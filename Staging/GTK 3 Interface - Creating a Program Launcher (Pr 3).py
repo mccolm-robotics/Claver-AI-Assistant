@@ -17,7 +17,7 @@ class RootWindow(Gtk.Application):
         screen = Gdk.Screen.get_default()
         styleContext = Gtk.StyleContext()
         styleContext.add_provider_for_screen(screen, cssProvider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
-d
+
     def do_activate(self):
         window = Gtk.Window(application=self)
         window.set_title("McColm Robotics GTK Framework")
