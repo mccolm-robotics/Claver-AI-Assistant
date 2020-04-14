@@ -13,7 +13,7 @@ class RootWindow(Gtk.Application):
         self.monitor_num_for_display = 0
 
         cssProvider = Gtk.CssProvider()
-        cssProvider.load_from_path('style.css') 
+        cssProvider.load_from_path('style.css')
         screen = Gdk.Screen.get_default()
         styleContext = Gtk.StyleContext()
         styleContext.add_provider_for_screen(screen, cssProvider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
