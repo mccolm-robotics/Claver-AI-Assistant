@@ -74,7 +74,7 @@ class PopUp(Gtk.Dialog):
             self.response(Gtk.ResponseType.CANCEL)
 
 cssProvider = Gtk.CssProvider()
-cssProvider.load_from_path('style.css')
+cssProvider.load_from_path('style-pt1.css')
 screen = Gdk.Screen.get_default()
 styleContext = Gtk.StyleContext()
 styleContext.add_provider_for_screen(screen, cssProvider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)

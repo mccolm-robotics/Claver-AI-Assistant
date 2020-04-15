@@ -1,0 +1,23 @@
+.orange-background {
+    background-color: #ffa500;
+}
+
+.green-background {
+    background-image: none;
+    background-color: green;
+    color: blue;
+}
+
+#myButton_red {
+    color: white;
+    font-size: 20px;
+    background-color: red;
+    background-image: none;
+    border-image: none;
+    border-radius: 8px;
+    margin-left: 10px;
+}
+
+#myButton_red:hover {
+    background-color: purple;
+}

@@ -1,0 +1,38 @@
+.orange-background {
+    background-color: #ffa500;
+}
+
+.green-background {
+    background-image: none;
+    background-color: green;
+    color: blue;
+}
+
+#myButton_red {
+    color: white;
+    font-size: 20px;
+    background-color: red;
+    background-image: none;
+    border-image: none;
+    border-radius: 8px;
+}
+
+#myButton_red:hover {
+    background-color: purple;
+}
+
+.blue-text:focus {
+    color: green;
+}
+
+.blue-text:hover {
+    color: orange;
+}
+
+.blue-text {
+    color: #135e94;
+}
+
+.grid_list {
+    background-color: black;
+}
