@@ -29,12 +29,10 @@ class GLCanvas(Gtk.GLArea):
         # This is a python list (not a c-style array)
         # Python lists, tuples and numbers all require the creation of a temporary variable to hold their data. http://pyopengl.sourceforge.net/documentation/opengl_diffs.html
         # https://www.khronos.org/opengl/wiki/Vertex_Specification
-        self.vertices = [
+        self.vertices = np.array([
             0.6,  0.6, 0.0, 1.0,
             -0.6,  0.6, 0.0, 1.0,
-            0.0, -0.6, 0.0, 1.0]
-
-        # array3d = np.array(np.random.rand(number_of), dtype=np.float32)
+            0.0, -0.6, 0.0, 1.0], dtype=np.float32)
 
         # See SuperBible p. 80 for discussion of the difference between clipping space, normalized device space
         # Normalized device space extends from -1.0 to 1.0 in x, y. From 0.0 to 1.0 in z.
@@ -137,6 +135,7 @@ class GLCanvas(Gtk.GLArea):
         #glBindVertexArray(self.vertex_array_object)     # Binds the VAO to the context (ctx). This lets OpenGL know we want to use it.
 
         #self.vao = np.empty(1, dtype=np.uint32)
+        #glCreateBuffers(len(self.vao), self.vao)
         self.vao = GLuint()
         glCreateVertexArrays(1, ctypes.byref(self.vao))
         glBindVertexArray(self.vao)
@@ -147,7 +146,7 @@ class GLCanvas(Gtk.GLArea):
         # self.vertex_buffer = glGenBuffers(1) #glCreateBuffer p.138. Creates one buffer object and stores it in self.vertex_buffer. A buffer object is identified by a GLuint, which is a type of name or handle
         self.vertex_buffer = GLuint()
         glCreateBuffers(1, ctypes.byref(self.vertex_buffer))
-        glNamedBufferStorage(self.vertex_buffer, 48, self.vertices, GL_MAP_READ_BIT)
+        glNamedBufferStorage(self.vertex_buffer, self.vertices.nbytes, self.vertices, GL_MAP_READ_BIT)
 
         #The enum 'GL_ARRAY_BUFFER' represents the binding point (target) in the OpenGL pipeline where the buffer is attached. It tells OpeGL the buffer will store vertext data
         glBindBuffer(GL_ARRAY_BUFFER, self.vertex_buffer) #bind the buffer object to the current OpenGL context
