@@ -1,12 +1,24 @@
+"""
+Author: Praxis (McColm Robotics)
+Created: April 2020
+Python interpreter: 3.7
+GTK3 version: 3.24
+PyCharm version: 2020.1
+Platform: Ubuntu 19.10
+"""
+
 #from Claver_Program_Launcher import *
 import gi
 import sys
+import numpy as np
+import math
+
 gi.require_version('Gtk', '3.0')
+from pyrr import Matrix44
 from gi.repository import Gtk, Gdk
 from OpenGL.GL import *
 from OpenGL.GL.shaders import compileProgram, compileShader
-import numpy as np
-import math
+
 
 
 class GLCanvas(Gtk.GLArea):
@@ -17,13 +29,6 @@ class GLCanvas(Gtk.GLArea):
         self.connect("render", self.on_render)      # This signal is emitted for each frame that is rendered
         self.add_tick_callback(self.tick)           # This is a frame time clock that is called each time a frame is rendered
         self.set_start_time = False                 # Boolean to track whether the clock has been initialized
-
-        self.vertices = [           # Triangle
-            0.6,  0.6, 0.0, 1.0,    # Vertex 1
-            -0.6,  0.6, 0.0, 1.0,   # Vertex 2
-            0.0, -0.6, 0.0, 1.0]    # Vertex 3
-
-        self.vertices = np.array(self.vertices, dtype=np.float32)   # Converts the Python list into a NumPy array
 
     def tick(self, widget, frame_clock):
         self.current_frame_time = frame_clock.get_frame_time()  # Gets the current timestamp in microseconds
@@ -45,21 +50,52 @@ class GLCanvas(Gtk.GLArea):
             self.last_frame_time = self.current_frame_time              # Records the current timestamp to compare against for the next second
         return True                                                     # Returns true to indicate that tick callback should contine to be called
 
+    def load_geometry(self):
+        self.vertices = [           # Triangle
+            0.6,  0.6, 0.0, 1.0,    # Vertex 1
+            -0.6,  0.6, 0.0, 1.0,   # Vertex 2
+            0.0, -0.6, 0.0, 1.0]    # Vertex 3
+        self.vertices = np.array(self.vertices, dtype=np.float32)  # Converts the Python list into a NumPy array
+
+        self.colours = np.array([
+            1.0, 0.0, 0.0, 1.0,
+            0.0, 1.0, 0.0, 1.0,
+            0.0, 0.0, 1.0, 1.0,
+        ], dtype=np.float32)
+
+
+        # Initializes the vertex array object and activates the 'vertex_position' attribute
+        self.vertex_array_object = GLuint()                                 # Stores the name of the vertex array object
+        glCreateVertexArrays(1, ctypes.byref(self.vertex_array_object))     # Creates the vertex array object and initalizes it to default values
+        glBindVertexArray(self.vertex_array_object)                         # Binds the vertex array object to the OpenGL pipeline target
+        self.vertex_attribute_position = glGetAttribLocation(self.shader, 'vertex_position')    # Obtains a reference to the 'vertex_position' attribute from the vertex shader
+        glEnableVertexAttribArray(self.vertex_attribute_position)                               # Activates client-side use of vertex attribute arrays for rendering
+
+        # Creates a buffer to hold the vertex data and binds it to the OpenGL pipeline
+        self.vertex_buffer = GLuint()                           # Stores the name of the vertex buffer
+        glCreateBuffers(1, ctypes.byref(self.vertex_buffer))    # Generates a buffer to hold the vertex data
+        glNamedBufferStorage(self.vertex_buffer, self.vertices.nbytes, self.vertices, GL_MAP_READ_BIT)  # Allocates buffer memory and initializes it with vertex data
+        glBindBuffer(GL_ARRAY_BUFFER, self.vertex_buffer)       # Binds the buffer object to the OpenGL context and specifies that the buffer holds vertex data
+        glVertexAttribPointer(self.vertex_attribute_position, 4, GL_FLOAT, GL_FALSE, 0, ctypes.c_void_p(0)) # Describes the data layout of the vertex buffer used by the 'vertex_position' attribute
+
     def build_program(self):
         VERTEX_SHADER_SOURCE = """
             #version 450 core
             in vec4 vertex_position;
+            out vec4 fragment_colour;
             void main()
             {
                 gl_Position = vertex_position;
+                fragment_colour = vec4(1.0, 0.0, 0.0, 1.0);
             }
         """
         FRAGMENT_SHADER_SOURCE = """
             #version 450 core
-            out vec4 fragColor;
+            in vec4 fragment_colour;
+            out vec4 color;
             void main()
             {
-                fragColor = vec4(1.0, 0.0, 0.0, 1.0);
+                color = fragment_colour;
             }
         """
         # These are helper functions provided by PyOpenGL
@@ -72,33 +108,26 @@ class GLCanvas(Gtk.GLArea):
         opengl_context = self.get_context()             # Retrieves the Gdk.GLContext used by gl_area
         opengl_context.make_current()                   # Makes the Gdk.GLContext current to the drawing surfaced used by Gtk.GLArea
         major, minor = opengl_context.get_version()     # Gets the version of OpenGL currently used by the opengl_context
-        print("OpenGL context created successfully.\n-- Using OpenGL Version " + str(major) + "." + str(minor))
+        # https://stackoverflow.com/questions/287871/how-to-print-colored-text-in-terminal-in-python
+        print("\033[93m OpenGL context created successfully.\n-- Using OpenGL Version \033[94m" + str(major) + "." + str(minor) + "\033[0m")
 
         # Checks to see if there were errors creating the context
         if gl_area.get_error() != None:
             print(gl_area.get_error())
 
+        self.model_matrix = Matrix44.identity()
+        self.view_matrix = Matrix44.identity()
+        self.projection_matrix = Matrix44.identity()
+
         self.build_program()    # Calls build_program() to compile and link the shaders
+        self.load_geometry()    # Calls load_geometry() to create vertex and colour data
 
-        # Initializes the vertex array object and activates the 'vertex_position' attribute
-        self.vertex_array_object = GLuint()                                 # Stores the name of the vertex array object
-        glCreateVertexArrays(1, ctypes.byref(self.vertex_array_object))     # Creates the vertex array object and initalizes it to default values
-        glBindVertexArray(self.vertex_array_object)                         # Binds the vertex array object to the OpenGL pipeline target
-        self.vertex_attribute_position = glGetAttribLocation(self.shader, 'vertex_position')    # Obtains a reference to the 'vertex_position' attribute from the vertex shader
-        glEnableVertexAttribArray(self.vertex_attribute_position)                               # Activates client-side use of vertex attribute arrays for rendering
-
-        # Creates a buffer to hold the vertex data and bind it to the OpenGL pipeline
-        self.vertex_buffer = GLuint()                           # Stores the name of the vertex buffer
-        glCreateBuffers(1, ctypes.byref(self.vertex_buffer))    # Generates a buffer to hold the vertex data
-        glNamedBufferStorage(self.vertex_buffer, self.vertices.nbytes, self.vertices, GL_MAP_READ_BIT)  # Allocates buffer memory and initializes it with vertex data
-        glBindBuffer(GL_ARRAY_BUFFER, self.vertex_buffer)       # Binds the buffer object to the OpenGL context and specifies that the buffer holds vertex data
-        glVertexAttribPointer(self.vertex_attribute_position, 4, GL_FLOAT, GL_FALSE, 0, ctypes.c_void_p(0)) # Describes the data layout of the vertex buffer used by the 'vertex_position' attribute
         return True
 
     def on_render(self, gl_area, gl_context):
         # Changes the background colour based on the the value of the program's running time
-        colour_vector = [math.sin(self.running_seconds_from_start)*.5+.5, math.cos(self.running_seconds_from_start)*.5+.5, 0.0, 1.0]
-        glClearBufferfv(GL_COLOR, 0, colour_vector)     # Clears the colour buffer to the value of colour_vector
+        #colour_vector = [math.sin(self.running_seconds_from_start)*.5+.5, math.cos(self.running_seconds_from_start)*.5+.5, 0.0, 1.0]
+        glClearBufferfv(GL_COLOR, 0, (0.0, 0.0, 0.0, 1.0))     # Clears the colour buffer to the value of colour_vector
 
         glUseProgram(self.shader)                       # Tells OpenGL to use the shader program for rendering geometry
 
