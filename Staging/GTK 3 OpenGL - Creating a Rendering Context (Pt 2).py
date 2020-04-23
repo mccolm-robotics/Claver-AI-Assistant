@@ -8,7 +8,7 @@ Platform: Ubuntu 19.10
 """
 
 #from Claver_Program_Launcher import *
-import gi
+import gi, pyrr
 import sys
 import numpy as np
 import math
@@ -20,15 +20,17 @@ from OpenGL.GL import *
 from OpenGL.GL.shaders import compileProgram, compileShader
 
 
-
 class GLCanvas(Gtk.GLArea):
     def __init__(self):
         Gtk.GLArea.__init__(self)
         self.set_required_version(4, 5)             # Sets the version of OpenGL required by this OpenGL program
         self.connect("realize", self.on_initialize) # This signal is used to initialize the OpenGL state
         self.connect("render", self.on_render)      # This signal is emitted for each frame that is rendered
+        self.connect("resize", self.on_resize)
+        #self.connect("unrealize", self.on_unrealize)
         self.add_tick_callback(self.tick)           # This is a frame time clock that is called each time a frame is rendered
         self.set_start_time = False                 # Boolean to track whether the clock has been initialized
+        self.set_has_depth_buffer(True)
 
     def tick(self, widget, frame_clock):
         self.current_frame_time = frame_clock.get_frame_time()  # Gets the current timestamp in microseconds
@@ -40,28 +42,92 @@ class GLCanvas(Gtk.GLArea):
             self.starting_time = self.current_frame_time        # Stores the timestamp set when the program was initalized
             self.set_start_time = True                          # Prevents the initialization routine from running again in this instance
 
-        self.running_seconds_from_start = (self.current_frame_time - self.starting_time)/1000000    # Calculate the total number of seconds that the program has been running
+        self.application_clock = (self.current_frame_time - self.starting_time)/1000000    # Calculate the total number of seconds that the program has been running
 
         self.frame_counter += 1                                         # The frame counter is called by GTK each time a frame is rendered. Keep track of how many are rendered.
         # Track how many Frames Per Second (FPS) are rendered
         if self.current_frame_time - self.last_frame_time > 1000000:    # Checks to see if 60 seconds have elapsed since the last counter reset
-            print(str(self.frame_counter) + "/s")                       # Prints out the number of frames rendered in the last second
+            print("\r" + str(self.frame_counter) + " FPS", end="")      # Prints out the number of frames rendered in the last second
             self.frame_counter = 0                                      # Resets the frame counter
             self.last_frame_time = self.current_frame_time              # Records the current timestamp to compare against for the next second
         return True                                                     # Returns true to indicate that tick callback should contine to be called
 
     def load_geometry(self):
-        self.vertices = [           # Triangle
-            0.6,  0.6, 0.0, 1.0,    # Vertex 1
-            -0.6,  0.6, 0.0, 1.0,   # Vertex 2
-            0.0, -0.6, 0.0, 1.0]    # Vertex 3
-        self.vertices = np.array(self.vertices, dtype=np.float32)  # Converts the Python list into a NumPy array
+        self.vertices = np.array([-1.0, -1.0, -1.0, 1.0,
+                             -1.0, -1.0, 1.0, 1.0,
+                             -1.0, 1.0, 1.0, 1.0,
+                             1.0, 1.0, -1.0, 1.0,
+                             -1.0, -1.0, -1.0, 1.0,
+                             -1.0, 1.0, -1.0, 1.0,
+                             1.0, -1.0, 1.0, 1.0,
+                             -1.0, -1.0, -1.0, 1.0,
+                             1.0, -1.0, -1.0, 1.0,
+                             1.0, 1.0, -1.0, 1.0,
+                             1.0, -1.0, -1.0, 1.0,
+                             -1.0, -1.0, -1.0, 1.0,
+                             -1.0, -1.0, -1.0, 1.0,
+                             -1.0, 1.0, 1.0, 1.0,
+                             -1.0, 1.0, -1.0, 1.0,
+                             1.0, -1.0, 1.0, 1.0,
+                             -1.0, -1.0, 1.0, 1.0,
+                             -1.0, -1.0, -1.0, 1.0,
+                             -1.0, 1.0, 1.0, 1.0,
+                             -1.0, -1.0, 1.0, 1.0,
+                             1.0, -1.0, 1.0, 1.0,
+                             1.0, 1.0, 1.0, 1.0,
+                             1.0, -1.0, -1.0, 1.0,
+                             1.0, 1.0, -1.0, 1.0,
+                             1.0, -1.0, -1.0, 1.0,
+                             1.0, 1.0, 1.0, 1.0,
+                             1.0, -1.0, 1.0, 1.0,
+                             1.0, 1.0, 1.0, 1.0,
+                             1.0, 1.0, -1.0, 1.0,
+                             -1.0, 1.0, -1.0, 1.0,
+                             1.0, 1.0, 1.0, 1.0,
+                             -1.0, 1.0, -1.0, 1.0,
+                             -1.0, 1.0, 1.0, 1.0,
+                             1.0, 1.0, 1.0, 1.0,
+                             -1.0, 1.0, 1.0, 1.0,
+                             1.0, -1.0, 1.0, 1.0
+                             ], dtype=np.float32)
 
-        self.colours = np.array([
-            1.0, 0.0, 0.0, 1.0,
-            0.0, 1.0, 0.0, 1.0,
-            0.0, 0.0, 1.0, 1.0,
-        ], dtype=np.float32)
+        self.colours = np.array([0.483, 0.596, 0.789, 1.0,
+                           0.483, 0.596, 0.789, 1.0,
+                           0.483, 0.596, 0.789, 1.0,
+                           1.0, 0.0, 0.0, 1.0,
+                           1.0, 0.0, 0.0, 1.0,
+                           1.0, 0.0, 0.0, 1.0,
+                           0.0, 1.0, 0.0, 1.0,
+                           0.0, 1.0, 0.0, 1.0,
+                           0.0, 1.0, 0.0, 1.0,
+                           1.0, 0.0, 0.0, 1.0,
+                           1.0, 0.0, 0.0, 1.0,
+                           1.0, 0.0, 0.0, 1.0,
+                           0.483, 0.596, 0.789, 1.0,
+                           0.483, 0.596, 0.789, 1.0,
+                           0.483, 0.596, 0.789, 1.0,
+                           0.0, 1.0, 0.0, 1.0,
+                           0.0, 1.0, 0.0, 1.0,
+                           0.0, 1.0, 0.0, 1.0,
+                           0.140, 0.616, 0.489, 1.0,
+                           0.140, 0.616, 0.489, 1.0,
+                           0.140, 0.616, 0.489, 1.0,
+                           0.055, 0.953, 0.042, 1.0,
+                           0.055, 0.953, 0.042, 1.0,
+                           0.055, 0.953, 0.042, 1.0,
+                           0.055, 0.953, 0.042, 1.0,
+                           0.055, 0.953, 0.042, 1.0,
+                           0.055, 0.953, 0.042, 1.0,
+                           0.0, 0.0, 1.0, 1.0,
+                           0.0, 0.0, 1.0, 1.0,
+                           0.0, 0.0, 1.0, 1.0,
+                           0.0, 0.0, 1.0, 1.0,
+                           0.0, 0.0, 1.0, 1.0,
+                           0.0, 0.0, 1.0, 1.0,
+                           0.140, 0.616, 0.489, 1.0,
+                           0.140, 0.616, 0.489, 1.0,
+                           0.140, 0.616, 0.489, 1.0
+                           ], dtype=np.float32)
 
 
         # Initializes the vertex array object and activates the 'vertex_position' attribute
@@ -70,23 +136,34 @@ class GLCanvas(Gtk.GLArea):
         glBindVertexArray(self.vertex_array_object)                         # Binds the vertex array object to the OpenGL pipeline target
         self.vertex_attribute_position = glGetAttribLocation(self.shader, 'vertex_position')    # Obtains a reference to the 'vertex_position' attribute from the vertex shader
         glEnableVertexAttribArray(self.vertex_attribute_position)                               # Activates client-side use of vertex attribute arrays for rendering
+        self.vertex_colour_position = glGetAttribLocation(self.shader, 'vertex_colour')
+        glEnableVertexAttribArray(self.vertex_colour_position)
 
         # Creates a buffer to hold the vertex data and binds it to the OpenGL pipeline
         self.vertex_buffer = GLuint()                           # Stores the name of the vertex buffer
         glCreateBuffers(1, ctypes.byref(self.vertex_buffer))    # Generates a buffer to hold the vertex data
-        glNamedBufferStorage(self.vertex_buffer, self.vertices.nbytes, self.vertices, GL_MAP_READ_BIT)  # Allocates buffer memory and initializes it with vertex data
+        glNamedBufferStorage(self.vertex_buffer, self.vertices.nbytes, self.vertices, GL_MAP_READ_BIT)      # Allocates buffer memory and initializes it with vertex data
         glBindBuffer(GL_ARRAY_BUFFER, self.vertex_buffer)       # Binds the buffer object to the OpenGL context and specifies that the buffer holds vertex data
         glVertexAttribPointer(self.vertex_attribute_position, 4, GL_FLOAT, GL_FALSE, 0, ctypes.c_void_p(0)) # Describes the data layout of the vertex buffer used by the 'vertex_position' attribute
+
+        # Creates a buffer to hold the vertex colour data
+        self.vertex_color_buffer = GLuint()
+        glCreateBuffers(1, ctypes.byref(self.vertex_color_buffer))
+        glNamedBufferStorage(self.vertex_color_buffer, self.colours.nbytes, self.colours, GL_MAP_READ_BIT)
+        glBindBuffer(GL_ARRAY_BUFFER, self.vertex_color_buffer)
+        glVertexAttribPointer(self.vertex_colour_position, 4, GL_FLOAT, GL_FALSE, 0, ctypes.c_void_p(0))
 
     def build_program(self):
         VERTEX_SHADER_SOURCE = """
             #version 450 core
-            in vec4 vertex_position;
+            layout(location = 0) in vec4 vertex_position;
+            layout(location = 1) in vec4 vertex_colour;
+            uniform mat4 ModelViewPerspective;
             out vec4 fragment_colour;
             void main()
             {
-                gl_Position = vertex_position;
-                fragment_colour = vec4(1.0, 0.0, 0.0, 1.0);
+                gl_Position = ModelViewPerspective * vertex_position;
+                fragment_colour = vertex_colour;
             }
         """
         FRAGMENT_SHADER_SOURCE = """
@@ -109,11 +186,19 @@ class GLCanvas(Gtk.GLArea):
         opengl_context.make_current()                   # Makes the Gdk.GLContext current to the drawing surfaced used by Gtk.GLArea
         major, minor = opengl_context.get_version()     # Gets the version of OpenGL currently used by the opengl_context
         # https://stackoverflow.com/questions/287871/how-to-print-colored-text-in-terminal-in-python
-        print("\033[93m OpenGL context created successfully.\n-- Using OpenGL Version \033[94m" + str(major) + "." + str(minor) + "\033[0m")
+        print("\033[93m OpenGL context created successfully.\n -- Using OpenGL Version \033[94m" + str(major) + "." + str(minor) + "\033[0m")
 
         # Checks to see if there were errors creating the context
         if gl_area.get_error() != None:
             print(gl_area.get_error())
+
+        # Get information about current GTK GLArea canvas
+        window = gl_area.get_allocation()
+        # Construct perspective matrix using width and height of window allocated by GTK
+        self.perspective_matrix = Matrix44.perspective_projection(45.0, window.width / window.height, 0.1, 200.0)
+
+        glEnable(GL_DEPTH_TEST)
+        glDepthFunc(GL_LESS)
 
         self.model_matrix = Matrix44.identity()
         self.view_matrix = Matrix44.identity()
@@ -125,16 +210,33 @@ class GLCanvas(Gtk.GLArea):
         return True
 
     def on_render(self, gl_area, gl_context):
-        # Changes the background colour based on the the value of the program's running time
-        #colour_vector = [math.sin(self.running_seconds_from_start)*.5+.5, math.cos(self.running_seconds_from_start)*.5+.5, 0.0, 1.0]
-        glClearBufferfv(GL_COLOR, 0, (0.0, 0.0, 0.0, 1.0))     # Clears the colour buffer to the value of colour_vector
+        glClearColor(0.0, 0.0, 0.0, 0.0)
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
         glUseProgram(self.shader)                       # Tells OpenGL to use the shader program for rendering geometry
+
+        eye = (4.0, 4.0, 6)
+        target = (0.0, -.5, 0.0)
+        up = (0.0, 1.0, 0.0)
+
+        view_matrix = Matrix44.look_at(eye, target, up)
+        model_matrix = Matrix44.from_translation([0.0, 0.0, 0.0]) * pyrr.matrix44.create_from_axis_rotation((0.0, 1.0, 0.0), self.application_clock) * Matrix44.from_scale([2.0, 2.0, 2.0])
+
+        ModelViewPerspective = self.perspective_matrix * view_matrix * model_matrix
+
+        self.mvpMatrixLocationInShader = glGetUniformLocation(self.shader, "ModelViewPerspective")
+        glUniformMatrix4fv(self.mvpMatrixLocationInShader, 1, GL_FALSE, ModelViewPerspective)
 
         glBindVertexArray(self.vertex_array_object)     # Binds the self.vertex_array_object to the OpenGL pipeline vertex target
         glDrawArrays(GL_TRIANGLES, 0, int(len(self.vertices)/4))    # Constructs geometric primitives (GL_TRIANGLES) using sequential elements of the vertex array
 
         self.queue_draw()   # Schedules a redraw for Gtk.GLArea
+
+    def on_resize(self, area, width, height):
+        self.perspective_matrix = Matrix44.perspective_projection(45.0, width / height, 0.1, 200.0)
+
+    #def on_unrealize(self, gl_area):
+        # release(self.scene)     #Pyassimp function
 
 class RootWindow(Gtk.Application):
     def __init__(self):
