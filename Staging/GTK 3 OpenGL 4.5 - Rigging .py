@@ -12,15 +12,19 @@ Platform: Ubuntu 19.10
 import gi, pyrr
 import sys
 import numpy as np
-
 gi.require_version('Gtk', '3.0')
 from pyrr import Matrix44
 from gi.repository import Gtk, Gdk
 from pyassimp import *
+from pyassimp.helper import get_bounding_box
 from OpenGL.GL import *
 from OpenGL.GL.shaders import compileProgram, compileShader
 from PIL import Image
 
+def recur_node(node, level=0):
+    print("  " + "\t" * level + "- " + str(node))
+    for child in node.children:
+        recur_node(child, level + 1)
 
 class GLCanvas(Gtk.GLArea):
     def __init__(self):
@@ -33,6 +37,61 @@ class GLCanvas(Gtk.GLArea):
         self.add_tick_callback(self.tick)           # This is a frame time clock that is called each time a frame is rendered
         self.set_start_time = False                 # Boolean to track whether the clock has been initialized
         self.set_has_depth_buffer(True)
+
+    def recur_node(node, level=0):
+        print("  " + "\t" * level + "- " + str(node))
+        for child in node.children:
+            recur_node(child, level + 1)
+
+    def view_pyassimp_model(self):
+        # Begin Pyassimp functions
+        print("SCENE:")
+        print("   meshes: " + str(len(self.scene.meshes)))
+        print("   total faces: %d" % sum([len(mesh.faces) for mesh in self.scene.meshes]))
+        print("   materials: " + str(len(self.scene.materials)))
+        print("   textures: " + str(len(self.scene.textures)))
+        print("NODES:")
+        recur_node(self.scene.rootnode)
+        print("MESHES")
+        for index, mesh in enumerate(self.scene.meshes):
+            print("   MESH " + str(index+1))
+            print("      material id: " + str(mesh.materialindex+1))
+            print("      vertices: " + str(len(mesh.vertices)))
+            print("      faces: " + str(len(mesh.faces)))
+            print("      normals: " + str(len(mesh.normals)))
+            self.bb_min, self.bb_max = get_bounding_box(self.scene)
+            print("      bounding box:" + str(self.bb_min) + " - " + str(self.bb_max))
+
+            self.scene_center = [(a + b) / 2. for a, b in zip(self.bb_min, self.bb_max)]
+            print("      scene center: ", self.scene_center)
+            print("      first 3 verts:\n" + str(mesh.normals[:3]))
+            if mesh.normals.any():
+                print("      first 3 normals:\n" + str(mesh.normals[:3]))
+            else:
+                print("      no normals")
+            print("      colors: " + str(len(mesh.colors)))
+            self.tcs = mesh.texturecoords
+            if self.tcs.any():
+                for tc_index, tc in enumerate(self.tcs):
+                    print("      texture-coords " + str(tc_index) + ": " + str(len(self.tcs[tc_index])) + "      first 3: " + str(self.tcs[tc_index][:3]))
+            else:
+                print("      no texture coordinates")
+            print("      uv-component-count: " + str(len(mesh.numuvcomponents)))
+            print("      faces: " + str(len(mesh.faces)) + " -> first 3:\n" + str(mesh.faces[:3]))
+            print("      bones: " + str(len(mesh.bones)) + " -> first: " + str([str(b) for b in mesh.bones[:3]]))
+        print("MATERIALS:")
+        for index, material in enumerate (self.scene.materials):
+            print("   MATERIAL (id: " + str(index+1) + ")")
+            for key, value in material.properties.items():
+                print("      %s: %s" % (key, value))
+        print("TEXTURES:")
+        for index, texture in enumerate(self.scene.textures):
+            print("   TEXTURE " + str(index+1))
+            print("      width: " + str(texture.width))
+            print("      height: " + str(texture.height))
+            print("      hint: " + str(texture.achformathint))
+            print("      data (size): " + str(len(texture.data)))
+        # End Pyassimp functions
 
     def tick(self, widget, frame_clock):
         self.current_frame_time = frame_clock.get_frame_time()  # Gets the current timestamp in microseconds
@@ -56,7 +115,7 @@ class GLCanvas(Gtk.GLArea):
 
     def load_geometry(self):
 
-        self.scene = load('models/char_01_triangulated.obj')
+        self.scene = load('models/NewSnake1.fbx')
         self.blenderModel = self.scene.meshes[0]
         print("Name of model being loaded: ", self.blenderModel)
         self.model = np.concatenate((self.blenderModel.vertices, self.blenderModel.texturecoords[0]), axis=0)
@@ -91,10 +150,12 @@ class GLCanvas(Gtk.GLArea):
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
 
-        image = Image.open("models/Chibi_Texture_D.png")
+        image = Image.open("models/NewSnakeSkin.png")
         flipped_image = image.transpose(Image.FLIP_TOP_BOTTOM)
         img_data = np.array(list(flipped_image.getdata()), np.uint8)
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image.width, image.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, img_data)
+
+        self.view_pyassimp_model()
 
     def build_program(self):
         VERTEX_SHADER_SOURCE = """
@@ -158,8 +219,8 @@ class GLCanvas(Gtk.GLArea):
         glClearColor(0.0, 0.0, 0.0, 0.0)    # Set the background colour for the window -> Black
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) # Clear the window background colour to black by resetting the COLOR_BUFFER and clear the DEPTH_BUFFER
 
-        eye = (0.0, 5, 18.0)        # Eye coordinates (location of the camera)
-        target = (0.0, 7.0, 0.0)    # Target coordinates (where the camera is looking)
+        eye = (0.0, 3, 12.0)        # Eye coordinates (location of the camera)
+        target = (0.0, 0.0, 0.0)    # Target coordinates (where the camera is looking)
         up = (0.0, 1.0, 0.0)        # A vector representing the 'up' direction.
 
         view_matrix = Matrix44.look_at(eye, target, up) # Calculate the view matrix
