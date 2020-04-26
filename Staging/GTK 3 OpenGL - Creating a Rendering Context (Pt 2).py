@@ -1,5 +1,6 @@
 """
 Author: Praxis (McColm Robotics)
+Title: Rotating Cube
 Created: April 2020
 Python interpreter: 3.7
 GTK3 version: 3.24
@@ -11,7 +12,6 @@ Platform: Ubuntu 19.10
 import gi, pyrr
 import sys
 import numpy as np
-import math
 
 gi.require_version('Gtk', '3.0')
 from pyrr import Matrix44
@@ -26,8 +26,7 @@ class GLCanvas(Gtk.GLArea):
         self.set_required_version(4, 5)             # Sets the version of OpenGL required by this OpenGL program
         self.connect("realize", self.on_initialize) # This signal is used to initialize the OpenGL state
         self.connect("render", self.on_render)      # This signal is emitted for each frame that is rendered
-        self.connect("resize", self.on_resize)
-        #self.connect("unrealize", self.on_unrealize)
+        self.connect("resize", self.on_resize)      # This signal is emitted when the window is resized
         self.add_tick_callback(self.tick)           # This is a frame time clock that is called each time a frame is rendered
         self.set_start_time = False                 # Boolean to track whether the clock has been initialized
         self.set_has_depth_buffer(True)
@@ -129,21 +128,19 @@ class GLCanvas(Gtk.GLArea):
                            0.140, 0.616, 0.489, 1.0
                            ], dtype=np.float32)
 
-
         # Initializes the vertex array object and activates the 'vertex_position' attribute
         self.vertex_array_object = GLuint()                                 # Stores the name of the vertex array object
         glCreateVertexArrays(1, ctypes.byref(self.vertex_array_object))     # Creates the vertex array object and initalizes it to default values
         glBindVertexArray(self.vertex_array_object)                         # Binds the vertex array object to the OpenGL pipeline target
-        self.vertex_attribute_position = glGetAttribLocation(self.shader, 'vertex_position')    # Obtains a reference to the 'vertex_position' attribute from the vertex shader
-        glEnableVertexAttribArray(self.vertex_attribute_position)                               # Activates client-side use of vertex attribute arrays for rendering
-        self.vertex_colour_position = glGetAttribLocation(self.shader, 'vertex_colour')
-        glEnableVertexAttribArray(self.vertex_colour_position)
 
         # Creates a buffer to hold the vertex data and binds it to the OpenGL pipeline
         self.vertex_buffer = GLuint()                           # Stores the name of the vertex buffer
         glCreateBuffers(1, ctypes.byref(self.vertex_buffer))    # Generates a buffer to hold the vertex data
-        glNamedBufferStorage(self.vertex_buffer, self.vertices.nbytes, self.vertices, GL_MAP_READ_BIT)      # Allocates buffer memory and initializes it with vertex data
+        glNamedBufferStorage(self.vertex_buffer, self.vertices.nbytes, self.vertices, GL_MAP_READ_BIT) # Allocates buffer memory and initializes it with vertex data
         glBindBuffer(GL_ARRAY_BUFFER, self.vertex_buffer)       # Binds the buffer object to the OpenGL context and specifies that the buffer holds vertex data
+
+        self.vertex_attribute_position = glGetAttribLocation(self.shader, 'vertex_position')  # Obtains a reference to the 'vertex_position' attribute from the vertex shader
+        glEnableVertexAttribArray(self.vertex_attribute_position)  # Activates client-side use of vertex attribute arrays for rendering
         glVertexAttribPointer(self.vertex_attribute_position, 4, GL_FLOAT, GL_FALSE, 0, ctypes.c_void_p(0)) # Describes the data layout of the vertex buffer used by the 'vertex_position' attribute
 
         # Creates a buffer to hold the vertex colour data
@@ -151,6 +148,9 @@ class GLCanvas(Gtk.GLArea):
         glCreateBuffers(1, ctypes.byref(self.vertex_color_buffer))
         glNamedBufferStorage(self.vertex_color_buffer, self.colours.nbytes, self.colours, GL_MAP_READ_BIT)
         glBindBuffer(GL_ARRAY_BUFFER, self.vertex_color_buffer)
+
+        self.vertex_colour_position = glGetAttribLocation(self.shader, 'vertex_colour')
+        glEnableVertexAttribArray(self.vertex_colour_position)
         glVertexAttribPointer(self.vertex_colour_position, 4, GL_FLOAT, GL_FALSE, 0, ctypes.c_void_p(0))
 
     def build_program(self):
@@ -197,35 +197,33 @@ class GLCanvas(Gtk.GLArea):
         # Construct perspective matrix using width and height of window allocated by GTK
         self.perspective_matrix = Matrix44.perspective_projection(45.0, window.width / window.height, 0.1, 200.0)
 
-        glEnable(GL_DEPTH_TEST)
-        glDepthFunc(GL_LESS)
+        glEnable(GL_DEPTH_TEST) # Enable depth testing to ensure pixels closer to the viewer appear closest
+        glDepthFunc(GL_LESS)    # Set the type of calculation used by the depth buffer
+        glEnable(GL_CULL_FACE)  # Enable face culling
+        glCullFace(GL_BACK)     # Discard the back faces of polygons (determined by the vertex winding order)
 
-        self.model_matrix = Matrix44.identity()
-        self.view_matrix = Matrix44.identity()
-        self.projection_matrix = Matrix44.identity()
+        self.build_program()      # Calls build_program() to compile and link the shaders
+        glUseProgram(self.shader) # Tells OpenGL to use the shader program for rendering geometry
+        self.load_geometry()      # Calls load_geometry() to create vertex and colour data
 
-        self.build_program()    # Calls build_program() to compile and link the shaders
-        self.load_geometry()    # Calls load_geometry() to create vertex and colour data
+        self.mvpMatrixLocationInShader = glGetUniformLocation(self.shader, "ModelViewPerspective")  # Get the location of the ModelViewPerspective matrix in the vertex shader.
 
         return True
 
     def on_render(self, gl_area, gl_context):
-        glClearColor(0.0, 0.0, 0.0, 0.0)
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+        glClearColor(0.0, 0.0, 0.0, 0.0)    # Set the background colour for the window -> Black
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) # Clear the window background colour to black by resetting the COLOR_BUFFER and clear the DEPTH_BUFFER
 
-        glUseProgram(self.shader)                       # Tells OpenGL to use the shader program for rendering geometry
+        eye = (0.0, 1.5, 4.0)       # Eye coordinates
+        target = (0.0, 0.0, 0.0)    # Target coordinates (where the camera is looking)
+        up = (0.0, 1.0, 0.0)        # A vector representing the 'up' direction.
 
-        eye = (4.0, 4.0, 6)
-        target = (0.0, -.5, 0.0)
-        up = (0.0, 1.0, 0.0)
+        view_matrix = Matrix44.look_at(eye, target, up) # Calculate the view matrix
+        # Calculate the model matrix. The rotation speed is regulated by the application clock.
+        model_matrix = Matrix44.from_translation([0.0, 0.0, 0.0]) * pyrr.matrix44.create_from_axis_rotation((0.0, 1.0, 0.0), self.application_clock) * Matrix44.from_scale([1.0, 1.0, 1.0])
 
-        view_matrix = Matrix44.look_at(eye, target, up)
-        model_matrix = Matrix44.from_translation([0.0, 0.0, 0.0]) * pyrr.matrix44.create_from_axis_rotation((0.0, 1.0, 0.0), self.application_clock) * Matrix44.from_scale([2.0, 2.0, 2.0])
-
-        ModelViewPerspective = self.perspective_matrix * view_matrix * model_matrix
-
-        self.mvpMatrixLocationInShader = glGetUniformLocation(self.shader, "ModelViewPerspective")
-        glUniformMatrix4fv(self.mvpMatrixLocationInShader, 1, GL_FALSE, ModelViewPerspective)
+        ModelViewPerspective = self.perspective_matrix * view_matrix * model_matrix             # Calculate the ModelViewPerspective matrix
+        glUniformMatrix4fv(self.mvpMatrixLocationInShader, 1, GL_FALSE, ModelViewPerspective)   # Update the value of the ModelViewPerspective matrix attribute variable in the vertex buffer
 
         glBindVertexArray(self.vertex_array_object)     # Binds the self.vertex_array_object to the OpenGL pipeline vertex target
         glDrawArrays(GL_TRIANGLES, 0, int(len(self.vertices)/4))    # Constructs geometric primitives (GL_TRIANGLES) using sequential elements of the vertex array
@@ -233,10 +231,7 @@ class GLCanvas(Gtk.GLArea):
         self.queue_draw()   # Schedules a redraw for Gtk.GLArea
 
     def on_resize(self, area, width, height):
-        self.perspective_matrix = Matrix44.perspective_projection(45.0, width / height, 0.1, 200.0)
-
-    #def on_unrealize(self, gl_area):
-        # release(self.scene)     #Pyassimp function
+        self.perspective_matrix = Matrix44.perspective_projection(45.0, width / height, 0.1, 200.0) # Recalculate the perspective matrix when the window is resized
 
 class RootWindow(Gtk.Application):
     def __init__(self):

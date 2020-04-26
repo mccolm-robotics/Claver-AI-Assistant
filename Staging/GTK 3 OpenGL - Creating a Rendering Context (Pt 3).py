@@ -1,215 +1,187 @@
+"""
+Author: Praxis (McColm Robotics)
+Title: Textured Cube
+Created: April 2020
+Python interpreter: 3.7
+GTK3 version: 3.24
+PyCharm version: 2020.1
+Platform: Ubuntu 19.10
+"""
+
 #from Claver_Program_Launcher import *
-import gi
+import gi, pyrr
 import sys
+import numpy as np
+
 gi.require_version('Gtk', '3.0')
+from pyrr import Matrix44
 from gi.repository import Gtk, Gdk
+from pyassimp import *
 from OpenGL.GL import *
 from OpenGL.GL.shaders import compileProgram, compileShader
-import numpy as np
-import math
+from PIL import Image
 
 
 class GLCanvas(Gtk.GLArea):
-    # Gtk.GLArea is a widget that sets up its own Gdk.GLContext. It creates its own GL framebuffer and sets it as the default rendering target.
     def __init__(self):
         Gtk.GLArea.__init__(self)
-        self.set_required_version(4, 5)             # Set the version of OpenGL required by this OpenGL program
-        self.connect("realize", self.on_initialize)    # This signal is used to initialize the OpenGL state
+        self.set_required_version(4, 5)             # Sets the version of OpenGL required by this OpenGL program
+        self.connect("realize", self.on_initialize) # This signal is used to initialize the OpenGL state
+        self.connect("unrealize", self.on_unrealize)  # Catch this signal to clean up buffer objects and shaders
         self.connect("render", self.on_render)      # This signal is emitted for each frame that is rendered
+        self.connect("resize", self.on_resize)      # This signal is emitted when the window is resized
         self.add_tick_callback(self.tick)           # This is a frame time clock that is called each time a frame is rendered
         self.set_start_time = False                 # Boolean to track whether the clock has been initialized
-
-        # This is the data provided to the vertex shader during the 'vertex fetching' stage of the OpenGL pipeline
-        # Values are represented as four-component vectors. These are homogeneous coordinates rather than Cartesian coordinate triplets.
-        # The fourth value is the 'w' coordinate
-        # Coordinates are converted into Cartesian coordinates when OpenGL performs a perspective division. In this stage, all the coordinates are divided by the 'w' coord
-        # leaving a value of 1.0 for 'w'
-
-        # This is a python list (not a c-style array)
-        # Python lists, tuples and numbers all require the creation of a temporary variable to hold their data. http://pyopengl.sourceforge.net/documentation/opengl_diffs.html
-        # https://www.khronos.org/opengl/wiki/Vertex_Specification
-        self.vertices = [
-            0.6,  0.6, 0.0, 1.0,
-            -0.6,  0.6, 0.0, 1.0,
-            0.0, -0.6, 0.0, 1.0]
-
-        self.vertices = np.array(self.vertices, dtype=np.float32)
-
-        # See SuperBible p. 80 for discussion of the difference between clipping space, normalized device space
-        # Normalized device space extends from -1.0 to 1.0 in x, y. From 0.0 to 1.0 in z.
-        # The window has coordinates with (0,0)  at the bottom left and range (w-1, h-1)
-        # The viewport transform is applied to the normalized device coordinates to move them into window coordinates
-        # Viewport bounds are set by calling glViewport() and glDepthRange()
-        # GL triangle winding, front face, and culling p.82A
-
-
+        self.set_has_depth_buffer(True)
 
     def tick(self, widget, frame_clock):
-        # A frame clock is compatible with OpenGL. It automatically stops painting when it knows frames will not be visible.
-        # A tick is issued every time GTK draws a new frame.
-        # Gets a timestamp in microseconds
-        self.current_frame_time = frame_clock.get_frame_time() # https://developer.gnome.org/gdk3/stable/GdkFrameClock.html#gdk-frame-clock-get-frame-time
+        self.current_frame_time = frame_clock.get_frame_time()  # Gets the current timestamp in microseconds
 
-        if self.set_start_time == False:
-            self.last_frame_time = 0
-            self.frame_counter = 0
-            self.running_seconds_from_start = 0
-            self.starting_time = self.current_frame_time
-            self.set_start_time = True
+        if self.set_start_time == False:                        # Initializes the timer at the start of the program
+            self.last_frame_time = 0                            # Stores the previous timestamp
+            self.frame_counter = 0                              # Counts the total frames rendered per seconds
+            self.running_seconds_from_start = 0                 # Stores the cumulative running time of the program
+            self.starting_time = self.current_frame_time        # Stores the timestamp set when the program was initalized
+            self.set_start_time = True                          # Prevents the initialization routine from running again in this instance
 
-        self.running_seconds_from_start = (self.current_frame_time - self.starting_time)/1000000
+        self.application_clock = (self.current_frame_time - self.starting_time)/1000000    # Calculate the total number of seconds that the program has been running
 
-        self.frame_counter += 1
-        if self.current_frame_time - self.last_frame_time > 1000000:
-            print(str(self.frame_counter) + "/s")
-            self.frame_counter = 0
-            self.last_frame_time = self.current_frame_time
-        return True #Return true to indicate that tick callback should contine to be called https://developer.gnome.org/gtk3/unstable/GtkWidget.html#GtkTickCallback
+        self.frame_counter += 1                                         # The frame counter is called by GTK each time a frame is rendered. Keep track of how many are rendered.
+        # Track how many Frames Per Second (FPS) are rendered
+        if self.current_frame_time - self.last_frame_time > 1000000:    # Checks to see if 60 seconds have elapsed since the last counter reset
+            print("\r" + str(self.frame_counter) + " FPS", end="")      # Prints out the number of frames rendered in the last second
+            self.frame_counter = 0                                      # Resets the frame counter
+            self.last_frame_time = self.current_frame_time              # Records the current timestamp to compare against for the next second
+        return True                                                     # Returns true to indicate that tick callback should contine to be called
+
+    def load_geometry(self):
+
+        self.scene = load('models/char_01_triangulated.obj')
+        self.blenderModel = self.scene.meshes[0]
+        print("Name of model being loaded: ", self.blenderModel)
+        self.model = np.concatenate((self.blenderModel.vertices, self.blenderModel.texturecoords[0]), axis=0)
+
+        self.vertex_array_object = GLuint()                                 # Stores the name of the vertex array object
+        glCreateVertexArrays(1, ctypes.byref(self.vertex_array_object))     # Creates the vertex array object and initalizes it to default values
+        glBindVertexArray(self.vertex_array_object)
+
+        # Creates a buffer to hold the vertex data and binds it to the OpenGL pipeline
+        self.vertex_buffer_object = GLuint()                           # Stores the name of the vertex buffer
+        glCreateBuffers(1, ctypes.byref(self.vertex_buffer_object))    # Generates a buffer to hold the vertex data
+        glNamedBufferStorage(self.vertex_buffer_object, self.model.nbytes, self.model, GL_MAP_READ_BIT) # Allocates buffer memory and initializes it with vertex data
+        glBindBuffer(GL_ARRAY_BUFFER, self.vertex_buffer_object)       # Binds the buffer object to the OpenGL context and specifies that the buffer holds vertex data
+
+        # Get the 'position layout' (index of the generic vertex attribute) of the 'in_positions' parameter from the vertex shader program and store it.
+        self.vertex_position_attribute = glGetAttribLocation(self.shader, 'vertex_position')
+        glEnableVertexAttribArray(self.vertex_position_attribute)
+        # Describe the 'position layout' data in the buffer
+        # ctypes.c_void_p(0) specifies the offset location in the buffer to begin reading data. Here it reads from the start of the buffer.
+        # self.model.itemsize*3 specifies the stride (how to step through the data in the buffer). This is important for telling OpenGL how to step through a buffer having concatinated vertex and color data (see: https://youtu.be/bmCYgoCAyMQ).
+        glVertexAttribPointer(self.vertex_position_attribute, 3, GL_FLOAT, GL_FALSE, self.model.itemsize * 3, ctypes.c_void_p(0))
+
+        self.texture_in = glGetAttribLocation(self.shader, 'texture_position')
+        self.texture_offset = self.model.itemsize * (len(self.model) // 2) * 3
+        # Describe the position data layout in the buffer
+        glVertexAttribPointer(self.texture_in, 3, GL_FLOAT, GL_FALSE, self.model.itemsize * 3, ctypes.c_void_p(self.texture_offset))
+        glEnableVertexAttribArray(self.texture_in)
+
+        texture = glGenTextures(1)
+        glBindTexture(GL_TEXTURE_2D, texture)
+        # Set the texture wrapping parameters
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
+        # Set texture filtering parameters
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+
+        image = Image.open("models/Chibi_Texture_D.png")
+        flipped_image = image.transpose(Image.FLIP_TOP_BOTTOM)
+        img_data = np.array(list(flipped_image.getdata()), np.uint8)
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image.width, image.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, img_data)
 
     def build_program(self):
-        # This program is only called once so that we are not wasting time recompiling
-        # OpenGL shaders are in in GLSL (OpenGL Shading Language). Languge is a derivative of C programming language
-        # This compiler language is built into OpenGL
-
-        # Vertex shader is the first programmable stage of the OpenGL pipeline. It is also the only mandatory shader that must
-        # be written in order to create a valid OpenGL program.
-        # Require to have a vertex shader and fragment shader to see any pixels on the screen.
-        # #version 450 core tells the shader compiler we are using version 4.5 and just the features from the core profile.
-        # gl_Position is a built-in variable that is part of GLSL that connects the vertex shader to the fragment shader
-        # gl_Position represents the output position of the vertex
-        # Declares position as an input variable of type vec4
-
-        # in / out are storage qualifiers that are part of the GLSL these keywords are used to create data transport links between one shader and another.
-        # vertex_position is called a 'vertex attribute'. It is a global variable and it is used for injecting data into the OpenGL pipeline
-        # vertex attributes in the vertex shader are filled automatically during the vertex fetch stage. The vertex fetch stage is a fixed function pipeline stage
         VERTEX_SHADER_SOURCE = """
             #version 450 core
-            in vec4 vertex_position;
+            layout(location = 0) in vec4 vertex_position;
+            layout(location = 1) in vec4 texture_position;
+            uniform mat4 ModelViewPerspective;
+            out vec2 texture_fragment;
             void main()
             {
-                gl_Position = vertex_position;
+                gl_Position = ModelViewPerspective * vertex_position;
+                texture_fragment = texture_position.xy;
             }
         """
-
-        # fragColor is declared an output variable of type vec4.
-        # The value of output variables are sent to the screen
         FRAGMENT_SHADER_SOURCE = """
             #version 450 core
-            out vec4 fragColor;
+            in vec2 texture_fragment;
+            out vec4 out_colour;
+            uniform sampler2D samplerTexture;
             void main()
             {
-                fragColor = vec4(1.0, 0.0, 0.0, 1.0);
+                out_colour = texture(samplerTexture, texture_fragment);
             }
         """
-        # These are PyOpenGL Convenience Functions and *not* standard OpenGL functions
-        # See page 59 of the OpenGL SuperBible (7th Edition) for the general OpenGL process in C.
-        # This step combines three steps: 1) Creating a vertex shader object 2) Stores the source code in the shader object 3) compiles the shader object into intermediate binary representation
-        vertex_shader = compileShader(VERTEX_SHADER_SOURCE, GL_VERTEX_SHADER)
-        # This step combines three steps: 1) Creating a fragment shader object 2) Stores the source code in the shader object 3) compiles the shader object into intermediate binary representation
-        fragment_shader = compileShader(FRAGMENT_SHADER_SOURCE, GL_FRAGMENT_SHADER)
-        # This step combines three steps: 1) creates a shader program object 2) attaches the vertex and fragment shader objects 3) Links the shader object
-        # together into the program 4) deletes the shader objects since the program object now contains the binary code for both shaders
-        self.shader = compileProgram(vertex_shader, fragment_shader)
+        # These are helper functions provided by PyOpenGL
+        vertex_shader = compileShader(VERTEX_SHADER_SOURCE, GL_VERTEX_SHADER)           # Compiles the vertex shader into intermediate binary representation
+        fragment_shader = compileShader(FRAGMENT_SHADER_SOURCE, GL_FRAGMENT_SHADER)     # Compiles the fragment object into intermediate binary representation
+        self.shader = compileProgram(vertex_shader, fragment_shader)                    # Links the vertex and fragment shader objects together into a program
 
     def on_initialize(self, gl_area):
+        # Prints information about our OpenGL Context
+        opengl_context = self.get_context()             # Retrieves the Gdk.GLContext used by gl_area
+        opengl_context.make_current()                   # Makes the Gdk.GLContext current to the drawing surfaced used by Gtk.GLArea
+        major, minor = opengl_context.get_version()     # Gets the version of OpenGL currently used by the opengl_context
+        # https://stackoverflow.com/questions/287871/how-to-print-colored-text-in-terminal-in-python
+        print("\033[93m OpenGL context created successfully.\n -- Using OpenGL Version \033[94m" + str(major) + "." + str(minor) + "\033[0m")
 
-        # PyOpenGL 4.5 Cheatsheet: https://github.com/henkeldi/opengl_cheatsheet
-
-        # Print information about our OpenGL Context
-        opengl_context = self.get_context() # Retrieves the GdkGLContext used by area
-        opengl_context.make_current()       # Makes the Gdk.GLContext current to the drawable surfaced used by Gtk.GLArea
-        major, minor = opengl_context.get_version()     # Gets the version of OpenGL currently used by the opengl context
-        print("OpenGL context created successfully.\n-- Using OpenGL Version " + str(major) + "." + str(minor))
-
-        # Check to see if there were errors creating the context (check for shader version support?)
+        # Checks to see if there were errors creating the context
         if gl_area.get_error() != None:
             print(gl_area.get_error())
 
-        # Call our function for compiling and linking the shaders
-        self.build_program()
+        # Get information about current GTK GLArea canvas
+        window = gl_area.get_allocation()
+        # Construct perspective matrix using width and height of window allocated by GTK
+        self.perspective_matrix = Matrix44.perspective_projection(45.0, window.width / window.height, 0.1, 200.0)
 
-        # Generate vertex array object (VAO)
-        # This object maintains all of the state related to the input of the OpenGL pipeline
-        # The VAO (vertex array object) supplies input to the vertex shader. VAOs are referenced by
-        # names generated by glCreateVertexArrays()
-        # https://github.com/KhronosGroup/OpenGL-Registry/blob/master/extensions/ARB/ARB_direct_state_access.txt
-        #self.vertex_array_object = glGenVertexArrays(1) #glCreateVertexArrays() p.60
-        #glBindVertexArray(self.vertex_array_object)     # Binds the VAO to the context (ctx). This lets OpenGL
-        # know we want to use it.
+        glEnable(GL_DEPTH_TEST) # Enable depth testing to ensure pixels closer to the viewer appear closest
+        glDepthFunc(GL_LESS)    # Set the type of calculation used by the depth buffer
+        glEnable(GL_CULL_FACE)  # Enable face culling
+        glCullFace(GL_BACK)     # Discard the back faces of polygons (determined by the vertex winding order)
 
-        #self.vao = np.empty(1, dtype=np.uint32)
-        #glCreateBuffers(len(self.vao), self.vao)
-        self.vao = GLuint()
-        glCreateVertexArrays(1, ctypes.byref(self.vao))
-        glBindVertexArray(self.vao)
+        self.build_program()      # Calls build_program() to compile and link the shaders
+        glUseProgram(self.shader) # Tells OpenGL to use the shader program for rendering geometry
+        self.load_geometry()      # Calls load_geometry() to create vertex and colour data
 
-        # Generate buffers to hold our vertices
-        # glGen* just gives a name but does not actually create an object. The object is only created until it is bound for the first time. (bind-to-create)
-        # The glCreate* functions actually create the underlying GL object with an uninitialized state as well as returning a name.
-        # self.vertex_buffer = glGenBuffers(1) #glCreateBuffer p.138. Creates one buffer object and stores it in self.vertex_buffer. A buffer object is identified by a GLuint, which is a type of name or handle
-        self.vertex_buffer = GLuint()
-        glCreateBuffers(1, ctypes.byref(self.vertex_buffer))
-        glNamedBufferStorage(self.vertex_buffer, self.vertices.nbytes, self.vertices, GL_MAP_READ_BIT)
-
-        #The enum 'GL_ARRAY_BUFFER' represents the binding point (target) in the OpenGL pipeline where the buffer is attached. It tells OpeGL the buffer will store vertext data
-        glBindBuffer(GL_ARRAY_BUFFER, self.vertex_buffer) #bind the buffer object to the current OpenGL context
-
-        # Send the data over to the buffer
-        # Parameters: binding target, size of the buffer in bytes, data to initialize the buffer with, flags to tell OpenGL how the buffer will be used
-        #glBufferData(GL_ARRAY_BUFFER, 48, self.vertices, GL_STATIC_DRAW)
-        # sys.getsizeof(self.vertices)/3 = 48 https://stackoverflow.com/questions/49318826/getting-size-of-primitive-data-types-in-python
-        # a float in Python is 8 bytes wide. This corresponds to the underlying C-double. Since 'float' is an object, it also includes overhead for a reference counter (8 bytes) and
-        # len(self.vertices)*4 = 48
-
-
-        # Get the position of the 'vertex_position' IN parameter of our vertex shader and bind it.
-        self.vertex_attribute_position = glGetAttribLocation(self.shader, 'vertex_position')
-
-        # By default, all client-side capabilities are disabled, including all generic vertex attribute arrays. If enabled,
-        # the values in the generic vertex attribute array will be accessed and used for rendering when calls are made to
-        # vertex array commands
-        glEnableVertexAttribArray(self.vertex_attribute_position)
-
-        # Describe the position data layout in the buffer. This function is
-        # A helper function that sits on top of glVertexAttribFormat(), glVertexAttribBinding(), and glBindVertexBuffer(). p 280
-        # Params: 1)Index: the vertex attribute to be modified; 2)Size: The number of components per vertex attribute 3)Type: Data type for each component in the array
-        # 4) Normalized: Specifies whether fixed-point data values should be normalized (GL_TRUE) or converted directly a fixed-point values (GL_FALSE) when they are accessed
-        # For (GL_False) values are are converted to floats directly without normalization.
-        # 5) Stride: Specifies the byte offset between consecutive generic vertex attributes.
-        # 6) Pointer: Specifies an offset of the first component of the first generic vertex attribute in the array in the data store of the buffer currently bount to the GL_ARRAY_BUFFER target.
-        # This value is treated as a byte offset into the buffer object's data store
-        glVertexAttribPointer(self.vertex_attribute_position, 4, GL_FLOAT, GL_FALSE, 0, ctypes.c_void_p(0))
-
-
+        self.mvpMatrixLocationInShader = glGetUniformLocation(self.shader, "ModelViewPerspective")  # Get the location of the ModelViewPerspective matrix in the vertex shader.
 
         return True
 
     def on_render(self, gl_area, gl_context):
+        glClearColor(0.0, 0.0, 0.0, 0.0)    # Set the background colour for the window -> Black
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) # Clear the window background colour to black by resetting the COLOR_BUFFER and clear the DEPTH_BUFFER
 
-        # Creates a vector of floating point numbers
-        # Uses the value for number of seconds that the programming has been running
-        # Uses this value in sin(), cos() for x and y values
-        # This causes the background colour to oscillate
-        # 4th value corresponds to opacity. value of 0 makes it transparent.
-        color = [math.sin(self.running_seconds_from_start)*.5+.5, math.cos(self.running_seconds_from_start)*.5+.5, 0.0, 1.0]
+        eye = (0.0, 5, 18.0)        # Eye coordinates
+        target = (0.0, 7.0, 0.0)    # Target coordinates (where the camera is looking)
+        up = (0.0, 1.0, 0.0)        # A vector representing the 'up' direction.
 
-        # Tells OpenGL to clear the buffer specified by GL_COLOR. The second paramater targets the specific buffer (multibuffer) and 3rd the vector of floating point numbers
-        # fv: f = floating point numbers. v = vector
-        glClearBufferfv(GL_COLOR, 0, color)
+        view_matrix = Matrix44.look_at(eye, target, up) # Calculate the view matrix
+        # Calculate the model matrix. The rotation speed is regulated by the application clock.
+        model_matrix = Matrix44.from_translation([0.0, 0.0, 0.0]) * pyrr.matrix44.create_from_axis_rotation((0.0, 1.0, 0.0), self.application_clock) * Matrix44.from_scale([1.0, 1.0, 1.0])
 
-        # Tells OpenGL to use our program for rending geometry to the screen
-        glUseProgram(self.shader)
+        ModelViewPerspective = self.perspective_matrix * view_matrix * model_matrix             # Calculate the ModelViewPerspective matrix
+        glUniformMatrix4fv(self.mvpMatrixLocationInShader, 1, GL_FALSE, ModelViewPerspective)   # Update the value of the ModelViewPerspective matrix attribute variable in the vertex buffer
 
-        #glBindVertexArray(self.vertex_array_object)
-        glBindVertexArray(self.vao)
-        # Send vertices into the OpenGL pipeline
-        # The vertex shader is executed for each vertex in the array
-        # GL_TRIANGLES is the type of graphics primitive to render (the rendering mode)
-        # Parameter #3 is the number of vertices to render (represented by a Vector4)
-        glDrawArrays(GL_TRIANGLES, 0, int(len(self.vertices)/4))
+        glBindVertexArray(self.vertex_array_object)                                             # Binds the self.vertex_array_object to the OpenGL pipeline vertex target
+        glDrawArrays(GL_TRIANGLES, 0, len(self.blenderModel.vertices))
 
-        # Schedule Redraw
-        self.queue_draw()
+        self.queue_draw()   # Schedules a redraw for Gtk.GLArea
+
+    def on_unrealize(self, area):
+        release(self.scene)  # Pyassimp function
+
+    def on_resize(self, area, width, height):
+        self.perspective_matrix = Matrix44.perspective_projection(45.0, width / height, 0.1, 200.0) # Recalculate the perspective matrix when the window is resized
 
 class RootWindow(Gtk.Application):
     def __init__(self):
