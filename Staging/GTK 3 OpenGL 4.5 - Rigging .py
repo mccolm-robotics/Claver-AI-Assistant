@@ -21,11 +21,6 @@ from OpenGL.GL import *
 from OpenGL.GL.shaders import compileProgram, compileShader
 from PIL import Image
 
-def recur_node(node, level=0):
-    print("  " + "\t" * level + "- " + str(node))
-    for child in node.children:
-        recur_node(child, level + 1)
-
 class GLCanvas(Gtk.GLArea):
     def __init__(self):
         Gtk.GLArea.__init__(self)
@@ -38,10 +33,10 @@ class GLCanvas(Gtk.GLArea):
         self.set_start_time = False                 # Boolean to track whether the clock has been initialized
         self.set_has_depth_buffer(True)
 
-    def recur_node(node, level=0):
+    def recur_node(self, node, level=0):
         print("  " + "\t" * level + "- " + str(node))
         for child in node.children:
-            recur_node(child, level + 1)
+            self.recur_node(child, level + 1)
 
     def view_pyassimp_model(self):
         # Begin Pyassimp functions
@@ -51,7 +46,7 @@ class GLCanvas(Gtk.GLArea):
         print("   materials: " + str(len(self.scene.materials)))
         print("   textures: " + str(len(self.scene.textures)))
         print("NODES:")
-        recur_node(self.scene.rootnode)
+        self.recur_node(self.scene.rootnode)
         print("MESHES")
         for index, mesh in enumerate(self.scene.meshes):
             print("   MESH " + str(index+1))
