@@ -7,13 +7,16 @@ GTK3 version: 3.24
 PyCharm version: 2020.1
 Platform: Ubuntu 19.10
 """
+https://stackoverflow.com/questions/33060959/simple-assimp-program-giving-incorrect-data
+https://stackoverflow.com/questions/32649449/assimp-faces-all-have-indices-0-1-2
+google search: assimp incorrect faces
 
 #from Claver_Program_Launcher import *
 import gi, pyrr
 import sys
 import numpy as np
 gi.require_version('Gtk', '3.0')
-from pyrr import Matrix44
+from pyrr import Matrix44, Vector4, Vector3, Quaternion
 from gi.repository import Gtk, Gdk
 from pyassimp import *
 from pyassimp.helper import get_bounding_box
@@ -110,7 +113,7 @@ class GLCanvas(Gtk.GLArea):
 
     def load_geometry(self):
 
-        self.scene = load('models/NewSnake1.fbx')
+        self.scene = load('models/char_01_triangulated.obj', postprocess.aiProcess_Triangulate | postprocess.aiProcess_JoinIdenticalVertices)
         self.blenderModel = self.scene.meshes[0]
         print("Name of model being loaded: ", self.blenderModel)
         self.model = np.concatenate((self.blenderModel.vertices, self.blenderModel.texturecoords[0]), axis=0)
@@ -124,20 +127,23 @@ class GLCanvas(Gtk.GLArea):
         glCreateBuffers(1, ctypes.byref(self.vertex_buffer_object))    # Generates a buffer to hold the vertex data
         glNamedBufferStorage(self.vertex_buffer_object, self.model.nbytes, self.model, GL_MAP_READ_BIT) # Allocates buffer memory and initializes it with vertex data
         glBindBuffer(GL_ARRAY_BUFFER, self.vertex_buffer_object)       # Binds the buffer object to the OpenGL context and specifies that the buffer holds vertex data
-
-        self.vertex_position_attribute = glGetAttribLocation(self.shader, 'vertex_position')
         glEnableVertexAttribArray(self.vertex_position_attribute)
         # self.model.itemsize*3 specifies the stride (how to step through the data in the buffer). This is important for telling OpenGL how to step through a buffer having concatinated vertex and color data (see: https://youtu.be/bmCYgoCAyMQ).
+        # This function puts the VBO into the VAO
         glVertexAttribPointer(self.vertex_position_attribute, 3, GL_FLOAT, GL_FALSE, self.model.itemsize * 3, ctypes.c_void_p(0))
 
-        self.texture_in = glGetAttribLocation(self.shader, 'texture_position')
+        self.vertex_indices_buffer = GLuint()
+        glCreateBuffers(1, ctypes.byref(self.vertex_indices_buffer))
+        #glNamedBufferStorage(self.vertex_indices_buffer, self.indicies.nbytes, self.indicies, GL_MAP_READ_BIT)
+        #glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, self.vertex_indices_buffer)
+
         self.texture_offset = self.model.itemsize * (len(self.model) // 2) * 3
         # Describe the position data layout in the buffer
         glVertexAttribPointer(self.texture_in, 3, GL_FLOAT, GL_FALSE, self.model.itemsize * 3, ctypes.c_void_p(self.texture_offset))
         glEnableVertexAttribArray(self.texture_in)
 
-        texture = glGenTextures(1)
-        glBindTexture(GL_TEXTURE_2D, texture)
+        self.texture = glGenTextures(1)
+        glBindTexture(GL_TEXTURE_2D, self.texture)
         # Set the texture wrapping parameters
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
@@ -145,10 +151,15 @@ class GLCanvas(Gtk.GLArea):
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
 
-        image = Image.open("models/NewSnakeSkin.png")
+        image = Image.open("models/Chibi_Texture_D.png")
         flipped_image = image.transpose(Image.FLIP_TOP_BOTTOM)
         img_data = np.array(list(flipped_image.getdata()), np.uint8)
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image.width, image.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, img_data)
+
+        #glDisableVertexAttribArray(self.vertex_position_attribute)
+        #glDisableVertexAttribArray(self.texture_in)
+        glBindBuffer(GL_ARRAY_BUFFER, 0)
+        glBindVertexArray(0)
 
         self.view_pyassimp_model()
 
@@ -156,29 +167,41 @@ class GLCanvas(Gtk.GLArea):
         VERTEX_SHADER_SOURCE = """
             #version 450 core
             layout(location = 0) in vec4 vertex_position;
-            layout(location = 1) in vec4 texture_position;
-            uniform mat4 ModelViewPerspective;
-            out vec2 texture_fragment;
+            layout(location = 1) in vec2 texture_position;
+            layout(location = 2) uniform mat4 model_matrix;
+            layout(location = 3) uniform mat4 view_matrix;
+            layout(location = 4) uniform mat4 perspective_matrix;
+            layout(location = 5) out vec2 texture_coordinates;
             void main()
             {
-                gl_Position = ModelViewPerspective * vertex_position;
-                texture_fragment = texture_position.xy;
+                gl_Position = perspective_matrix * view_matrix * model_matrix * vertex_position;
+                texture_coordinates = texture_position;
             }
         """
         FRAGMENT_SHADER_SOURCE = """
             #version 450 core
-            in vec2 texture_fragment;
+            layout(location = 5) in vec2 texture_coordinates;
             out vec4 out_colour;
             uniform sampler2D samplerTexture;
             void main()
             {
-                out_colour = texture(samplerTexture, texture_fragment);
+                out_colour = texture(samplerTexture, texture_coordinates);
             }
         """
         # These are helper functions provided by PyOpenGL
         vertex_shader = compileShader(VERTEX_SHADER_SOURCE, GL_VERTEX_SHADER)           # Compiles the vertex shader into intermediate binary representation
         fragment_shader = compileShader(FRAGMENT_SHADER_SOURCE, GL_FRAGMENT_SHADER)     # Compiles the fragment object into intermediate binary representation
         self.shader = compileProgram(vertex_shader, fragment_shader)                    # Links the vertex and fragment shader objects together into a program
+        glDeleteShader(vertex_shader)
+        glDeleteShader(fragment_shader)
+
+        # Bind the attributes for this shader
+        self.vertex_position_attribute = glGetAttribLocation(self.shader, 'vertex_position')
+        self.texture_in = glGetAttribLocation(self.shader, 'texture_position')
+        self.mvpMatrixLocationInShader = glGetUniformLocation(self.shader, "ModelViewPerspective")  # Get the location of the ModelViewPerspective matrix in the vertex shader.
+        self.modelMatrixLocationInShader = glGetUniformLocation(self.shader, "model_matrix")
+        self.viewMatrixLocationInShader = glGetUniformLocation(self.shader, "view_matrix")
+        self.perspectiveMatrixLocationInShader = glGetUniformLocation(self.shader, "perspective_matrix")
 
     def on_initialize(self, gl_area):
         # Prints information about our OpenGL Context
@@ -192,21 +215,27 @@ class GLCanvas(Gtk.GLArea):
         if gl_area.get_error() != None:
             print(gl_area.get_error())
 
-        # Get information about current GTK GLArea canvas
-        window = gl_area.get_allocation()
-        # Construct perspective matrix using width and height of window allocated by GTK
-        self.perspective_matrix = Matrix44.perspective_projection(45.0, window.width / window.height, 0.1, 200.0)
-
         glEnable(GL_DEPTH_TEST) # Enable depth testing to ensure pixels closer to the viewer appear closest
         glDepthFunc(GL_LESS)    # Set the type of calculation used by the depth buffer
         glEnable(GL_CULL_FACE)  # Enable face culling
         glCullFace(GL_BACK)     # Discard the back faces of polygons (determined by the vertex winding order)
 
         self.build_program()      # Calls build_program() to compile and link the shaders
-        glUseProgram(self.shader) # Tells OpenGL to use the shader program for rendering geometry
         self.load_geometry()      # Calls load_geometry() to create vertex and colour data
 
-        self.mvpMatrixLocationInShader = glGetUniformLocation(self.shader, "ModelViewPerspective")  # Get the location of the ModelViewPerspective matrix in the vertex shader.
+        # Get information about current GTK GLArea canvas
+        window = gl_area.get_allocation()
+        # Construct perspective matrix using width and height of window allocated by GTK
+        self.perspective_matrix = Matrix44.perspective_projection(45.0, window.width / window.height, 0.1, 200.0)
+
+        glUseProgram(self.shader)
+        glUniformMatrix4fv(self.perspectiveMatrixLocationInShader, 1, GL_FALSE, self.perspective_matrix)
+        glUseProgram(0)
+
+        #print(self.blenderModel.vertices[:1])
+        print(self.blenderModel.vertices[0])
+        print(self.blenderModel.faces[0])
+        #mesh.faces[:3]
 
         return True
 
@@ -214,27 +243,38 @@ class GLCanvas(Gtk.GLArea):
         glClearColor(0.0, 0.0, 0.0, 0.0)    # Set the background colour for the window -> Black
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) # Clear the window background colour to black by resetting the COLOR_BUFFER and clear the DEPTH_BUFFER
 
-        eye = (0.0, 3, 12.0)        # Eye coordinates (location of the camera)
-        target = (0.0, 0.0, 0.0)    # Target coordinates (where the camera is looking)
+        eye = (0.0, 5, 18.0)        # Eye coordinates (location of the camera)
+        target = (0.0, 7.0, 0.0)    # Target coordinates (where the camera is looking)
         up = (0.0, 1.0, 0.0)        # A vector representing the 'up' direction.
 
+
         view_matrix = Matrix44.look_at(eye, target, up) # Calculate the view matrix
-        # Calculate the model matrix. The rotation speed is regulated by the application clock.
         model_matrix = Matrix44.from_translation([0.0, 0.0, 0.0]) * pyrr.matrix44.create_from_axis_rotation((0.0, 1.0, 0.0), self.application_clock) * Matrix44.from_scale([1.0, 1.0, 1.0])
 
-        ModelViewPerspective = self.perspective_matrix * view_matrix * model_matrix             # Calculate the ModelViewPerspective matrix
-        glUniformMatrix4fv(self.mvpMatrixLocationInShader, 1, GL_FALSE, ModelViewPerspective)   # Update the value of the ModelViewPerspective matrix attribute variable in the vertex buffer
-
+        glUseProgram(self.shader)  # Tells OpenGL to use the shader program for rendering geometry
+        glUniformMatrix4fv(self.viewMatrixLocationInShader, 1, GL_FALSE, view_matrix)
+        glUniformMatrix4fv(self.modelMatrixLocationInShader, 1, GL_FALSE, model_matrix)
         glBindVertexArray(self.vertex_array_object)                                             # Binds the self.vertex_array_object to the OpenGL pipeline vertex target
         glDrawArrays(GL_TRIANGLES, 0, len(self.blenderModel.vertices))
+        glBindVertexArray(0)
+        glUseProgram(0)  # Tells OpenGL to use the shader program for rendering geometry
 
         self.queue_draw()   # Schedules a redraw for Gtk.GLArea
 
-    def on_unrealize(self, area):
+    def on_unrealize(self, gl_area):
         release(self.scene)  # Pyassimp function
+        glDeleteVertexArrays(1, self.vertex_array_object)
+        glDeleteBuffers(1, self.vertex_buffer_object)
+        glDeleteTextures(self.texture)
+        glDeleteProgram(self.shader)
 
     def on_resize(self, area, width, height):
+        # Field of view, aspect ration, distance to near, distance to far
         self.perspective_matrix = Matrix44.perspective_projection(45.0, width / height, 0.1, 200.0) # Recalculate the perspective matrix when the window is resized
+        glUseProgram(self.shader)
+        glUniformMatrix4fv(self.perspectiveMatrixLocationInShader, 1, GL_FALSE, self.perspective_matrix)
+        glUseProgram(0)
+
 
 class RootWindow(Gtk.Application):
     def __init__(self):
