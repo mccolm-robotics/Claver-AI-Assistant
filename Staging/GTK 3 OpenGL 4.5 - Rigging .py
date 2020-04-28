@@ -7,9 +7,6 @@ GTK3 version: 3.24
 PyCharm version: 2020.1
 Platform: Ubuntu 19.10
 """
-https://stackoverflow.com/questions/33060959/simple-assimp-program-giving-incorrect-data
-https://stackoverflow.com/questions/32649449/assimp-faces-all-have-indices-0-1-2
-google search: assimp incorrect faces
 
 #from Claver_Program_Launcher import *
 import gi, pyrr
@@ -75,7 +72,7 @@ class GLCanvas(Gtk.GLArea):
             else:
                 print("      no texture coordinates")
             print("      uv-component-count: " + str(len(mesh.numuvcomponents)))
-            print("      faces: " + str(len(mesh.faces)) + " -> first 3:\n" + str(mesh.faces[:3]))
+            print("      faces: " + str(len(mesh.faces)) + " -> first 3:\n", mesh.faces[:3])
             print("      bones: " + str(len(mesh.bones)) + " -> first: " + str([str(b) for b in mesh.bones[:3]]))
         print("MATERIALS:")
         for index, material in enumerate (self.scene.materials):
@@ -111,12 +108,75 @@ class GLCanvas(Gtk.GLArea):
             self.last_frame_time = self.current_frame_time              # Records the current timestamp to compare against for the next second
         return True                                                     # Returns true to indicate that tick callback should contine to be called
 
+    def build_program(self):
+        VERTEX_SHADER_SOURCE = """
+            #version 450 core
+            layout(location = 0) in vec4 vertex_position;
+            layout(location = 1) in vec2 texture_position;
+            layout(location = 2) in vec3 normal;
+            layout(location = 3) out vec2 texture_coordinates;
+            layout(location = 4) out vec3 surface_normal;
+            layout(location = 5) out vec3 to_light_vector;
+            uniform mat4 model_matrix;
+            uniform mat4 view_matrix;
+            uniform mat4 perspective_matrix;
+            uniform vec3 light_position;
+            void main()
+            {
+                vec4 world_position_matrix = model_matrix * vertex_position;
+                gl_Position = perspective_matrix * view_matrix * world_position_matrix;
+                texture_coordinates = texture_position;
+                surface_normal = (model_matrix * vec4(normal, 0.0)).xyz;
+                to_light_vector = light_position - world_position_matrix.xyz;
+            }
+        """
+        FRAGMENT_SHADER_SOURCE = """
+            #version 450 core
+            layout(location = 3) in vec2 texture_coordinates;
+            layout(location = 4) in vec3 surface_normal;
+            layout(location = 5) in vec3 to_light_vector;
+            out vec4 out_colour;
+            uniform sampler2D samplerTexture;
+            uniform vec3 light_colour;
+            void main()
+            {
+                vec3 unitNormal = normalize(surface_normal);
+                vec3 unitLightVector = normalize(to_light_vector);
+                float nDot1 = dot(unitNormal,unitLightVector);
+                float brightness = max(nDot1,0.0);
+                vec3 diffuse = brightness * light_colour;
+                out_colour = vec4(diffuse,1.0) * texture(samplerTexture, texture_coordinates);
+            }
+        """
+        # These are helper functions provided by PyOpenGL
+        vertex_shader = compileShader(VERTEX_SHADER_SOURCE, GL_VERTEX_SHADER)           # Compiles the vertex shader into intermediate binary representation
+        fragment_shader = compileShader(FRAGMENT_SHADER_SOURCE, GL_FRAGMENT_SHADER)     # Compiles the fragment object into intermediate binary representation
+        self.shader = compileProgram(vertex_shader, fragment_shader)                    # Links the vertex and fragment shader objects together into a program
+        glDeleteShader(vertex_shader)
+        glDeleteShader(fragment_shader)
+
+        # Bind attributes
+        self.vertexLocationInShader = glGetAttribLocation(self.shader, 'vertex_position')
+        self.textureLocationInShader = glGetAttribLocation(self.shader, 'texture_position')
+        self.normalLocationInShader = glGetAttribLocation(self.shader, "normal")
+        # Bind uniforms
+        self.modelMatrixLocationInShader = glGetUniformLocation(self.shader, "model_matrix")
+        self.viewMatrixLocationInShader = glGetUniformLocation(self.shader, "view_matrix")
+        self.perspectiveMatrixLocationInShader = glGetUniformLocation(self.shader, "perspective_matrix")
+        self.lightPositionLocationInShader = glGetUniformLocation(self.shader, "light_position")
+        self.lightColourLocationInShader = glGetUniformLocation(self.shader, "light_colour")
+
     def load_geometry(self):
 
-        self.scene = load('models/char_01_triangulated.obj', postprocess.aiProcess_Triangulate | postprocess.aiProcess_JoinIdenticalVertices)
+        self.scene = load('models/char_01_triangulated.obj')
         self.blenderModel = self.scene.meshes[0]
         print("Name of model being loaded: ", self.blenderModel)
-        self.model = np.concatenate((self.blenderModel.vertices, self.blenderModel.texturecoords[0]), axis=0)
+        self.model = np.concatenate((self.blenderModel.vertices, self.blenderModel.normals, self.blenderModel.texturecoords[0]), axis=0)
+
+        self.vertices_offset = 0
+        self.normal_offset = self.model.itemsize * len(self.blenderModel.vertices) * 3
+        self.texture_offset = self.normal_offset + (self.model.itemsize * len(self.blenderModel.texturecoords[0]) * 3) # Assimp represents the texture as a vec3 (u, v, 0)
+
 
         self.vertex_array_object = GLuint()                                 # Stores the name of the vertex array object
         glCreateVertexArrays(1, ctypes.byref(self.vertex_array_object))     # Creates the vertex array object and initalizes it to default values
@@ -127,20 +187,17 @@ class GLCanvas(Gtk.GLArea):
         glCreateBuffers(1, ctypes.byref(self.vertex_buffer_object))    # Generates a buffer to hold the vertex data
         glNamedBufferStorage(self.vertex_buffer_object, self.model.nbytes, self.model, GL_MAP_READ_BIT) # Allocates buffer memory and initializes it with vertex data
         glBindBuffer(GL_ARRAY_BUFFER, self.vertex_buffer_object)       # Binds the buffer object to the OpenGL context and specifies that the buffer holds vertex data
-        glEnableVertexAttribArray(self.vertex_position_attribute)
+        glEnableVertexAttribArray(self.vertexLocationInShader)
         # self.model.itemsize*3 specifies the stride (how to step through the data in the buffer). This is important for telling OpenGL how to step through a buffer having concatinated vertex and color data (see: https://youtu.be/bmCYgoCAyMQ).
         # This function puts the VBO into the VAO
-        glVertexAttribPointer(self.vertex_position_attribute, 3, GL_FLOAT, GL_FALSE, self.model.itemsize * 3, ctypes.c_void_p(0))
+        glVertexAttribPointer(self.vertexLocationInShader, 3, GL_FLOAT, GL_FALSE, self.model.itemsize * 3, ctypes.c_void_p(0))
 
-        self.vertex_indices_buffer = GLuint()
-        glCreateBuffers(1, ctypes.byref(self.vertex_indices_buffer))
-        #glNamedBufferStorage(self.vertex_indices_buffer, self.indicies.nbytes, self.indicies, GL_MAP_READ_BIT)
-        #glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, self.vertex_indices_buffer)
-
-        self.texture_offset = self.model.itemsize * (len(self.model) // 2) * 3
         # Describe the position data layout in the buffer
-        glVertexAttribPointer(self.texture_in, 3, GL_FLOAT, GL_FALSE, self.model.itemsize * 3, ctypes.c_void_p(self.texture_offset))
-        glEnableVertexAttribArray(self.texture_in)
+        glEnableVertexAttribArray(self.textureLocationInShader)
+        glVertexAttribPointer(self.textureLocationInShader, 3, GL_FLOAT, GL_FALSE, self.model.itemsize * 3, ctypes.c_void_p(self.texture_offset))
+
+        glEnableVertexAttribArray(self.normalLocationInShader)
+        glVertexAttribPointer(self.normalLocationInShader, 3, GL_FLOAT, GL_FALSE, self.model.itemsize * 3, ctypes.c_void_p(self.normal_offset))
 
         self.texture = glGenTextures(1)
         glBindTexture(GL_TEXTURE_2D, self.texture)
@@ -162,46 +219,6 @@ class GLCanvas(Gtk.GLArea):
         glBindVertexArray(0)
 
         self.view_pyassimp_model()
-
-    def build_program(self):
-        VERTEX_SHADER_SOURCE = """
-            #version 450 core
-            layout(location = 0) in vec4 vertex_position;
-            layout(location = 1) in vec2 texture_position;
-            layout(location = 2) uniform mat4 model_matrix;
-            layout(location = 3) uniform mat4 view_matrix;
-            layout(location = 4) uniform mat4 perspective_matrix;
-            layout(location = 5) out vec2 texture_coordinates;
-            void main()
-            {
-                gl_Position = perspective_matrix * view_matrix * model_matrix * vertex_position;
-                texture_coordinates = texture_position;
-            }
-        """
-        FRAGMENT_SHADER_SOURCE = """
-            #version 450 core
-            layout(location = 5) in vec2 texture_coordinates;
-            out vec4 out_colour;
-            uniform sampler2D samplerTexture;
-            void main()
-            {
-                out_colour = texture(samplerTexture, texture_coordinates);
-            }
-        """
-        # These are helper functions provided by PyOpenGL
-        vertex_shader = compileShader(VERTEX_SHADER_SOURCE, GL_VERTEX_SHADER)           # Compiles the vertex shader into intermediate binary representation
-        fragment_shader = compileShader(FRAGMENT_SHADER_SOURCE, GL_FRAGMENT_SHADER)     # Compiles the fragment object into intermediate binary representation
-        self.shader = compileProgram(vertex_shader, fragment_shader)                    # Links the vertex and fragment shader objects together into a program
-        glDeleteShader(vertex_shader)
-        glDeleteShader(fragment_shader)
-
-        # Bind the attributes for this shader
-        self.vertex_position_attribute = glGetAttribLocation(self.shader, 'vertex_position')
-        self.texture_in = glGetAttribLocation(self.shader, 'texture_position')
-        self.mvpMatrixLocationInShader = glGetUniformLocation(self.shader, "ModelViewPerspective")  # Get the location of the ModelViewPerspective matrix in the vertex shader.
-        self.modelMatrixLocationInShader = glGetUniformLocation(self.shader, "model_matrix")
-        self.viewMatrixLocationInShader = glGetUniformLocation(self.shader, "view_matrix")
-        self.perspectiveMatrixLocationInShader = glGetUniformLocation(self.shader, "perspective_matrix")
 
     def on_initialize(self, gl_area):
         # Prints information about our OpenGL Context
@@ -230,12 +247,11 @@ class GLCanvas(Gtk.GLArea):
 
         glUseProgram(self.shader)
         glUniformMatrix4fv(self.perspectiveMatrixLocationInShader, 1, GL_FALSE, self.perspective_matrix)
+
         glUseProgram(0)
 
-        #print(self.blenderModel.vertices[:1])
-        print(self.blenderModel.vertices[0])
-        print(self.blenderModel.faces[0])
-        #mesh.faces[:3]
+        #aiFace.indices = [aiFace.mIndices[i] for i in range(aiFace.mNumIndices)]
+        #faces = [f.indices for f in target.faces]
 
         return True
 
@@ -254,6 +270,8 @@ class GLCanvas(Gtk.GLArea):
         glUseProgram(self.shader)  # Tells OpenGL to use the shader program for rendering geometry
         glUniformMatrix4fv(self.viewMatrixLocationInShader, 1, GL_FALSE, view_matrix)
         glUniformMatrix4fv(self.modelMatrixLocationInShader, 1, GL_FALSE, model_matrix)
+        glUniform3f(self.lightPositionLocationInShader, 0.0, 3.0, 10.0)
+        glUniform3f(self.lightColourLocationInShader, 1.0, 1.0, 1.0)
         glBindVertexArray(self.vertex_array_object)                                             # Binds the self.vertex_array_object to the OpenGL pipeline vertex target
         glDrawArrays(GL_TRIANGLES, 0, len(self.blenderModel.vertices))
         glBindVertexArray(0)
