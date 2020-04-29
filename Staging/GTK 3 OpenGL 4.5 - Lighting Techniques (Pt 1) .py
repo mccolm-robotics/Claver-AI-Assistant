@@ -1,6 +1,6 @@
 """
 Author: Praxis (McColm Robotics)
-Title: Rotating Chibi
+Title: Illuminated Rotating Chibi
 Created: April 2020
 Python interpreter: 3.7
 GTK3 version: 3.24
