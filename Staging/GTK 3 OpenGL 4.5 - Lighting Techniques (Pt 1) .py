@@ -190,7 +190,7 @@ class GLCanvas(Gtk.GLArea):
         glEnableVertexAttribArray(self.vertexLocationInShader)
         # self.model.itemsize*3 specifies the stride (how to step through the data in the buffer). This is important for telling OpenGL how to step through a buffer having concatinated vertex and color data (see: https://youtu.be/bmCYgoCAyMQ).
         # This function puts the VBO into the VAO
-        glVertexAttribPointer(self.vertexLocationInShader, 3, GL_FLOAT, GL_FALSE, self.model.itemsize * 3, ctypes.c_void_p(0))
+        glVertexAttribPointer(self.vertexLocationInShader, 3, GL_FLOAT, GL_FALSE, self.model.itemsize * 3, ctypes.c_void_p(self.vertices_offset))
 
         # Describe the position data layout in the buffer
         glEnableVertexAttribArray(self.textureLocationInShader)
