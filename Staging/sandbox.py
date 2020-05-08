@@ -1,6 +1,6 @@
 import os
 from dataclasses import dataclass
-
+from pyrr import Vector3
 
 @dataclass
 class Character:
@@ -24,8 +24,6 @@ class MetaFile:
     PAD_BOTTOM = 2
     PAD_RIGHT = 3
     DESIRED_PADDING = 3
-    LINE_HEIGHT = 0.03
-    SPACE_ASCII = 32
 
     def __init__(self, fileName):
         self.aspectRatio = 500 / 300
@@ -96,7 +94,7 @@ class MetaFile:
     def loadLineSizes(self):
         self.processNextLine()
         lineHeightPixels = self.getValueOfVariable("lineHeight") - self.paddingHeight
-        self.verticalPerPixelSize = self.LINE_HEIGHT / lineHeightPixels
+        self.verticalPerPixelSize = TextMeshCreator.LINE_HEIGHT / lineHeightPixels
         self.horizontalPerPixelSize = self.verticalPerPixelSize / self.aspectRatio
 
     def loadCharacterData(self, imageWidth):
@@ -111,7 +109,7 @@ class MetaFile:
         id = self.getValueOfVariable("id")
         if id == None:
             return None
-        if id == self.SPACE_ASCII:
+        if id == TextMeshCreator.SPACE_ASCII:
             self.spaceWidth = (self.getValueOfVariable("xadvance") - self.paddingWidth) * self.horizontalPerPixelSize
             return None
         xTex = (self.getValueOfVariable("x") + (self.padding[self.PAD_LEFT] - self.DESIRED_PADDING)) / imageSize
@@ -178,6 +176,84 @@ class Line:
         else:
             return False
 
+class FontType:
+    # Creates a new font and loads up the data about each character from the font file.
+	#  *
+	#  * (int) textureAtlas - the ID of the font atlas texture.
+	#  * (TextMeshCreator) fontFile - the font file containing information about each character in
+	#  *                   the texture atlas.
+    def __init__(self, textureAtlas, fontFile):
+        self.textureAtlas = textureAtlas
+        self.loader = TextMeshCreator(fontFile)
+
+    # * Takes in an unloaded text and calculates all of the vertices for the quads
+    # * on which this text will be rendered. The vertex positions and texture
+    # * coords are calculated based on the information from the font file.
+    # *
+    # * (GUIText) text - the unloaded text.
+    # * (TextMeshData) Returns information about the vertices of all the quads.
+    def loadText(self, text):
+        return self.loader.createTextMesh(text)
+
+class GUIText:
+    colour = Vector3([0.0, 0.0, 0.0])
+
+    # Creates a new text, loads the text's quads into a VAO, and adds the text to the screen.
+    # *
+    # * (String) text - the text.
+    # * (float) fontSize - the font size of the text, where a font size of 1 is the default size.
+    # * (FontType) font - the font that this text should use.
+    # * (Vector2) position - the position on the screen where the top left corner of the
+    # *            text should be rendered. The top left corner of the screen is
+    # *            (0, 0) and the bottom right is (1, 1).
+    # * (float) maxLineLength - basically the width of the virtual page in terms of screen
+	# *            width (1 is full screen width, 0.5 is half the width of the
+    # *            screen, etc.) Text cannot go off the edge of the page, so if
+    # *            the text is longer than this length it will go onto the next
+    # *            line. When text is centered it is centered into the middle of
+    # *            the line, based on this line length value.
+    # * (boolean) centered - whether the text should be centered or not.
+
+    def __init__(self, text, fontSize, font, position, maxLineLength, centered):
+        self.textString = text
+        self.fontSize = fontSize
+        if(isinstance(font, FontType)):
+            self.font = font
+        else:
+            print("ERROR: font must be of type <FontType>")
+        self.position = position
+        self.lineMaxSize = maxLineLength
+        self.centerText = centered
+
+    def __len__(self):
+        return self.lineMaxSize
+        # return NotImplemented
+
+    # Set the colour of the text. All values 0 < x < 1
+    def setColour(self, r, g, b):
+        self.colour = Vector3([r, g, b]) # Just use a tuple? list?
+
+    @property
+    def colour(self):
+        return self.colour
+
+    @colour.setter
+    def colour(self, r, g, b):
+        self.colour = Vector3([r, g, b])
+
+    # Returns the ID of the text's VAO, which contains all the vertex data for the quads on which the text will be rendered.
+    def getMesh(self):
+        return self.textMeshVao
+
+    # Set the VAO and vertex count for this text.
+    def setMeshInfo(self, vao, verticesCount):
+        self.textMeshVao = vao
+        self.vertexCount = verticesCount
+
+    # Sets the number of lines that this text covers (method used only in loading)
+    def setNumberOfLines(self, number):
+        self.numberOfLines = number
+
 
 class TextMeshCreator:
     LINE_HEIGHT = 0.03
@@ -186,7 +262,207 @@ class TextMeshCreator:
     def __init__(self, metaFile):
         self.metaData = MetaFile(metaFile)
 
+    def createTextMesh(GUIText
+text) {
+    List < Line > lines = createStructure(text);
+TextMeshData
+data = createQuadVertices(text, lines);
+return data;
+}
 
+private
+List < Line > createStructure(GUIText
+text) {
+char[]
+chars = text.getTextString().toCharArray();
+List < Line > lines = new
+ArrayList < Line > ();
+Line
+currentLine = new
+Line(metaData.getSpaceWidth(), text.getFontSize(), text.getMaxLineSize());
+Word
+currentWord = new
+Word(text.getFontSize());
+for (char c: chars) {
+    int ascii = (int) c;
+if (ascii == SPACE_ASCII) {
+boolean added = currentLine.attemptToAddWord(currentWord);
+if (!added) {
+lines.add(currentLine);
+currentLine = new Line(metaData.getSpaceWidth(), text.getFontSize(), text.getMaxLineSize());
+currentLine.attemptToAddWord(currentWord);
+}
+currentWord = new Word(text.getFontSize());
+continue;
+}
+Character
+character = metaData.getCharacter(ascii);
+currentWord.addCharacter(character);
+}
+completeStructure(lines, currentLine, currentWord, text);
+return lines;
+}
+
+private
+void
+completeStructure(List < Line > lines, Line
+currentLine, Word
+currentWord, GUIText
+text) {
+boolean
+added = currentLine.attemptToAddWord(currentWord);
+if (!added) {
+lines.add(currentLine);
+currentLine = new Line(metaData.getSpaceWidth(), text.getFontSize(), text.getMaxLineSize());
+currentLine.attemptToAddWord(currentWord);
+}
+lines.add(currentLine);
+}
+
+private
+TextMeshData
+createQuadVertices(GUIText
+text, List < Line > lines) {
+text.setNumberOfLines(lines.size());
+double
+curserX = 0
+f;
+double
+curserY = 0
+f;
+List < Float > vertices = new
+ArrayList < Float > ();
+List < Float > textureCoords = new
+ArrayList < Float > ();
+for (Line line: lines) {
+if (text.isCentered()) {
+curserX = (line.getMaxLength() - line.getLineLength()) / 2;
+}
+for (Word word: line.getWords()) {
+for (Character letter: word.getCharacters()) {
+addVerticesForCharacter(curserX, curserY, letter, text.getFontSize(), vertices);
+addTexCoords(textureCoords, letter.getxTextureCoord(), letter.getyTextureCoord(),
+letter.getXMaxTextureCoord(), letter.getYMaxTextureCoord());
+curserX += letter.getxAdvance() * text.getFontSize();
+}
+curserX += metaData.getSpaceWidth() * text.getFontSize();
+}
+curserX = 0;
+curserY += LINE_HEIGHT * text.getFontSize();
+}
+return new
+TextMeshData(listToArray(vertices), listToArray(textureCoords));
+}
+
+private
+void
+addVerticesForCharacter(double
+curserX, double
+curserY, Character
+character, double
+fontSize,
+List < Float > vertices) {
+double
+x = curserX + (character.getxOffset() * fontSize);
+double
+y = curserY + (character.getyOffset() * fontSize);
+double
+maxX = x + (character.getSizeX() * fontSize);
+double
+maxY = y + (character.getSizeY() * fontSize);
+double
+properX = (2 * x) - 1;
+double
+properY = (-2 * y) + 1;
+double
+properMaxX = (2 * maxX) - 1;
+double
+properMaxY = (-2 * maxY) + 1;
+addVertices(vertices, properX, properY, properMaxX, properMaxY);
+}
+
+private
+static
+void
+addVertices(List < Float > vertices, double
+x, double
+y, double
+maxX, double
+maxY) {
+vertices.add((float)
+x);
+vertices.add((float)
+y);
+vertices.add((float)
+x);
+vertices.add((float)
+maxY);
+vertices.add((float)
+maxX);
+vertices.add((float)
+maxY);
+vertices.add((float)
+maxX);
+vertices.add((float)
+maxY);
+vertices.add((float)
+maxX);
+vertices.add((float)
+y);
+vertices.add((float)
+x);
+vertices.add((float)
+y);
+}
+
+private
+static
+void
+addTexCoords(List < Float > texCoords, double
+x, double
+y, double
+maxX, double
+maxY) {
+texCoords.add((float)
+x);
+texCoords.add((float)
+y);
+texCoords.add((float)
+x);
+texCoords.add((float)
+maxY);
+texCoords.add((float)
+maxX);
+texCoords.add((float)
+maxY);
+texCoords.add((float)
+maxX);
+texCoords.add((float)
+maxY);
+texCoords.add((float)
+maxX);
+texCoords.add((float)
+y);
+texCoords.add((float)
+x);
+texCoords.add((float)
+y);
+}
+
+
+private
+static
+float[]
+listToArray(List < Float > listOfFloats)
+{
+float[]
+array = new
+float[listOfFloats.size()];
+for (int i = 0; i < array.length; i++) {
+    array[i] = listOfFloats.get(i);
+}
+return array;
+}
 
 
 

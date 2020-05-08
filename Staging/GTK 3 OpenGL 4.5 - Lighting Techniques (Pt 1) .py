@@ -12,6 +12,8 @@ Platform: Ubuntu 19.10
 import gi, pyrr
 import sys
 import numpy as np
+import pyassimp
+
 gi.require_version('Gtk', '3.0')
 from pyrr import Matrix44, Vector4, Vector3, Quaternion
 from gi.repository import Gtk, Gdk
@@ -23,7 +25,7 @@ from PIL import Image
 
 class GLCanvas(Gtk.GLArea):
     def __init__(self):
-        Gtk.GLArea.__init__(self)
+        super().__init__()
         self.set_required_version(4, 5)             # Sets the version of OpenGL required by this OpenGL program
         self.connect("realize", self.on_initialize) # This signal is used to initialize the OpenGL state
         self.connect("unrealize", self.on_unrealize)  # Catch this signal to clean up buffer objects and shaders
@@ -87,6 +89,7 @@ class GLCanvas(Gtk.GLArea):
             print("      hint: " + str(texture.achformathint))
             print("      data (size): " + str(len(texture.data)))
         # End Pyassimp functions
+        #print(help(pyassimp.structs.Face))
 
     def tick(self, widget, frame_clock):
         self.current_frame_time = frame_clock.get_frame_time()  # Gets the current timestamp in microseconds
