@@ -151,6 +151,9 @@ class Word:
         self.characters.append(character)
         self.width += character.xAdvance * self.fontSize
 
+    def __str__(self):
+        pass
+
 
 class Line:
     words = []
@@ -176,6 +179,9 @@ class Line:
             return True
         else:
             return False
+
+    def __str__(self):
+        pass
 
 class FontType:
     # Creates a new font and loads up the data about each character from the font file.
