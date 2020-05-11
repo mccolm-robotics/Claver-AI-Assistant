@@ -56,11 +56,11 @@ class GLCanvas(Gtk.GLArea):
             print("      vertices: " + str(len(mesh.vertices)))
             print("      faces: " + str(len(mesh.faces)))
             print("      normals: " + str(len(mesh.normals)))
-            self.bb_min, self.bb_max = get_bounding_box(self.scene)
-            print("      bounding box:" + str(self.bb_min) + " - " + str(self.bb_max))
-
-            self.scene_center = [(a + b) / 2. for a, b in zip(self.bb_min, self.bb_max)]
-            print("      scene center: ", self.scene_center)
+            # self.bb_min, self.bb_max = get_bounding_box(self.scene)
+            # print("      bounding box:" + str(self.bb_min) + " - " + str(self.bb_max))
+            #
+            # self.scene_center = [(a + b) / 2. for a, b in zip(self.bb_min, self.bb_max)]
+            # print("      scene center: ", self.scene_center)
             print("      first 3 verts:\n" + str(mesh.normals[:3]))
             if mesh.normals.any():
                 print("      first 3 normals:\n" + str(mesh.normals[:3]))
@@ -90,6 +90,7 @@ class GLCanvas(Gtk.GLArea):
             print("      data (size): " + str(len(texture.data)))
         # End Pyassimp functions
         #print(help(pyassimp.structs.Face))
+        #print(dir(pyassimp.structs.Face))
 
     def tick(self, widget, frame_clock):
         self.current_frame_time = frame_clock.get_frame_time()  # Gets the current timestamp in microseconds

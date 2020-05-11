@@ -1,19 +1,22 @@
 import os
-from dataclasses import dataclass
 from pyrr import Vector3
 
-@dataclass
 class Character:
-    id: int
-    xTextureCoord: float
-    yTextureCoord: float
-    xTexSize: float
-    yTexSize: float
-    xOffset: float
-    yOffset: float
-    sizeX: float
-    sizeY: float
-    xAdvance: float
+
+    def __init__(self, id, xTextureCoord, yTextureCoord, xTexSize, yTexSize, xOffset, yOffset, sizeX, sizeY, xAdvance):
+        self.id = id
+        self.xTextureCoord = xTextureCoord
+        self.yTextureCoord = yTextureCoord
+        self.xOffset = xOffset
+        self.yOffset = yOffset
+        self.sizeX = sizeX
+        self.sizeY = sizeY
+        self.xMaxTextureCoord = xTexSize + xTextureCoord
+        self.yMaxTextureCoord = yTexSize + yTextureCoord
+        self.xAdvance = xAdvance
+
+    def __str__(self):
+        return 'Character (Id:{}, xTextureCoord:{}, yTextureCoord:{}, xOffset:{}, yOffset:{}, sizeX:{}, sizeY:{}, xMaxTextureCoord:{}, yMaxTextureCoord:{}, xAdvance:{})'.format(self.id, self.xTextureCoord, self.yTextureCoord, self.xOffset, self.yOffset, self.sizeX, self.sizeY, self.xMaxTextureCoord, self.yMaxTextureCoord, self.xAdvance)
 
 
 class MetaFile:
@@ -33,10 +36,9 @@ class MetaFile:
         imageWidth = self.getValueOfVariable("scaleW")
         self.loadCharacterData(imageWidth)
         self.close()
-        #print(self.meta_data)
 
     def getCharacter(self, ascii):
-        return self.char_dict.get(ascii)
+        return self.meta_data.get(ascii)
 
     def getValueOfVariable(self, variable):
         value = self.values_dict.get(variable)
@@ -80,7 +82,7 @@ class MetaFile:
         try:
             self.font_file = open(file)
         except OSError:
-            print("Unable to open font file")
+            print("EXCEPTION: Unable to open font file")
 
     def close(self):
         self.font_file.close()
@@ -147,11 +149,10 @@ class Word:
     # Adds a character to the end of the current word and increases the screen-space width of the word.
     def addCharacter(self, character):
         self.characters.append(character)
-        self.width += character.getxAdvance() * self.fontSize
+        self.width += character.xAdvance * self.fontSize
+
 
 class Line:
-    maxLength = 0
-    spaceSize = 0
     words = []
     currentLineLength = 0
 
@@ -163,7 +164,7 @@ class Line:
     # without reaching the maximum line length then the word is added and the
     # line length increased.
     def attemptToAddWord(self, word):
-        additionalLength = word.getWordWidth()
+        additionalLength = word.width
         if self.words:
             additionalLength += self.spaceSize
         else:
@@ -178,10 +179,8 @@ class Line:
 
 class FontType:
     # Creates a new font and loads up the data about each character from the font file.
-	#  *
-	#  * (int) textureAtlas - the ID of the font atlas texture.
-	#  * (TextMeshCreator) fontFile - the font file containing information about each character in
-	#  *                   the texture atlas.
+    #  * (int) textureAtlas - the ID of the font atlas texture.
+    #  * (TextMeshCreator) fontFile - the font file containing information about each character in the texture atlas.
     def __init__(self, textureAtlas, fontFile):
         self.textureAtlas = textureAtlas
         self.loader = TextMeshCreator(fontFile)
@@ -207,7 +206,7 @@ class GUIText:
     # *            text should be rendered. The top left corner of the screen is
     # *            (0, 0) and the bottom right is (1, 1).
     # * (float) maxLineLength - basically the width of the virtual page in terms of screen
-	# *            width (1 is full screen width, 0.5 is half the width of the
+    # *            width (1 is full screen width, 0.5 is half the width of the
     # *            screen, etc.) Text cannot go off the edge of the page, so if
     # *            the text is longer than this length it will go onto the next
     # *            line. When text is centered it is centered into the middle of
@@ -224,6 +223,10 @@ class GUIText:
         self.position = position
         self.lineMaxSize = maxLineLength
         self.centerText = centered
+        #TextMaster.loadText(self)
+
+    def remove(self):
+        TextMaster.removeText(self)
 
     def __len__(self):
         return self.lineMaxSize
@@ -262,208 +265,130 @@ class TextMeshCreator:
     def __init__(self, metaFile):
         self.metaData = MetaFile(metaFile)
 
-    def createTextMesh(GUIText
-text) {
-    List < Line > lines = createStructure(text);
-TextMeshData
-data = createQuadVertices(text, lines);
-return data;
-}
+    # (GUIText) text
+    def createTextMesh(self, text):
+        lines = self.createStructure(text)
+        # data = self.createQuadVertices(text, lines)
+        # return data
 
-private
-List < Line > createStructure(GUIText
-text) {
-char[]
-chars = text.getTextString().toCharArray();
-List < Line > lines = new
-ArrayList < Line > ();
-Line
-currentLine = new
-Line(metaData.getSpaceWidth(), text.getFontSize(), text.getMaxLineSize());
-Word
-currentWord = new
-Word(text.getFontSize());
-for (char c: chars) {
-    int ascii = (int) c;
-if (ascii == SPACE_ASCII) {
-boolean added = currentLine.attemptToAddWord(currentWord);
-if (!added) {
-lines.add(currentLine);
-currentLine = new Line(metaData.getSpaceWidth(), text.getFontSize(), text.getMaxLineSize());
-currentLine.attemptToAddWord(currentWord);
-}
-currentWord = new Word(text.getFontSize());
-continue;
-}
-Character
-character = metaData.getCharacter(ascii);
-currentWord.addCharacter(character);
-}
-completeStructure(lines, currentLine, currentWord, text);
-return lines;
-}
+    # (GUIText) text
+    def createStructure(self, text):
+        chars = text.textString
+        lines = []
+        currentLine = Line(self.metaData.spaceWidth, text.fontSize, text.lineMaxSize)
+        currentWord = Word(text.fontSize)
+        for char in chars:
+            ascii = ord(char)
+            if ascii == self.SPACE_ASCII:
+                added = currentLine.attemptToAddWord(currentWord)
+                if added is False:
+                    print("FALSE")
+                    lines.append(currentLine)
+                    currentLine = Line(self.metaData.spaceWidth, text.fontSize, text.lineMaxSize)
+                    currentLine.attemptToAddWord(currentWord)
+                currentWord = Word(text.fontSize)
+                continue
+            character = self.metaData.getCharacter(ascii)
+            currentWord.addCharacter(character)
+        self.completeStructure(lines, currentLine, currentWord, text)
+        return lines
 
-private
-void
-completeStructure(List < Line > lines, Line
-currentLine, Word
-currentWord, GUIText
-text) {
-boolean
-added = currentLine.attemptToAddWord(currentWord);
-if (!added) {
-lines.add(currentLine);
-currentLine = new Line(metaData.getSpaceWidth(), text.getFontSize(), text.getMaxLineSize());
-currentLine.attemptToAddWord(currentWord);
-}
-lines.add(currentLine);
-}
+    # * ([]]) lines - list of lines.
+    # * (Line) currentLine
+    # * (Word) currentWord
+    # * (GUIText) text
+    def completeStructure(self, lines, currentLine, currentWord, text):
+        added = currentLine.attemptToAddWord(currentWord)
+        if added is False:
+            lines.append(currentLine)
+            currentLine = Line(self.metaData.spaceWidth, text.fontSize, text.lineMaxSize)
+            currentLine.attemptToAddWord(currentWord)
+        lines.append(currentLine)
 
-private
-TextMeshData
-createQuadVertices(GUIText
-text, List < Line > lines) {
-text.setNumberOfLines(lines.size());
-double
-curserX = 0
-f;
-double
-curserY = 0
-f;
-List < Float > vertices = new
-ArrayList < Float > ();
-List < Float > textureCoords = new
-ArrayList < Float > ();
-for (Line line: lines) {
-if (text.isCentered()) {
-curserX = (line.getMaxLength() - line.getLineLength()) / 2;
-}
-for (Word word: line.getWords()) {
-for (Character letter: word.getCharacters()) {
-addVerticesForCharacter(curserX, curserY, letter, text.getFontSize(), vertices);
-addTexCoords(textureCoords, letter.getxTextureCoord(), letter.getyTextureCoord(),
-letter.getXMaxTextureCoord(), letter.getYMaxTextureCoord());
-curserX += letter.getxAdvance() * text.getFontSize();
-}
-curserX += metaData.getSpaceWidth() * text.getFontSize();
-}
-curserX = 0;
-curserY += LINE_HEIGHT * text.getFontSize();
-}
-return new
-TextMeshData(listToArray(vertices), listToArray(textureCoords));
-}
+    # * ([]]) lines - list of lines.
+    # * (GUIText) text
+    def createQuadVertices(self, text, lines):
+        text.setNumberOfLines(len(lines))
+        curserX = 0.0
+        curserY = 0.0
+        vertices = []
+        textureCoords = []
+        for line in lines:
+            if text.centerText is True:
+                curserX = (line.maxLength - line.currentLineLength) / 2
 
-private
-void
-addVerticesForCharacter(double
-curserX, double
-curserY, Character
-character, double
-fontSize,
-List < Float > vertices) {
-double
-x = curserX + (character.getxOffset() * fontSize);
-double
-y = curserY + (character.getyOffset() * fontSize);
-double
-maxX = x + (character.getSizeX() * fontSize);
-double
-maxY = y + (character.getSizeY() * fontSize);
-double
-properX = (2 * x) - 1;
-double
-properY = (-2 * y) + 1;
-double
-properMaxX = (2 * maxX) - 1;
-double
-properMaxY = (-2 * maxY) + 1;
-addVertices(vertices, properX, properY, properMaxX, properMaxY);
-}
+            for word in line.words:
+                for letter in word.characters:
+                    self.addVerticesForCharacter(curserX, curserY, letter, text.fontSize, vertices)
+                    self.addTexCoords(textureCoords, letter.xTextureCoord, letter.yTextureCoord, letter.xMaxTextureCoord, letter.yMaxTextureCoord)
+                    curserX += letter.xAdvance() * text.fontSize
+                curserX += self.metaData.spaceWidth * text.fontSize
+            curserX = 0
+            curserY += self.LINE_HEIGHT * text.fontSize
+        return TextMeshData(vertices, textureCoords)
 
-private
-static
-void
-addVertices(List < Float > vertices, double
-x, double
-y, double
-maxX, double
-maxY) {
-vertices.add((float)
-x);
-vertices.add((float)
-y);
-vertices.add((float)
-x);
-vertices.add((float)
-maxY);
-vertices.add((float)
-maxX);
-vertices.add((float)
-maxY);
-vertices.add((float)
-maxX);
-vertices.add((float)
-maxY);
-vertices.add((float)
-maxX);
-vertices.add((float)
-y);
-vertices.add((float)
-x);
-vertices.add((float)
-y);
-}
+    # * (Character) character
+    # * ([]) vertices
+    def addVerticesForCharacter(self, curserX, curserY, character, fontSize, vertices):
+        x = curserX + (character.xOffset * fontSize)
+        y = curserY + (character.yOffset * fontSize)
+        maxX = x + (character.sizeX * fontSize)
+        maxY = y + (character.sizeY * fontSize)
+        properX = (2 * x) - 1
+        properY = (-2 * y) + 1
+        properMaxX = (2 * maxX) - 1
+        properMaxY = (-2 * maxY) + 1
+        self.addVertices(vertices, properX, properY, properMaxX, properMaxY)
 
-private
-static
-void
-addTexCoords(List < Float > texCoords, double
-x, double
-y, double
-maxX, double
-maxY) {
-texCoords.add((float)
-x);
-texCoords.add((float)
-y);
-texCoords.add((float)
-x);
-texCoords.add((float)
-maxY);
-texCoords.add((float)
-maxX);
-texCoords.add((float)
-maxY);
-texCoords.add((float)
-maxX);
-texCoords.add((float)
-maxY);
-texCoords.add((float)
-maxX);
-texCoords.add((float)
-y);
-texCoords.add((float)
-x);
-texCoords.add((float)
-y);
-}
+    # * ([]) vertices
+    def addVertices(self, vertices, x, y, maxX, maxY):
+        vertices.append(x)
+        vertices.append(y)
+        vertices.append(x)
+        vertices.append(maxY)
+        vertices.append(maxX)
+        vertices.append(maxY)
+        vertices.append(maxX)
+        vertices.append(maxY)
+        vertices.append(maxX)
+        vertices.append(y)
+        vertices.append(x)
+        vertices.append(y)
+
+    # * ([]) texCoords
+    def addTexCoords(self, texCoords, x, y, maxX, maxY):
+        texCoords.append(x)
+        texCoords.append(y)
+        texCoords.append(x)
+        texCoords.append(maxY)
+        texCoords.append(maxX)
+        texCoords.append(maxY)
+        texCoords.append(maxX)
+        texCoords.append(maxY)
+        texCoords.append(maxX)
+        texCoords.append(y)
+        texCoords.append(x)
+        texCoords.append(y)
+
+    # * ([]) listOfFloats
+    def listToArray(self, listOfFloats):
+        return [val for val in listOfFloats]
 
 
-private
-static
-float[]
-listToArray(List < Float > listOfFloats)
-{
-float[]
-array = new
-float[listOfFloats.size()];
-for (int i = 0; i < array.length; i++) {
-    array[i] = listOfFloats.get(i);
-}
-return array;
-}
+# font = MetaFile("res/pop.fnt")
 
-
-
-font = MetaFile("res/pop.fnt")
+# Loader loader = new Loader();
+# TextMaster.init(loader);
+# font = FontType(loader.loadTexture("verdana"), new File("verdana.fnt"));
+font = FontType(0, "res/pop.fnt")
+# # Parameters (
+#     text to render,
+#     font size,
+#     font,
+#     the position,
+#     line length -> 1.0 = width of screen,
+#     whether text is centered)
+my_epic_text = "This is a test text! This is a test text! This is a test text! This is a test text! This is a test text! This is a test text! This is a test text! This is a test text! This is a test text! This is a test text! This is a test text! This is a test text! This is a test text! This is a test text! This is a test text! "
+text = GUIText(my_epic_text, 1, font, (0,0), 1.0, True)
+data = font.loadText(text)  # (TextMeshData) data
+# text.setColour(1,0,0);
