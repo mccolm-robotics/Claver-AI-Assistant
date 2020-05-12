@@ -140,11 +140,10 @@ class TextMeshData:
         return len(self.vertexPositions) / 2
 
 class Word:
-    width = 0
-    characters = []
-
     def __init__(self, fontSize):
         self.fontSize = fontSize
+        self.characters = []
+        self.width = 0
 
     # Adds a character to the end of the current word and increases the screen-space width of the word.
     def addCharacter(self, character):
@@ -152,16 +151,20 @@ class Word:
         self.width += character.xAdvance * self.fontSize
 
     def __str__(self):
-        pass
+        letters = []
+        for character in self.characters:
+            letters.append(chr(character.id))
+
+        return "{} (width:{})".format("".join(letters),self.width)
 
 
 class Line:
-    words = []
-    currentLineLength = 0
 
     def __init__(self, spaceWidth, fontSize, maxLength):
         self.spaceSize = spaceWidth * fontSize
         self.maxLength = maxLength
+        self.words = []
+        self.currentLineLength = 0
 
     # Attempt to add a word to the line. If the line can fit the word in
     # without reaching the maximum line length then the word is added and the
@@ -181,7 +184,10 @@ class Line:
             return False
 
     def __str__(self):
-        pass
+        line_string = []
+        for word in self.words:
+            line_string.append(word.__str__())
+        return "Line (current length: {}, max length: {}, space size: {} \n words:{})".format(self.currentLineLength, self.maxLength, self.spaceSize, line_string)
 
 class FontType:
     # Creates a new font and loads up the data about each character from the font file.
@@ -288,7 +294,6 @@ class TextMeshCreator:
             if ascii == self.SPACE_ASCII:
                 added = currentLine.attemptToAddWord(currentWord)
                 if added is False:
-                    print("FALSE")
                     lines.append(currentLine)
                     currentLine = Line(self.metaData.spaceWidth, text.fontSize, text.lineMaxSize)
                     currentLine.attemptToAddWord(currentWord)
@@ -394,7 +399,7 @@ font = FontType(0, "res/pop.fnt")
 #     the position,
 #     line length -> 1.0 = width of screen,
 #     whether text is centered)
-my_epic_text = "This is a test text! This is a test text! This is a test text! This is a test text! This is a test text! This is a test text! This is a test text! This is a test text! This is a test text! This is a test text! This is a test text! This is a test text! This is a test text! This is a test text! This is a test text! "
-text = GUIText(my_epic_text, 1, font, (0,0), 1.0, True)
+my_epic_text = "Contrary to popular belief, Lorem Ipsum is not simply random text. It has roots in a piece of classical Latin literature from 45 BC, making it over 2000 years old."
+text = GUIText(my_epic_text, 3, font, (0,0), 1, True)
 data = font.loadText(text)  # (TextMeshData) data
 # text.setColour(1,0,0);
