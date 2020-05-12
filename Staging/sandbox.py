@@ -20,8 +20,6 @@ class Character:
 
 
 class MetaFile:
-    meta_data = {}
-    values_dict = {}
     PAD_TOP = 0
     PAD_LEFT = 1
     PAD_BOTTOM = 2
@@ -29,9 +27,12 @@ class MetaFile:
     DESIRED_PADDING = 3
 
     def __init__(self, fileName):
+        self.meta_data = {}
+        self.values_dict = {}
         self.aspectRatio = 500 / 300
         self.openFile(fileName)
         self.loadPaddingData()
+        self.fontName = self.getFontName().strip('"')
         self.loadLineSizes()
         imageWidth = self.getValueOfVariable("scaleW")
         self.loadCharacterData(imageWidth)
@@ -44,6 +45,9 @@ class MetaFile:
         value = self.values_dict.get(variable)
         if value is not None:
             return int(self.values_dict.get(variable))
+
+    def getFontName(self):
+        return self.values_dict.get("face")
 
     def getValuesListOfVariable(self, variable):
         # Split the string value by ','
@@ -127,12 +131,15 @@ class MetaFile:
         xAdvance = (self.getValueOfVariable("xadvance") - self.paddingWidth) * self.horizontalPerPixelSize
         return Character(id, xTex, yTex, xTexSize, yTexSize, xOff, yOff, quadWidth, quadHeight, xAdvance)
 
+    def __str__(self):
+        pass
+
 
 class TextMeshData:
     vertexPositions = []
     textureCoords = []
 
-    def TextMeshData(self, vertexPositions, textureCoords):
+    def __init__(self, vertexPositions, textureCoords):
         self.vertexPositions = vertexPositions
         self.textureCoords = textureCoords
 
@@ -206,6 +213,9 @@ class FontType:
     def loadText(self, text):
         return self.loader.createTextMesh(text)
 
+    def __str__(self):
+        return 'FontType({}: {} characters)'.format(str(self.loader.metaData.fontName), len(self.loader.metaData.meta_data))
+
 class GUIText:
     colour = Vector3([0.0, 0.0, 0.0])
 
@@ -269,6 +279,9 @@ class GUIText:
     def setNumberOfLines(self, number):
         self.numberOfLines = number
 
+    def __str__(self):
+        return 'GUIText values structure: Variables initialized'
+
 
 class TextMeshCreator:
     LINE_HEIGHT = 0.03
@@ -280,8 +293,8 @@ class TextMeshCreator:
     # (GUIText) text
     def createTextMesh(self, text):
         lines = self.createStructure(text)
-        # data = self.createQuadVertices(text, lines)
-        # return data
+        data = self.createQuadVertices(text, lines)
+        return data
 
     # (GUIText) text
     def createStructure(self, text):
@@ -332,7 +345,7 @@ class TextMeshCreator:
                 for letter in word.characters:
                     self.addVerticesForCharacter(curserX, curserY, letter, text.fontSize, vertices)
                     self.addTexCoords(textureCoords, letter.xTextureCoord, letter.yTextureCoord, letter.xMaxTextureCoord, letter.yMaxTextureCoord)
-                    curserX += letter.xAdvance() * text.fontSize
+                    curserX += letter.xAdvance * text.fontSize
                 curserX += self.metaData.spaceWidth * text.fontSize
             curserX = 0
             curserY += self.LINE_HEIGHT * text.fontSize
@@ -392,6 +405,7 @@ class TextMeshCreator:
 # TextMaster.init(loader);
 # font = FontType(loader.loadTexture("verdana"), new File("verdana.fnt"));
 font = FontType(0, "res/pop.fnt")
+print(font)
 # # Parameters (
 #     text to render,
 #     font size,
@@ -401,5 +415,7 @@ font = FontType(0, "res/pop.fnt")
 #     whether text is centered)
 my_epic_text = "Contrary to popular belief, Lorem Ipsum is not simply random text. It has roots in a piece of classical Latin literature from 45 BC, making it over 2000 years old."
 text = GUIText(my_epic_text, 3, font, (0,0), 1, True)
-data = font.loadText(text)  # (TextMeshData) data
+print(text)
+meshData = font.loadText(text)  # (TextMeshData) data
+print(meshData)
 # text.setColour(1,0,0);
