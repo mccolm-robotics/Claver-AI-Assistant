@@ -136,15 +136,15 @@ class MetaFile:
 
 
 class TextMeshData:
-    vertexPositions = []
-    textureCoords = []
-
     def __init__(self, vertexPositions, textureCoords):
         self.vertexPositions = vertexPositions
         self.textureCoords = textureCoords
 
     def getVertexCount(self):
         return len(self.vertexPositions) / 2
+
+    def __str__(self):
+        return "\033[34m TextMeshData \033[0m( Vertex Positions ({}): {} \n\t\t\t\tTexture Coords ({}): {})".format(len(self.vertexPositions), self.vertexPositions, len(self.textureCoords), self.textureCoords)
 
 class Word:
     def __init__(self, fontSize):
@@ -214,7 +214,7 @@ class FontType:
         return self.loader.createTextMesh(text)
 
     def __str__(self):
-        return 'FontType({}: {} characters)'.format(str(self.loader.metaData.fontName), len(self.loader.metaData.meta_data))
+        return '\033[34m FontType \033[0m({}: {} characters)'.format(str(self.loader.metaData.fontName), len(self.loader.metaData.meta_data))
 
 class GUIText:
     colour = Vector3([0.0, 0.0, 0.0])
@@ -280,7 +280,7 @@ class GUIText:
         self.numberOfLines = number
 
     def __str__(self):
-        return 'GUIText values structure: Variables initialized'
+        return "\033[34m GUIText \033[0m(Cursor position:{} Font size:{}, Text box width:{}, Centered:{})".format(self.position,self.fontSize,self.lineMaxSize,self.centerText)
 
 
 class TextMeshCreator:
@@ -406,16 +406,18 @@ class TextMeshCreator:
 # font = FontType(loader.loadTexture("verdana"), new File("verdana.fnt"));
 font = FontType(0, "res/pop.fnt")
 print(font)
+
 # # Parameters (
 #     text to render,
 #     font size,
 #     font,
-#     the position,
+#     cursor position,
 #     line length -> 1.0 = width of screen,
 #     whether text is centered)
-my_epic_text = "Contrary to popular belief, Lorem Ipsum is not simply random text. It has roots in a piece of classical Latin literature from 45 BC, making it over 2000 years old."
+my_epic_text = "Hello"
 text = GUIText(my_epic_text, 3, font, (0,0), 1, True)
 print(text)
+
 meshData = font.loadText(text)  # (TextMeshData) data
 print(meshData)
 # text.setColour(1,0,0);
