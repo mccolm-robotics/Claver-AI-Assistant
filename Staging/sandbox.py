@@ -280,7 +280,7 @@ class GUIText:
         self.numberOfLines = number
 
     def __str__(self):
-        return "\033[34m GUIText \033[0m(Cursor position:{} Font size:{}, Text box width:{}, Centered:{})".format(self.position,self.fontSize,self.lineMaxSize,self.centerText)
+        return "\033[34m GUIText \033[0m(Cursor position:{}, Font size:{}, Text-box width:{}, Centered:{})\n\t\t  Text String: {} characters".format(self.position,self.fontSize,self.lineMaxSize,self.centerText,len(self.textString))
 
 
 class TextMeshCreator:
