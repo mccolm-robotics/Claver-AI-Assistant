@@ -1,0 +1,9 @@
+uniform mat4 transformationMatrix;  // Model Matrix
+uniform mat4 viewMatrix;            // View Matrix
+uniform mat4 projectionMatrix;      // Projection Matrix
+uniform vec3 lightPosition
+
+void main(void){
+    gl_Position = projectionMatrix * viewMatrix * transformationMatrix * vec4(position, 1.0);
+
+}

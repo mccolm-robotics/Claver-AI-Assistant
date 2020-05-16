@@ -10,6 +10,13 @@ class ShaderProgram(ABC):
         self.programID = compileProgram(vertex_shader, fragment_shader)
         # glValidateProgram(self.programID)
 
+    @abstractmethod
+    def getAllUniformLocations(self):
+        pass
+
+    def getUniformLocation(self, uniformName):
+        return glGetUniformLocation(self.programID, uniformName)
+
     def start(self):
         glUseProgram(self.programID)
 
@@ -19,6 +26,22 @@ class ShaderProgram(ABC):
 
     def bindAttribute(self, attribute, variableName):
         glBindAttribLocation(self.programID, attribute, variableName)
+
+    def loadFloat(self, location, value):
+        glUniform1f(location, value)
+
+    def loadVector(self, location, vector):
+        glUniform3f(location, vector[0], vector[1], vector[2])
+
+    def loadBoolean(self, location, value):
+        toLoad = 0
+        if value:
+            toLoad = 1
+        glUniform1f(location, toLoad)
+
+    def loadMatrix(self, location, matrix):
+        glUniformMatrix4(location, false, matrix)
+
 
     def stop(self):
         glUseProgram(0)

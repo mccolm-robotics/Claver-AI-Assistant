@@ -8,3 +8,4 @@ class ModelData:
 
     def getVertexCount(self):
         return self.vertexCount
+

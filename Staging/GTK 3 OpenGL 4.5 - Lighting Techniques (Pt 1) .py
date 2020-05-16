@@ -35,7 +35,6 @@ class GLCanvas(Gtk.GLArea):
         self.set_start_time = False                 # Boolean to track whether the clock has been initialized
         self.set_has_depth_buffer(True)
         # self.loader = Loader()
-        # self.renderer = Renderer()
 
     def recur_node(self, node, level=0):
         print("  " + "\t" * level + "- " + str(node))
@@ -149,7 +148,7 @@ class GLCanvas(Gtk.GLArea):
                 vec3 unitNormal = normalize(surface_normal);
                 vec3 unitLightVector = normalize(to_light_vector);
                 float nDot1 = dot(unitNormal,unitLightVector);
-                float brightness = max(nDot1,0.0);
+                float brightness = max(nDot1,0.4);
                 vec3 diffuse = brightness * light_colour;
                 out_colour = vec4(diffuse,1.0) * texture(samplerTexture, texture_coordinates);
             }
@@ -219,7 +218,7 @@ class GLCanvas(Gtk.GLArea):
         flipped_image = image.transpose(Image.FLIP_TOP_BOTTOM)
         img_data = np.array(list(flipped_image.getdata()), np.uint8)
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image.width, image.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, img_data)
-
+        image.close()
         #glDisableVertexAttribArray(self.vertex_position_attribute)
         #glDisableVertexAttribArray(self.texture_in)
         glBindBuffer(GL_ARRAY_BUFFER, 0)
@@ -244,7 +243,18 @@ class GLCanvas(Gtk.GLArea):
         glEnable(GL_CULL_FACE)  # Enable face culling
         glCullFace(GL_BACK)     # Discard the back faces of polygons (determined by the vertex winding order)
 
-        # self.model = loader.loadToVAO(vertices)
+        # self.model = ModelLoader.loadModel("filename.fbx", self.loader)
+        # self.texture = ModelTexture(loader.loadTexture("models/Chibi_Texture_D.png"))
+        # texturedModel = TexturedModel(self.model, self.texture)
+        # texture = texturedModel.getTexture()
+        # texture.setShineDamper(10)
+        # texture.setReflectivity(1)
+        # self.entity = Entity(texturedModel, (0, 0, -1), 0, 0, 0, 1)
+        # self.light = Light((0,0,-20), (1,1,1))
+        # self.camera = Camera()
+
+        # self.renderer = MasterRenderer()
+
         self.build_program()      # Calls build_program() to compile and link the shaders
         self.load_geometry()      # Calls load_geometry() to create vertex and colour data
 
@@ -264,7 +274,8 @@ class GLCanvas(Gtk.GLArea):
         return True
 
     def on_render(self, gl_area, gl_context):
-        # self.renderer.prepare()
+        # self.camera.move()
+
         glClearColor(0.0, 0.0, 0.0, 0.0)    # Set the background colour for the window -> Black
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) # Clear the window background colour to black by resetting the COLOR_BUFFER and clear the DEPTH_BUFFER
 
@@ -276,8 +287,11 @@ class GLCanvas(Gtk.GLArea):
         view_matrix = Matrix44.look_at(eye, target, up) # Calculate the view matrix
         model_matrix = Matrix44.from_translation([0.0, 0.0, 0.0]) * pyrr.matrix44.create_from_axis_rotation((0.0, 1.0, 0.0), self.application_clock) * Matrix44.from_scale([1.0, 1.0, 1.0])
 
-        # self.shader.start()
-        # self.renderer.render(self.model)
+        # for entity in list_of_entities_to_render:
+        #     self.renderer.processEntity(entity)
+
+        # self.renderer.render(self.light, self.camera)
+
         glUseProgram(self.shader)  # Tells OpenGL to use the shader program for rendering geometry
         glUniformMatrix4fv(self.viewMatrixLocationInShader, 1, GL_FALSE, view_matrix)
         glUniformMatrix4fv(self.modelMatrixLocationInShader, 1, GL_FALSE, model_matrix)
@@ -285,14 +299,14 @@ class GLCanvas(Gtk.GLArea):
         glUniform3f(self.lightColourLocationInShader, 1.0, 1.0, 1.0)
         glBindVertexArray(self.vertex_array_object)                                             # Binds the self.vertex_array_object to the OpenGL pipeline vertex target
         glDrawArrays(GL_TRIANGLES, 0, len(self.blenderModel.vertices))
-        # self.shader.stop()
+
         glBindVertexArray(0)
         glUseProgram(0)  # Tells OpenGL to use the shader program for rendering geometry
 
         self.queue_draw()   # Schedules a redraw for Gtk.GLArea
 
     def on_unrealize(self, gl_area):
-        # self.shader.cleanUp()
+        # self.renderer.cleanUp()
         # self.loader.cleanUp()
         release(self.scene)  # Pyassimp function
         glDeleteVertexArrays(1, self.vertex_array_object)
