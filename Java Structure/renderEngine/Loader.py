@@ -18,8 +18,26 @@ class Loader:
         self.unbindVAO()
         return ModelData(vaoID, positions.length/3)
 
+    def loadGUIToVAO(self, positions, dimensions):
+        vaoID = self.createVAO()
+        self.storeDataInAttributeList(0, dimensions, positions)
+        self.unbindVAO()
+        return ModdelData(vaoID, positions/dimensions)
+
+    # * ( [float] ) positions
+    # * ( [float] ) textureCoords
+    def loadTextToVAO(self, positions, textureCoords):
+        vaoID = self.createVAO()
+        self.storeDataInAttributeList(0, 2, positions)
+        self.storeDataInAttributeList(1, 2, textureCoords)
+        self.unbindVAO()
+        return vaoID
+
     def loadTexture(self, fileName):
         image = Image.open(fileName)
+        glGenerateMipmap(GL_TEXTURE_2D)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR)
+        glTextParameterf(GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS, -0.4)
         self.textures.append(image)
         return image
 

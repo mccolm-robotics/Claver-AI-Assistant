@@ -7,13 +7,23 @@ class Entity:
     # * (Vector3) position
     # * (float) rotX, rotY, rotZ
     # * (float) scale
-    def __init__(self, model, position, rotX, rotY, rotZ, scale):
+    # * (int) textureIndex -> TextureAtlas
+    def __init__(self, model, position, rotX, rotY, rotZ, scale, textureIndex=0):
         self.model = model
         self.position = Vector3(position)
         self.rotX = rotX
         self.rotY = rotY
         self.rotZ = rotZ
         self.scale = scale
+        self.textureIndex = textureIndex
+
+    def getTextureXOffset(self):
+        column = self.textureIndex % self.model.getTexture().getNumberOfRows()
+        return column / self.model.getTexture.getNumberOfRows()
+
+    def getTextureYOffset(self):
+        row = self.textureIndex // self.model.getTexture().getNumberOfRows()
+        return row / self.model.getTexture().getNumberOfRows()
 
     def increasePosition(self, dx, dy, dz):
         self.position.x += dx

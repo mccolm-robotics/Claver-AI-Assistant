@@ -121,36 +121,68 @@ class GLCanvas(Gtk.GLArea):
             layout(location = 2) in vec3 normal;
             layout(location = 3) out vec2 texture_coordinates;
             layout(location = 4) out vec3 surface_normal;
-            layout(location = 5) out vec3 to_light_vector;
+            layout(location = 5) out vec3 to_light_vector[4];
             uniform mat4 model_matrix;
             uniform mat4 view_matrix;
             uniform mat4 perspective_matrix;
-            uniform vec3 light_position;
+            uniform vec3 light_position[4];
+            uniform float useFakeLighting;
             void main()
             {
                 vec4 world_position_matrix = model_matrix * vertex_position;
                 gl_Position = perspective_matrix * view_matrix * world_position_matrix;
                 texture_coordinates = texture_position;
-                surface_normal = (model_matrix * vec4(normal, 0.0)).xyz;
-                to_light_vector = light_position - world_position_matrix.xyz;
+                vec3 actualNormal = normal;
+                if(useFakeLighting > 0.5){
+                    actualNormal = vec3(0.0, 1.0, 0.0);
+                }
+                surface_normal = (model_matrix * vec4(actualNormal, 0.0)).xyz;
+                for(int i=0; i<4; i++){
+                    to_light_vector[i] = light_position[i] - world_position_matrix.xyz;
+                }
             }
         """
         FRAGMENT_SHADER_SOURCE = """
             #version 450 core
             layout(location = 3) in vec2 texture_coordinates;
             layout(location = 4) in vec3 surface_normal;
-            layout(location = 5) in vec3 to_light_vector;
+            layout(location = 5) in vec3 to_light_vector[4];
             out vec4 out_colour;
             uniform sampler2D samplerTexture;
-            uniform vec3 light_colour;
+            uniform vec3 light_colour[4];
+            uniform vec3 attenuation[4];
+            uniform float shineDamper;
+            uniform float reflectivity;
             void main()
             {
                 vec3 unitNormal = normalize(surface_normal);
-                vec3 unitLightVector = normalize(to_light_vector);
-                float nDot1 = dot(unitNormal,unitLightVector);
-                float brightness = max(nDot1,0.4);
-                vec3 diffuse = brightness * light_colour;
-                out_colour = vec4(diffuse,1.0) * texture(samplerTexture, texture_coordinates);
+                vec3 unitVec torToCamera = normalize(toCameraVector);
+                
+                vec3 totalDiffuse = vec3(0.0);
+                vec3 totalSpecular = vec3(0.0);
+                
+                for(int i=0; i<4; i++){
+                float distance = length(toLightVector[i]);
+                    vec3 unitLightVector = normalize(to_light_vector[i]);
+                    float attFactor = attenuation[i].x + (attenuation[i].y * distance) + (attenuation[i].z * distance * distance);
+                    float nDot1 = dot(unitNormal,unitLightVector);
+                    float brightness = max(nDot1,0.0);
+                    vec3 lightDirection = -unitLightVector;
+                    vec3 reflectedLightDirection = reflect(lightDirection, unitNormal);
+                    float specularFactor = dot(reflectedLightDirection, unitVectorToCamera);
+                    specularFactor = max(specularFactor, 0.0);
+                    float dampedFactor = pow(specularFactor, shineDamper);
+                    totalDiffuse = totalDiffuse + (brightness * light_colour[i])/attFactor;
+                    totalSpecular = totalSpecular + (dampedFactor * reflectivity * lightColour[i])/attFactor;
+                }
+                totalDiffuse = max(totalDiffuse, 0.3);
+                
+                vec4 textureColour = texture(samplerTexture, texture_coordinates);
+                if(textureColour.a < 0.5){
+                    discard;
+                }
+                
+                out_colour = vec4(totalDiffuse,1.0) * textureColour;
             }
         """
         # self.shader = StaticShader("vertexShader", "fragmentShader")
@@ -171,6 +203,7 @@ class GLCanvas(Gtk.GLArea):
         self.perspectiveMatrixLocationInShader = glGetUniformLocation(self.shader, "perspective_matrix")
         self.lightPositionLocationInShader = glGetUniformLocation(self.shader, "light_position")
         self.lightColourLocationInShader = glGetUniformLocation(self.shader, "light_colour")
+        self.useFakeLightingLocationInShader = glGetUniformLocation(self.shader, "useFakeLighting")
 
     def load_geometry(self):
 
@@ -245,15 +278,32 @@ class GLCanvas(Gtk.GLArea):
 
         # self.model = ModelLoader.loadModel("filename.fbx", self.loader)
         # self.texture = ModelTexture(loader.loadTexture("models/Chibi_Texture_D.png"))
-        # texturedModel = TexturedModel(self.model, self.texture)
+        # chibiModel = TexturedModel(self.model, self.texture)
+
+        # Snippet: grass.getTexture().setHasTransparency(true)
+        # Snippet: modelTextureAtlas = ModelTexture(self.loader.loadTexture("file.png"))
+        # Snippet: modelTextureAtlas.setNumberOfRows(2)
+
+        # self.guis = []
+        # gui = GuiTexture(loader.loadTexture("textureName"), (0.5, 0.5), (0.25, 0.25))
+        # self.guis.append(gui)
+        # self.guiRenderer = GuiRenderer(self.loader)
+
         # texture = texturedModel.getTexture()
         # texture.setShineDamper(10)
         # texture.setReflectivity(1)
-        # self.entity = Entity(texturedModel, (0, 0, -1), 0, 0, 0, 1)
-        # self.light = Light((0,0,-20), (1,1,1))
+        # self.entity = Entity(texturedModel,yghujikoljuyhik, atlas# (0, 0, -1), 0, 0, 0, 1)
+
+        # light = Light([0, 10000, -7000], [1.0, 1.0, 1.0]) # This is the sun
+        # lights = []
+        # lights.append(light)
+        # lights.append(Light([-200, 10, -200], [10.0, 0.0, 0.0], [1.0, 0.01, 0.002]))
+        # lights.append(Light([200, 10, 200], [0.0, 0.0, 10.0], [1.0, 0.01, 0.002]))
+
+
         # self.camera = Camera()
 
-        # self.renderer = MasterRenderer()
+        # self.renderer = MasterRenderer(self.loader)
 
         self.build_program()      # Calls build_program() to compile and link the shaders
         self.load_geometry()      # Calls load_geometry() to create vertex and colour data
@@ -274,7 +324,7 @@ class GLCanvas(Gtk.GLArea):
         return True
 
     def on_render(self, gl_area, gl_context):
-        # self.camera.move()
+
 
         glClearColor(0.0, 0.0, 0.0, 0.0)    # Set the background colour for the window -> Black
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) # Clear the window background colour to black by resetting the COLOR_BUFFER and clear the DEPTH_BUFFER
@@ -287,16 +337,18 @@ class GLCanvas(Gtk.GLArea):
         view_matrix = Matrix44.look_at(eye, target, up) # Calculate the view matrix
         model_matrix = Matrix44.from_translation([0.0, 0.0, 0.0]) * pyrr.matrix44.create_from_axis_rotation((0.0, 1.0, 0.0), self.application_clock) * Matrix44.from_scale([1.0, 1.0, 1.0])
 
+        # self.camera.move()
         # for entity in list_of_entities_to_render:
         #     self.renderer.processEntity(entity)
-
-        # self.renderer.render(self.light, self.camera)
+        # self.renderer.render(self.lights, self.camera)
+        # self.guiRenderer.render(self.guis)
 
         glUseProgram(self.shader)  # Tells OpenGL to use the shader program for rendering geometry
         glUniformMatrix4fv(self.viewMatrixLocationInShader, 1, GL_FALSE, view_matrix)
         glUniformMatrix4fv(self.modelMatrixLocationInShader, 1, GL_FALSE, model_matrix)
         glUniform3f(self.lightPositionLocationInShader, 0.0, 3.0, 10.0)
         glUniform3f(self.lightColourLocationInShader, 1.0, 1.0, 1.0)
+        glUniform1f(self.useFakeLightingLocationInShader, 0.0)
         glBindVertexArray(self.vertex_array_object)                                             # Binds the self.vertex_array_object to the OpenGL pipeline vertex target
         glDrawArrays(GL_TRIANGLES, 0, len(self.blenderModel.vertices))
 
@@ -306,6 +358,7 @@ class GLCanvas(Gtk.GLArea):
         self.queue_draw()   # Schedules a redraw for Gtk.GLArea
 
     def on_unrealize(self, gl_area):
+        # self.guiRenderer.cleanUp()
         # self.renderer.cleanUp()
         # self.loader.cleanUp()
         release(self.scene)  # Pyassimp function

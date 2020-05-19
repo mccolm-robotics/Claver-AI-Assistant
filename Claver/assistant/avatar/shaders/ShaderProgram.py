@@ -7,7 +7,7 @@ class ShaderProgram(ABC):
         super().__init__()
         self.vertex_shader = loadShader(vertexFile, GL_VERTEX_SHADER)
         self.fragment_shader = loadShader(fragmentFile, GL_FRAGMENT_SHADER)
-        self.programID = compileProgram(vertex_shader, fragment_shader)
+        self.__programID = compileProgram(vertex_shader, fragment_shader)
         # glValidateProgram(self.programID)
 
     @abstractmethod

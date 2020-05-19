@@ -1,23 +1,12 @@
 import models.ModelData
 
-class Renderer:
+class EntityRenderer:
     # * (StaticShader) shader
-    def __init__(self, shader):
-        self.FOV = 70
-        self.NEAR_PLANE = 0.1
-        self.FAR_PLANE = 1000
+    def __init__(self, shader, projectionMatrix):
         self.shader = shader
-        glEnable(GL_CULL_FACE)
-        glCullFAce(GL_BACK)
-        self.createProjectionMatrix()
         self.shader.start()
-        self.shader.loadProjectionMatrix(self.projectionMatrix)
+        self.shader.loadProjectionMatrix(projectionMatrix)
         self.shader.stop()
-
-    def prepare(self):
-        glEnable(GL_DEPTH_TEST)
-        glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
-        glClearColor(0.0, 0.0, 0.0, 1.0)
 
     def render(self, entities_dict):
         for model_type in entities_dict:
@@ -34,11 +23,16 @@ class Renderer:
         glEnableVertexAttribArray(1)  # Texture data
         glEnableVertexAttribArray(2)  # Normal data
         texture = texturedModel.getTexture()
+        self.shader.loadNumberOfRows(texture.getNumberOfRows())
+        if(texture.isHasTransparency()):
+            MasterRenderer.disableCulling()
+        self.shader.loadFakeLightingVariable(texture.isUseFakeLighting())
         self.shader.loadShineVariables(texture.getShineDamper(), texture.getReflectivity())
         glActiveTexture(GL_TEXTURE0)
         glBindTexture(GL_TEXTURE_2D, texturedModel.getTexture().getID())
 
     def unbindTexturedModel(self):
+        MasterRenderer.enableCulling()
         glDisableVertexAttribArray(0)
         glDisableVertexAttribArray(1)
         glDisableVertexAttribArray(2)
@@ -48,7 +42,4 @@ class Renderer:
         transformationMatrix = Math.createTransformationMatrix(entity.getPosition(), entity.getRotX(), entity.getRotY(),
                                                                entity.getRotZ(), entity.getScale())
         self.shader.loadTransformationMatrix(transformationMatrix)
-
-    def createProjectionMatrix(self):
-        aspectRatio =
-        self.projectionMatrix =
+        self.shader.loadOffset(entity.getTextureXOffset(), entity.getTextureYOffset())

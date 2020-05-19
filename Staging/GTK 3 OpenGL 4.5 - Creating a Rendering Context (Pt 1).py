@@ -34,6 +34,7 @@ class GLCanvas(Gtk.GLArea):
 
         self.vertices = np.array(self.vertices, dtype=np.float32)   # Converts the Python list into a NumPy array
 
+
     def tick(self, widget, frame_clock):
         self.current_frame_time = frame_clock.get_frame_time()  # Gets the current timestamp in microseconds
 

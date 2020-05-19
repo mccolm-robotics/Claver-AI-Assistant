@@ -26,10 +26,11 @@ class MetaFile:
     PAD_RIGHT = 3
     DESIRED_PADDING = 3
 
-    def __init__(self, fileName):
+    def __init__(self, fileName, display):
+        display_width, display_height = display
+        self.aspectRatio = display_width / display_height
         self.meta_data = {}
         self.values_dict = {}
-        self.aspectRatio = 500 / 300
         self.openFile(fileName)
         self.loadPaddingData()
         self.fontName = self.getFontName().strip('"')
@@ -288,7 +289,7 @@ class TextMeshCreator:
     SPACE_ASCII = 32
 
     def __init__(self, metaFile):
-        self.metaData = MetaFile(metaFile)
+        self.metaData = MetaFile(metaFile, (1920, 1080))
 
     # (GUIText) text
     def createTextMesh(self, text):
@@ -414,7 +415,7 @@ print(font)
 #     cursor position,
 #     line length -> 1.0 = width of screen,
 #     whether text is centered)
-my_epic_text = "Hello"
+my_epic_text = "H"
 text = GUIText(my_epic_text, 3, font, (0,0), 1, True)
 print(text)
 
