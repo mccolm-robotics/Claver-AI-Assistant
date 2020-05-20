@@ -2,15 +2,11 @@ import sys
 import gi
 gi.require_version('Gtk', '3.0')
 from Claver.interface.ProgramLoader import *
-from assistant.avatar.renderEngine.GLCanvas import *
+from Claver.assistant.avatar.renderEngine.GLCanvas import *
+from Claver.interface.Settings import res_dir
 
 
 class MainWindow(Gtk.Application):
-    # THIS_FOLDER = os.path.dirname(os.path.abspath(__file__))
-    # file = os.path.join(THIS_FOLDER, file)
-    # RES_FOLDER = str(Path(THIS_FOLDER).parents[1]) + "/res"
-    res_folder_path = "../res/"
-    res_loader_path = res_folder_path + "interface/program_loader/"
 
     # Default Window Size
     WIDTH = 1280
@@ -22,7 +18,7 @@ class MainWindow(Gtk.Application):
         self.monitor_num_for_display = 0
 
         cssProvider = Gtk.CssProvider()
-        cssProvider.load_from_path(self.res_loader_path + 'style.css')
+        cssProvider.load_from_path(res_dir['LOADER_GUI'] + 'style.css')
         screen = Gdk.Screen.get_default()
         styleContext = Gtk.StyleContext()
         styleContext.add_provider_for_screen(screen, cssProvider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)

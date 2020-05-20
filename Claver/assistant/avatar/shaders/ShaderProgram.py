@@ -9,9 +9,17 @@ from abc import ABC, abstractmethod
 class ShaderProgram(ABC):
     def __init__(self, vertexFile, fragmentFile):
         super().__init__()
-        vertex_shader = self.loadShader(vertexFile, GL_VERTEX_SHADER)
-        fragment_shader = self.loadShader(fragmentFile, GL_FRAGMENT_SHADER)
+        vertex_shader = self.__loadShader(vertexFile, GL_VERTEX_SHADER)
+        fragment_shader = self.__loadShader(fragmentFile, GL_FRAGMENT_SHADER)
         self.__programID = compileProgram(vertex_shader, fragment_shader)
+        self.getAllUniformLocations()
+
+    @abstractmethod
+    def getAllUniformLocations(self):
+        pass
+
+    def getUniformLocation(self, uniformName):
+        return glGetUniformLocation(self.__programID, uniformName)
 
     def start(self):
         glUseProgram(self.__programID)
@@ -30,8 +38,23 @@ class ShaderProgram(ABC):
     def bindAttribute(self, attribute, variableName):
         glBindAttribLocation(self.__programID, attribute, variableName)
 
+    def loadFloat(self, location, value):
+        glUniform1f(location, value)
+
+    def loadVector(self, location, vector):
+        glUniform3f(location, vector[0], vector[1], vector[2])
+
+    def loadBoolean(self, location, boolean):
+        toLoad = 0
+        if boolean:
+            toLoad = 1
+        glUniform1f(location, toLoad)
+
+    def loadMatrix(self, location, matrix):
+        glUniformMatrix4fv(location, 1, GL_FALSE, matrix)
+
     @staticmethod
-    def loadShader(fileName, type):
+    def __loadShader(fileName, type):
         with open(fileName) as file:
             shaderSource = file.read()
         shaderID = compileShader(shaderSource, type)

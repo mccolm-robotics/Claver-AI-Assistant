@@ -2,6 +2,7 @@ import os
 
 from Claver.assistant.avatar.shaders.ShaderProgram import *
 
+
 class StaticShader(ShaderProgram):
     __THIS_FOLDER = os.path.dirname(os.path.abspath(__file__))
     __VERTEX_FILE = os.path.join(__THIS_FOLDER, "vertexShader.txt")
@@ -12,3 +13,7 @@ class StaticShader(ShaderProgram):
 
     def bindAttributes(self):
         super().bindAttribute(0, "position")
+        super().bindAttribute(1, "textureCoords")
+
+    def getAllUniformLocations(self):
+        super().getUniformLocation() tutorial # 7
