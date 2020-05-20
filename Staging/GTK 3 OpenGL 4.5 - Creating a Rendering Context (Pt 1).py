@@ -90,10 +90,12 @@ class GLCanvas(Gtk.GLArea):
 
         self.build_program()    # Calls build_program() to compile and link the shaders
 
+        self.vao_list = np.empty(0, dtype=np.uint32)
         # Initializes the vertex array object and activates the 'vertex_position' attribute
-        self.vertex_array_object = GLuint()                                 # Stores the name of the vertex array object
-        glCreateVertexArrays(1, ctypes.byref(self.vertex_array_object))     # Creates the vertex array object and initalizes it to default values
-        glBindVertexArray(self.vertex_array_object)                         # Binds the vertex array object to the OpenGL pipeline target
+        vertex_array_object = GLuint()                                # Stores the name of the vertex array object
+        glCreateVertexArrays(1, ctypes.byref(vertex_array_object))     # Creates the vertex array object and initalizes it to default values
+        self.vao_list = np.append(self.vao_list, vertex_array_object)
+        glBindVertexArray(GLuint(self.vao_list[0]))                       # Binds the vertex array object to the OpenGL pipeline target
         self.vertex_attribute_position = glGetAttribLocation(self.shader, 'vertex_position')    # Obtains a reference to the 'vertex_position' attribute from the vertex shader
         glEnableVertexAttribArray(self.vertex_attribute_position)                               # Activates client-side use of vertex attribute arrays for rendering
 
@@ -112,7 +114,7 @@ class GLCanvas(Gtk.GLArea):
 
         glUseProgram(self.shader)                       # Tells OpenGL to use the shader program for rendering geometry
 
-        glBindVertexArray(self.vertex_array_object)     # Binds the self.vertex_array_object to the OpenGL pipeline vertex target
+        glBindVertexArray(GLuint(self.vao_list[0]))     # Binds the self.vertex_array_object to the OpenGL pipeline vertex target
         glDrawArrays(GL_TRIANGLES, 0, int(len(self.vertices)/4))    # Constructs geometric primitives (GL_TRIANGLES) using sequential elements of the vertex array
 
         self.queue_draw()   # Schedules a redraw for Gtk.GLArea
