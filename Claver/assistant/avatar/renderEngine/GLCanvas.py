@@ -5,6 +5,7 @@ from gi.repository import Gtk
 from Claver.assistant.avatar.renderEngine.Loader import Loader
 from Claver.assistant.avatar.renderEngine.Renderer import Renderer
 from Claver.assistant.avatar.shaders.StaticShader import StaticShader
+from Claver.assistant.avatar.shaders.TestShader import TestShader
 from Claver.assistant.avatar.textures.ModelTexture import ModelTexture
 from Claver.assistant.avatar.models.TexturedModel import TexturedModel
 from Claver.assistant.avatar.entities.Entity import Entity
@@ -24,6 +25,96 @@ class GLCanvas(Gtk.GLArea):
         self.add_tick_callback(self.tick)  # This is a frame time clock that is called each time a frame is rendered
         self.set_start_time = False  # Boolean to track whether the clock has been initialized
         self.keyboard = KeyboardEvent()
+
+        self.vertices = [
+            -1.0, 1.0, 1.0,        #Left
+             -1.0, -1.0, -1.0,
+            -1.0, -1.0, 1.0,
+            -1.0, 1.0, -1.0,
+            -1.0, -1.0, -1.0,
+            -1.0, 1.0, 1.0,
+
+            1.0, 1.0, 1.0,          #Front
+            -1.0, -1.0, 1.0,
+            1.0, -1.0, 1.0,
+            -1.0, 1.0, 1.0,
+            -1.0, -1.0, 1.0,
+            1.0, 1.0, 1.0,
+
+            1.0, 1.0, -1.0,          #Back
+            -1.0, -1.0, -1.0,
+            -1.0, 1.0, -1.0,
+            1.0, -1.0, -1.0,
+            -1.0, -1.0, -1.0,
+            1.0, 1.0, -1.0,
+
+            1.0, 1.0, -1.0,         #Right
+            1.0, -1.0, 1.0,
+            1.0, -1.0, -1.0,
+            1.0, 1.0, 1.0,
+            1.0, -1.0, 1.0,
+            1.0, 1.0, -1.0,
+
+            1.0, 1.0, -1.0,         #Top
+            -1.0, 1.0, 1.0,
+            1.0, 1.0, 1.0,
+            -1.0, 1.0, -1.0,
+            -1.0, 1.0, 1.0,
+            1.0, 1.0, -1.0,
+
+            1.0, -1.0, 1.0,         #Bottom
+            -1.0, -1.0, -1.0,
+            1.0, -1.0, -1.0,
+            -1.0, -1.0, 1.0,
+            -1.0, -1.0, -1.0,
+            1.0, -1.0, 1.0,
+
+        ]
+
+        self.textureCoords = [
+            1.0, 0.0,
+            0.0, 1.0,
+            1.0, 1.0,
+            0.0, 0.0,
+            0.0, 1.0,
+            1.0, 0.0,
+
+            1.0, 0.0,
+            0.0, 1.0,
+            1.0, 1.0,
+            0.0, 0.0,
+            0.0, 1.0,
+            1.0, 0.0,
+
+            0.0, 0.0,
+            1.0, 1.0,
+            1.0, 0.0,
+            0.0, 1.0,
+            1.0, 1.0,
+            0.0, 0.0,
+
+            1.0, 0.0,
+            0.0, 1.0,
+            1.0, 1.0,
+            0.0, 0.0,
+            0.0, 1.0,
+            1.0, 0.0,
+
+            1.0, 0.0,
+            0.0, 1.0,
+            1.0, 1.0,
+            0.0, 0.0,
+            0.0, 1.0,
+            1.0, 0.0,
+
+            1.0, 0.0,
+            0.0, 1.0,
+            1.0, 1.0,
+            0.0, 0.0,
+            0.0, 1.0,
+            1.0, 0.0
+        ]
+
 
     def tick(self, widget, frame_clock):
         self.current_frame_time = frame_clock.get_frame_time()  # Gets the current timestamp in microseconds
@@ -68,14 +159,19 @@ class GLCanvas(Gtk.GLArea):
         texture = ModelTexture(self.loader.loadTexture(res_dir['MODELS'] + "Chibi_Texture.png"))
         texturedModel = TexturedModel(self.model, texture)
 
-        self.entity = Entity(texturedModel, (0.0, 0.0, 0.0), 0.0, 0.0, 0.0, 1.0)
+        # model = self.loader.loadToVAO(self.vertices, self.textureCoords)
+        # texture = ModelTexture(self.loader.loadTexture(res_dir['TEXTURES'] + "test_image.png"))
+        # texturedModel = TexturedModel(model, texture)
+
+
+        self.entity = Entity(texturedModel, (0.0, -2.0, -10.0), 0.0, 2.0, 0.0, 1.0)
 
         self.camera = Camera()
 
         return True
 
     def on_render(self, gl_area, gl_context):
-        self.entity.increaseRotation(0.0, 1.0, 0.0)
+        # self.entity.increaseRotation(0.0, 1.0, 0.0)
         self.camera.move(self.keyboard)
         self.renderer.prepare(self.running_seconds_from_start)
         self.shader.start()

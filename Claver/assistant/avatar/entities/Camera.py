@@ -4,7 +4,7 @@ class Camera:
     __MOVEMENT_SPEED = 0.002
 
     def __init__(self):
-        self.__position = Vector3((0.0, 5.0, 18))
+        self.__position = Vector3((0.0, 0.0, 3.0))
         self.__pitch = None
         self.__yaw = None
         self.__roll = None

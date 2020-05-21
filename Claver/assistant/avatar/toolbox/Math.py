@@ -15,6 +15,6 @@ def createProjectionMatrix(fov, width, height, near, far):
 
 def createViewMatrix(camera):
     position = camera.getPosition()                     # Eye coordinates (location of the camera)
-    target = (0.0, 7.0, 0.0)                            # Target coordinates (where the camera is looking)
+    target = (0.0, 0.0, 0.0)                            # Target coordinates (where the camera is looking)
     up = (0.0, 1.0, 0.0)                                # A vector representing the 'up' direction.
     return Matrix44.look_at(position, target, up)       # Calculate the view matrix
