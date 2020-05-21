@@ -29,9 +29,11 @@ class MainWindow(Gtk.Application):
         window.set_default_size(self.WIDTH, self.HEIGHT)
         window.set_position(Gtk.WindowPosition.CENTER)
         window.connect("key-release-event", self.on_key_release)
+        window.connect("key-press-event", self.on_key_press)
 
         # Attach a Gtk.GLArea widget to the window. GLCanvas subclasses Gtk.GLArea
-        window.add(GLCanvas())
+        self.glCanvas = GLCanvas()
+        window.add(self.glCanvas)
 
         if self.is_fullscreen == True:
             window.fullscreen_on_monitor(Gdk.Screen.get_default(), self.monitor_num_for_display)
@@ -42,6 +44,12 @@ class MainWindow(Gtk.Application):
             self.quit()
         elif event.keyval == Gdk.KEY_f:
             self.fullscreen_mode(window)
+        else:
+            self.glCanvas.cancelKeyPress(event.keyval)
+
+    def on_key_press(self, window, event):
+        if event.keyval != Gdk.KEY_f:
+            self.glCanvas.registerKeyPress(event.keyval)
 
     def fullscreen_mode(self, window):
         if self.is_fullscreen == True:

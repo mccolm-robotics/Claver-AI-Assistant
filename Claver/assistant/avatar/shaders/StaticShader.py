@@ -1,6 +1,7 @@
 import os
 
 from Claver.assistant.avatar.shaders.ShaderProgram import *
+from Claver.assistant.avatar.toolbox.Math import createViewMatrix
 
 
 class StaticShader(ShaderProgram):
@@ -16,4 +17,16 @@ class StaticShader(ShaderProgram):
         super().bindAttribute(1, "textureCoords")
 
     def getAllUniformLocations(self):
-        super().getUniformLocation() tutorial # 7
+        self.__location_transformationMatrix = super().getUniformLocation("transformationMatrix")
+        self.__location_viewMatrix = super().getUniformLocation("viewMatrix")
+        self.__location_projectionMatrix = super().getUniformLocation("projectionMatrix")
+
+    def loadTransformationMatrix(self, matrix):
+        super().loadMatrix(self.__location_transformationMatrix, matrix)
+
+    def loadProjectionMatrix(self, matrix):
+        super().loadMatrix(self.__location_projectionMatrix, matrix)
+
+    def loadViewMatrix(self, camera):
+        matrix = createViewMatrix(camera)
+        super().loadMatrix(self.__location_viewMatrix, matrix)
