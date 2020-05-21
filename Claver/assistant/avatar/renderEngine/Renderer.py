@@ -33,7 +33,7 @@ class Renderer:
         shader.loadTransformationMatrix(transformationMatrix)
         glActiveTexture(GL_TEXTURE0)
         glBindTexture(GL_TEXTURE_2D, texturedModel.getTexture().getID())
-        glDrawArrays(GL_TRIANGLE_FAN, 0, model.getVertexCount())
+        glDrawArrays(GL_TRIANGLES, 0, model.getVertexCount())
         glDisableVertexAttribArray(0)
         glDisableVertexAttribArray(1)
         glBindVertexArray(0)

@@ -14,10 +14,9 @@ class ModelLoader:
         self.__vertices = model.vertices
         self.__normals = model.normals
         self.__textures = model.texturecoords[0]
+        release(self.scene)
         return loader.loadToVAO(self.__vertices, self.__textures)
 
-    def cleanUp(self):
-        release(self.scene)
 
         # self.scene = load('models/char_01_triangulated.obj')
         # self.blenderModel = self.scene.meshes[0]

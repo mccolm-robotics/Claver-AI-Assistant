@@ -86,7 +86,6 @@ class GLCanvas(Gtk.GLArea):
         self.queue_draw()  # Schedules a redraw for Gtk.GLArea
 
     def on_unrealize(self, gl_area):
-        self.model.cleanUp()
         self.shader.cleanUp()
         self.loader.cleanUp()
 
