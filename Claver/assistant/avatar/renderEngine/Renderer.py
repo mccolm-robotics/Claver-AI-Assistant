@@ -11,6 +11,7 @@ class Renderer:
     def __init__(self, shader, window):
         self.__width = window.width
         self.__height = window.height
+        self.__shader = shader
         self.__createProjectionMatrix()
         shader.start()
         shader.loadProjectionMatrix(self.__projectionMatrix)
@@ -43,3 +44,9 @@ class Renderer:
 
     def __createProjectionMatrix(self):
         self.__projectionMatrix = createProjectionMatrix(self.__FOV, self.__width, self.__height, self.__NEAR_PLANE, self.__FAR_PLANE)
+
+    def updateProjectionMatrix(self, width, height):
+        self.__projectionMatrix = createProjectionMatrix(self.__FOV, width, height, self.__NEAR_PLANE, self.__FAR_PLANE)
+        self.__shader.start()
+        self.__shader.loadProjectionMatrix(self.__projectionMatrix)
+        self.__shader.stop()

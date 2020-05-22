@@ -1,6 +1,5 @@
 import pyrr
-from pyrr import Matrix44, Vector4, Vector3, Quaternion
-from Claver.assistant.avatar.entities.Camera import Camera
+from pyrr import Matrix44
 
 
 def createTransformationMatrix(position, rotX, rotY, rotZ, scale, clock):

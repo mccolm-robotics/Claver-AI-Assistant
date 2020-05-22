@@ -1,7 +1,7 @@
 from pyrr import Vector3
 
 class Camera:
-    __MOVEMENT_SPEED = 0.002
+    __MOVEMENT_SPEED = 0.02
 
     def __init__(self):
         self.__position = Vector3((0.0, 0.0, 3.0))

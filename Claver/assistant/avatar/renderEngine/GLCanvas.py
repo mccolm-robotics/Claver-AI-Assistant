@@ -5,7 +5,6 @@ from gi.repository import Gtk
 from Claver.assistant.avatar.renderEngine.Loader import Loader
 from Claver.assistant.avatar.renderEngine.Renderer import Renderer
 from Claver.assistant.avatar.shaders.StaticShader import StaticShader
-from Claver.assistant.avatar.shaders.TestShader import TestShader
 from Claver.assistant.avatar.textures.ModelTexture import ModelTexture
 from Claver.assistant.avatar.models.TexturedModel import TexturedModel
 from Claver.assistant.avatar.entities.Entity import Entity
@@ -22,99 +21,11 @@ class GLCanvas(Gtk.GLArea):
         self.connect("realize", self.on_initialize)  # This signal is used to initialize the OpenGL state
         self.connect("unrealize", self.on_unrealize)  # Catch this signal to clean up buffer objects and shaders
         self.connect("render", self.on_render)  # This signal is emitted for each frame that is rendered
+        self.connect("resize", self.on_resize)  # This signal is emitted when the window is resized
         self.add_tick_callback(self.tick)  # This is a frame time clock that is called each time a frame is rendered
         self.set_start_time = False  # Boolean to track whether the clock has been initialized
         self.set_has_depth_buffer(True)
         self.keyboard = KeyboardEvent()
-
-        self.vertices = [
-            -1.0, 1.0, 1.0,        #Left
-             -1.0, -1.0, -1.0,
-            -1.0, -1.0, 1.0,
-            -1.0, 1.0, -1.0,
-            -1.0, -1.0, -1.0,
-            -1.0, 1.0, 1.0,
-
-            1.0, 1.0, 1.0,          #Front
-            -1.0, -1.0, 1.0,
-            1.0, -1.0, 1.0,
-            -1.0, 1.0, 1.0,
-            -1.0, -1.0, 1.0,
-            1.0, 1.0, 1.0,
-
-            1.0, 1.0, -1.0,          #Back
-            -1.0, -1.0, -1.0,
-            -1.0, 1.0, -1.0,
-            1.0, -1.0, -1.0,
-            -1.0, -1.0, -1.0,
-            1.0, 1.0, -1.0,
-
-            1.0, 1.0, -1.0,         #Right
-            1.0, -1.0, 1.0,
-            1.0, -1.0, -1.0,
-            1.0, 1.0, 1.0,
-            1.0, -1.0, 1.0,
-            1.0, 1.0, -1.0,
-
-            1.0, 1.0, -1.0,         #Top
-            -1.0, 1.0, 1.0,
-            1.0, 1.0, 1.0,
-            -1.0, 1.0, -1.0,
-            -1.0, 1.0, 1.0,
-            1.0, 1.0, -1.0,
-
-            1.0, -1.0, 1.0,         #Bottom
-            -1.0, -1.0, -1.0,
-            1.0, -1.0, -1.0,
-            -1.0, -1.0, 1.0,
-            -1.0, -1.0, -1.0,
-            1.0, -1.0, 1.0,
-
-        ]
-
-        self.textureCoords = [
-            1.0, 0.0,
-            0.0, 1.0,
-            1.0, 1.0,
-            0.0, 0.0,
-            0.0, 1.0,
-            1.0, 0.0,
-
-            1.0, 0.0,
-            0.0, 1.0,
-            1.0, 1.0,
-            0.0, 0.0,
-            0.0, 1.0,
-            1.0, 0.0,
-
-            0.0, 0.0,
-            1.0, 1.0,
-            1.0, 0.0,
-            0.0, 1.0,
-            1.0, 1.0,
-            0.0, 0.0,
-
-            1.0, 0.0,
-            0.0, 1.0,
-            1.0, 1.0,
-            0.0, 0.0,
-            0.0, 1.0,
-            1.0, 0.0,
-
-            1.0, 0.0,
-            0.0, 1.0,
-            1.0, 1.0,
-            0.0, 0.0,
-            0.0, 1.0,
-            1.0, 0.0,
-
-            1.0, 0.0,
-            0.0, 1.0,
-            1.0, 1.0,
-            0.0, 0.0,
-            0.0, 1.0,
-            1.0, 0.0
-        ]
 
 
     def tick(self, widget, frame_clock):
@@ -127,8 +38,7 @@ class GLCanvas(Gtk.GLArea):
             self.starting_time = self.current_frame_time  # Stores the timestamp set when the program was initalized
             self.set_start_time = True  # Prevents the initialization routine from running again in this instance
 
-        self.running_seconds_from_start = (
-                                                      self.current_frame_time - self.starting_time) / 1000000  # Calculate the total number of seconds that the program has been running
+        self.running_seconds_from_start = (self.current_frame_time - self.starting_time) / 1000000  # Calculate the total number of seconds that the program has been running
 
         self.frame_counter += 1  # The frame counter is called by GTK each time a frame is rendered. Keep track of how many are rendered.
         # Track how many Frames Per Second (FPS) are rendered
@@ -152,7 +62,6 @@ class GLCanvas(Gtk.GLArea):
         # Get information about current GTK GLArea canvas
         window = gl_area.get_allocation()
 
-
         self.loader = Loader()
         self.shader = StaticShader()
         self.renderer = Renderer(self.shader, window)
@@ -161,19 +70,13 @@ class GLCanvas(Gtk.GLArea):
         texture = ModelTexture(self.loader.loadTexture(res_dir['MODELS'] + "Chibi_Texture.png"))
         texturedModel = TexturedModel(self.model, texture)
 
-        # model = self.loader.loadToVAO(self.vertices, self.textureCoords)
-        # texture = ModelTexture(self.loader.loadTexture(res_dir['TEXTURES'] + "test_image.png"))
-        # texturedModel = TexturedModel(model, texture)
-
-
-        self.entity = Entity(texturedModel, (0.0, -2.0, -10.0), 0.0, 2.0, 0.0, 1.0)
+        self.entity = Entity(texturedModel, (0.0, -6.0, -10.0), 0.0, 2.0, 0.0, 1.0)
 
         self.camera = Camera()
 
         return True
 
     def on_render(self, gl_area, gl_context):
-        # self.entity.increaseRotation(0.0, 1.0, 0.0)
         self.camera.move(self.keyboard)
         self.renderer.prepare(self.running_seconds_from_start)
         self.shader.start()
@@ -193,9 +96,5 @@ class GLCanvas(Gtk.GLArea):
     def cancelKeyPress(self, key):
         self.keyboard.cancelEvent(key)
 
-    # def on_resize(self, area, width, height):
-    #     # Field of view, aspect ration, distance to near, distance to far
-    #     self.perspective_matrix = Matrix44.perspective_projection(45.0, width / height, 0.1, 200.0) # Recalculate the perspective matrix when the window is resized
-    #     glUseProgram(self.shader)
-    #     glUniformMatrix4fv(self.perspectiveMatrixLocationInShader, 1, GL_FALSE, self.perspective_matrix)
-    #     glUseProgram(0)
+    def on_resize(self, area, width, height):
+        self.renderer.updateProjectionMatrix(width, height)
