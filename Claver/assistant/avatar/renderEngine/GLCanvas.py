@@ -24,6 +24,7 @@ class GLCanvas(Gtk.GLArea):
         self.connect("render", self.on_render)  # This signal is emitted for each frame that is rendered
         self.add_tick_callback(self.tick)  # This is a frame time clock that is called each time a frame is rendered
         self.set_start_time = False  # Boolean to track whether the clock has been initialized
+        self.set_has_depth_buffer(True)
         self.keyboard = KeyboardEvent()
 
         self.vertices = [
