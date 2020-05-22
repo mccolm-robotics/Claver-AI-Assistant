@@ -11,11 +11,13 @@ class Loader:
         self.__textures = np.empty(0, dtype=np.uint32)
 
     # * ( [float] ) positions
-    def loadToVAO(self, positions, textureCoords=None):
+    def loadToVAO(self, positions, textureCoords=None, normals=None):
         vaoID = self.createVAO()
         self.storeDataInAttributeList(0, 3, positions)
         if textureCoords is not None:
             self.storeDataInAttributeList(1, 3, textureCoords)
+        if normals is not None:
+            self.storeDataInAttributeList(2, 3, normals)
         # Creates a buffer to hold the vertex data and binds it to the OpenGL pipeline
         # self.model = np.concatenate((positions, textureCoords), axis=0)
         #

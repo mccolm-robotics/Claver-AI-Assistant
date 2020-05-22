@@ -1,6 +1,7 @@
 from OpenGL.GL import *
 
 from Claver.assistant.avatar.toolbox.Math import createTransformationMatrix, createProjectionMatrix
+from Claver.assistant.avatar.textures.ModelTexture import ModelTexture
 
 
 class Renderer:
@@ -26,21 +27,35 @@ class Renderer:
         glClearColor(0.0, 0.0, 0.0, 0.0)  # Set the background colour for the window -> Black
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)  # Clear the window background colour to black by resetting the COLOR_BUFFER and clear the DEPTH_BUFFER
 
-    def render(self, entity, shader):
-        texturedModel = entity.getModel()
-        model = texturedModel.getRawModel()
-        # model = entity.getModel()  --> Models with no texture.
-        glBindVertexArray(model.getVaoID())
+    def render(self, entitiesDict):
+        for texturedModel in entitiesDict:
+            self.prepareTexturedModel(texturedModel)
+            for entity in entitiesDict[texturedModel]:
+                self.prepareInstance(entity)
+                glDrawArrays(GL_TRIANGLES, 0, texturedModel.getRawModel().getVertexCount())
+            self.unbindTexturedModel()
+
+    def prepareTexturedModel(self, model):
+        rawModel = model.getRawModel()
+        glBindVertexArray(rawModel.getVaoID())
         glEnableVertexAttribArray(0)
         glEnableVertexAttribArray(1)
-        transformationMatrix = createTransformationMatrix(entity.getPosition(), entity.getRotX(), entity.getRotY(), entity.getRotZ(), entity.getScale(), self.__applicationTime)
-        shader.loadTransformationMatrix(transformationMatrix)
+        glEnableVertexAttribArray(2)
+        texture = model.getTexture()
+        self.__shader.loadShineVariables(texture.getShineDamper(), texture.getReflectivity())
         glActiveTexture(GL_TEXTURE0)
-        glBindTexture(GL_TEXTURE_2D, texturedModel.getTexture().getID())
-        glDrawArrays(GL_TRIANGLES, 0, model.getVertexCount())
+        glBindTexture(GL_TEXTURE_2D, model.getTexture().getID())
+
+    def unbindTexturedModel(self):
         glDisableVertexAttribArray(0)
         glDisableVertexAttribArray(1)
+        glDisableVertexAttribArray(2)
         glBindVertexArray(0)
+
+    def prepareInstance(self, entity):
+        transformationMatrix = createTransformationMatrix(entity.getPosition(), entity.getRotX(), entity.getRotY(),
+                                                          entity.getRotZ(), entity.getScale(), self.__applicationTime)
+        self.__shader.loadTransformationMatrix(transformationMatrix)
 
     def __createProjectionMatrix(self):
         self.__projectionMatrix = createProjectionMatrix(self.__FOV, self.__width, self.__height, self.__NEAR_PLANE, self.__FAR_PLANE)

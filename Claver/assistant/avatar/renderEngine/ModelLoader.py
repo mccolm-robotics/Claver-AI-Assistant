@@ -15,7 +15,7 @@ class ModelLoader:
         self.__normals = model.normals
         self.__textures = model.texturecoords[0]
         release(self.scene)
-        return loader.loadToVAO(self.__vertices, self.__textures)
+        return loader.loadToVAO(self.__vertices, self.__textures, self.__normals)
 
 
         # self.scene = load('models/char_01_triangulated.obj')

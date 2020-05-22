@@ -1,7 +1,18 @@
-from pyrr import Vector3
-test = Vector3([5.0, 3.0, 9.0])
-dx = 3
-trap = Vector3(test)
-trap.y+=dx
-print(trap[1])
+entities = {'bar': ['fried', 'chicken', 'crispy']}
 
+print(entities)
+
+if 'foo' in entities:
+    entities['foo'].append('pork')
+    print(entities['foo'])
+else:
+    entities['foo'] = ['horse']
+
+print(entities)
+
+for i in range(5):
+    print(i)
+
+val = 5
+val +=1
+print(val)

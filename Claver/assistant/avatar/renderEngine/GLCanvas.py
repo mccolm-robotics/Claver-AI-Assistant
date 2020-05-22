@@ -2,12 +2,14 @@ import gi
 
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
+from pyrr import Matrix44, Vector4, Vector3, Quaternion
 from Claver.assistant.avatar.renderEngine.Loader import Loader
-from Claver.assistant.avatar.renderEngine.Renderer import Renderer
+from Claver.assistant.avatar.renderEngine.MasterRenderer import MasterRenderer
 from Claver.assistant.avatar.shaders.StaticShader import StaticShader
 from Claver.assistant.avatar.textures.ModelTexture import ModelTexture
 from Claver.assistant.avatar.models.TexturedModel import TexturedModel
 from Claver.assistant.avatar.entities.Entity import Entity
+from Claver.assistant.avatar.entities.Light import Light
 from Claver.interface.Settings import res_dir
 from Claver.interface.KeyboardEvent import KeyboardEvent
 from Claver.assistant.avatar.entities.Camera import Camera
@@ -63,31 +65,40 @@ class GLCanvas(Gtk.GLArea):
         window = gl_area.get_allocation()
 
         self.loader = Loader()
-        self.shader = StaticShader()
-        self.renderer = Renderer(self.shader, window)
 
         self.model = ModelLoader().loadModel(res_dir['MODELS']+"Chibi.obj", self.loader)
-        texture = ModelTexture(self.loader.loadTexture(res_dir['MODELS'] + "Chibi_Texture.png"))
-        texturedModel = TexturedModel(self.model, texture)
+        modelTexture = ModelTexture(self.loader.loadTexture(res_dir['MODELS'] + "Chibi_Texture.png"))
+        staticModel = TexturedModel(self.model, modelTexture)
+        texture = staticModel.getTexture()
+        texture.setShineDamper(10)
+        texture.setReflectivity(1)
 
-        self.entity = Entity(texturedModel, (0.0, -6.0, -10.0), 0.0, 2.0, 0.0, 1.0)
+
+        self.entity = Entity(staticModel, (0.0, -6.0, -10.0), 0.0, 2.0, 0.0, 1.0)
+        self.light = Light(Vector3((0, 0, 5)), Vector3((1,1,1)))
 
         self.camera = Camera()
 
+        self.renderer = MasterRenderer()
+
+        # for i in range(200):
+        #     x = random(range)
+        #     y = randome(range)
+        #     z = random(range)
+        #     allCubes.add(Entity(cubeModel, Vector3(x,y,z), random.nextFloat * 180, random.nextFloat * 180, 0, 1))
         return True
 
     def on_render(self, gl_area, gl_context):
         self.camera.move(self.keyboard)
-        self.renderer.prepare(self.running_seconds_from_start)
-        self.shader.start()
-        self.shader.loadViewMatrix(self.camera)
-        self.renderer.render(self.entity, self.shader)
-        self.shader.stop()
 
+        for entityType in myEntityTypeList:
+            self.renderer.processEntity(entityType)
+
+        self.renderer.render(self.light, self.camera, self.running_seconds_from_start)
         self.queue_draw()  # Schedules a redraw for Gtk.GLArea
 
     def on_unrealize(self, gl_area):
-        self.shader.cleanUp()
+        self.renderer.cleanUp()
         self.loader.cleanUp()
 
     def registerKeyPress(self, key):
