@@ -74,12 +74,12 @@ class GLCanvas(Gtk.GLArea):
         self.vertex_position_attribute = glGetAttribLocation(self.shader, 'vertex_position')
         glEnableVertexAttribArray(self.vertex_position_attribute)
         # self.model.itemsize*3 specifies the stride (how to step through the data in the buffer). This is important for telling OpenGL how to step through a buffer having concatinated vertex and color data (see: https://youtu.be/bmCYgoCAyMQ).
-        glVertexAttribPointer(self.vertex_position_attribute, 3, GL_FLOAT, GL_FALSE, self.model.itemsize * 3, ctypes.c_void_p(0))
+        glVertexAttribPointer(self.vertex_position_attribute, 3, GL_FLOAT, GL_FALSE, 0, ctypes.c_void_p(0))
 
         self.texture_in = glGetAttribLocation(self.shader, 'texture_position')
         self.texture_offset = self.model.itemsize * (len(self.model) // 2) * 3
         # Describe the position data layout in the buffer
-        glVertexAttribPointer(self.texture_in, 3, GL_FLOAT, GL_FALSE, self.model.itemsize * 3, ctypes.c_void_p(self.texture_offset))
+        glVertexAttribPointer(self.texture_in, 3, GL_FLOAT, GL_FALSE, 0, ctypes.c_void_p(self.texture_offset))
         glEnableVertexAttribArray(self.texture_in)
 
         texture = glGenTextures(1)
@@ -141,10 +141,10 @@ class GLCanvas(Gtk.GLArea):
         # Construct perspective matrix using width and height of window allocated by GTK
         self.perspective_matrix = Matrix44.perspective_projection(45.0, window.width / window.height, 0.1, 200.0)
 
-        glEnable(GL_DEPTH_TEST) # Enable depth testing to ensure pixels closer to the viewer appear closest
-        glDepthFunc(GL_LESS)    # Set the type of calculation used by the depth buffer
-        glEnable(GL_CULL_FACE)  # Enable face culling
-        glCullFace(GL_BACK)     # Discard the back faces of polygons (determined by the vertex winding order)
+        # glEnable(GL_DEPTH_TEST) # Enable depth testing to ensure pixels closer to the viewer appear closest
+        # glDepthFunc(GL_LESS)    # Set the type of calculation used by the depth buffer
+        # glEnable(GL_CULL_FACE)  # Enable face culling
+        # glCullFace(GL_BACK)     # Discard the back faces of polygons (determined by the vertex winding order)
 
         self.build_program()      # Calls build_program() to compile and link the shaders
         glUseProgram(self.shader) # Tells OpenGL to use the shader program for rendering geometry

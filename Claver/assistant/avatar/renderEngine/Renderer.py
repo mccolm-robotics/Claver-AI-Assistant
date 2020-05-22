@@ -15,16 +15,15 @@ class Renderer:
         shader.start()
         shader.loadProjectionMatrix(self.__projectionMatrix)
         shader.stop()
+        glEnable(GL_DEPTH_TEST) # Enable depth testing to ensure pixels closer to the viewer appear closest
+        glDepthFunc(GL_LESS)    # Set the type of calculation used by the depth buffer
+        glEnable(GL_CULL_FACE)  # Enable face culling
+        glCullFace(GL_BACK)     # Discard the back faces of polygons (determined by the vertex winding order)
 
     def prepare(self, time):
         self.__applicationTime = time
-        glEnable(GL_DEPTH_TEST)  # Enable depth testing to ensure pixels closer to the viewer appear closest
-        glDepthFunc(GL_LESS)  # Set the type of calculation used by the depth buffer
-        glEnable(GL_CULL_FACE)  # Enable face culling
-        glCullFace(GL_BACK)  # Discard the back faces of polygons (determined by the vertex winding order)
         glClearColor(0.0, 0.0, 0.0, 0.0)  # Set the background colour for the window -> Black
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)  # Clear the window background colour to black by resetting the COLOR_BUFFER and clear the DEPTH_BUFFER
-        glFrontFace(GL_CW)
 
     def render(self, entity, shader):
         texturedModel = entity.getModel()

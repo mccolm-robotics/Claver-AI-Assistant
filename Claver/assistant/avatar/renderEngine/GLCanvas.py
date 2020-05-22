@@ -152,6 +152,7 @@ class GLCanvas(Gtk.GLArea):
         # Get information about current GTK GLArea canvas
         window = gl_area.get_allocation()
 
+
         self.loader = Loader()
         self.shader = StaticShader()
         self.renderer = Renderer(self.shader, window)
