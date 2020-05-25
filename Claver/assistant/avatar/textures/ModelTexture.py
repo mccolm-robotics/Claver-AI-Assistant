@@ -3,6 +3,20 @@ class ModelTexture:
         self.__textureID = id
         self.__shineDamper = 1
         self.__reflectivity = 0
+        self.__hasTransparency = False
+        self.__useFakeLighting = False
+
+    def isUseFakeLighting(self):
+        return self.__useFakeLighting
+
+    def setUseFakeLighting(self, useFakeLighting):
+        self.__useFakeLighting = useFakeLighting
+
+    def isHasTransparency(self):
+        return self.__hasTransparency
+
+    def setHasTransparency(self, hasTransparency):
+        self.__hasTransparency = hasTransparency
 
     def getID(self):
         return self.__textureID

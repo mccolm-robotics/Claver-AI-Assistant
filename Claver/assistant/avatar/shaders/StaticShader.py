@@ -26,6 +26,14 @@ class StaticShader(ShaderProgram):
         self.__location_lightColour = super().getUniformLocation("lightColour")
         self.__location_shineDamper = super().getUniformLocation("shineDamper")
         self.__location_reflectivity = super().getUniformLocation("reflectivity")
+        self.__location_useFakeLighting = super().getUniformLocation("useFakeLighting")
+        self.__location_skyColour = super().getUniformLocation("skyColour")
+
+    def loadSkyColour(self, r, g, b):
+        super().loadVector(self.__location_skyColour, (r, g, b))
+
+    def loadFakeLightingVariable(self, useFake):
+        super().loadBoolean(self.__location_useFakeLighting, useFake)
 
     def loadShineVariables(self, damper, reflectivity):
         super().loadFloat(self.__location_shineDamper, damper)
@@ -43,5 +51,5 @@ class StaticShader(ShaderProgram):
         super().loadMatrix(self.__location_projectionMatrix, matrix)
 
     def loadViewMatrix(self, camera):
-        matrix = createViewMatrix(camera)
+        matrix = camera.getViewMatrix()
         super().loadMatrix(self.__location_viewMatrix, matrix)

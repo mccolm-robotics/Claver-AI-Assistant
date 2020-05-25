@@ -1,19 +1,22 @@
+import cairo
 import gi
 
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk
+from gi.repository import Gtk, Gdk
 from pyrr import Matrix44, Vector4, Vector3, Quaternion
 from Claver.assistant.avatar.renderEngine.Loader import Loader
 from Claver.assistant.avatar.renderEngine.MasterRenderer import MasterRenderer
 from Claver.assistant.avatar.shaders.StaticShader import StaticShader
+from Claver.assistant.avatar.terrain.Terrain import Terrain
 from Claver.assistant.avatar.textures.ModelTexture import ModelTexture
 from Claver.assistant.avatar.models.TexturedModel import TexturedModel
 from Claver.assistant.avatar.entities.Entity import Entity
 from Claver.assistant.avatar.entities.Light import Light
 from Claver.interface.Settings import res_dir
-from Claver.interface.KeyboardEvent import KeyboardEvent
+from Claver.interface.InputEvent import InputEvent
 from Claver.assistant.avatar.entities.Camera import Camera
 from Claver.assistant.avatar.renderEngine.ModelLoader import ModelLoader
+from Claver.assistant.avatar.toolbox.Primitives import Primitives
 
 
 class GLCanvas(Gtk.GLArea):
@@ -24,22 +27,31 @@ class GLCanvas(Gtk.GLArea):
         self.connect("unrealize", self.on_unrealize)  # Catch this signal to clean up buffer objects and shaders
         self.connect("render", self.on_render)  # This signal is emitted for each frame that is rendered
         self.connect("resize", self.on_resize)  # This signal is emitted when the window is resized
+        self.add_events(Gdk.EventMask.SCROLL_MASK|Gdk.EventMask.BUTTON_MOTION_MASK|Gdk.EventMask.BUTTON_PRESS_MASK|Gdk.EventMask.BUTTON_RELEASE_MASK)
+        self.connect("scroll-event", self.on_mouse_scroll)
+        self.connect("motion-notify-event", self.on_mouse_movement)
+        self.connect("button-press-event", self.on_mouse_press)
+        self.connect("button-release-event", self.on_mouse_release)
         self.add_tick_callback(self.tick)  # This is a frame time clock that is called each time a frame is rendered
         self.set_start_time = False  # Boolean to track whether the clock has been initialized
         self.set_has_depth_buffer(True)
-        self.keyboard = KeyboardEvent()
-
+        self.inputEvents = InputEvent()
+        self.cursorCoords = None
+        self.initalizedCursor = False
 
     def tick(self, widget, frame_clock):
         self.current_frame_time = frame_clock.get_frame_time()  # Gets the current timestamp in microseconds
 
         if self.set_start_time == False:  # Initializes the timer at the start of the program
             self.last_frame_time = 0  # Stores the previous timestamp
+            self.last_frame_delta = 0
             self.frame_counter = 0  # Counts the total frames rendered per seconds
             self.running_seconds_from_start = 0  # Stores the cumulative running time of the program
             self.starting_time = self.current_frame_time  # Stores the timestamp set when the program was initalized
             self.set_start_time = True  # Prevents the initialization routine from running again in this instance
 
+        self.delta = self.current_frame_time - self.last_frame_delta
+        self.last_frame_delta = self.current_frame_time
         self.running_seconds_from_start = (self.current_frame_time - self.starting_time) / 1000000  # Calculate the total number of seconds that the program has been running
 
         self.frame_counter += 1  # The frame counter is called by GTK each time a frame is rendered. Keep track of how many are rendered.
@@ -62,39 +74,76 @@ class GLCanvas(Gtk.GLArea):
             print(gl_area.get_error(), file=sys.stderr)
 
         # Get information about current GTK GLArea canvas
-        window = gl_area.get_allocation()
+        self.window = gl_area.get_allocation()
+        self.screen = Gdk.Screen.get_default()
+
+        cursor = cairo.ImageSurface.create_from_png("../res/cursors/pointer.png")
+        display = Gdk.Display.get_default()
+
+        self.custom_cursor = Gdk.Cursor.new_from_surface(display, cursor, 0, 0)
+        gl_area.get_toplevel().get_window().set_cursor(self.custom_cursor)
+
 
         self.loader = Loader()
 
-        self.model = ModelLoader().loadModel(res_dir['MODELS']+"Chibi.obj", self.loader)
-        modelTexture = ModelTexture(self.loader.loadTexture(res_dir['MODELS'] + "Chibi_Texture.png"))
-        staticModel = TexturedModel(self.model, modelTexture)
-        texture = staticModel.getTexture()
-        texture.setShineDamper(10)
-        texture.setReflectivity(1)
+        rawChibi = ModelLoader().loadModel(self.loader, res_dir['MODELS']+"Chibi.obj")
+        rawChibiTexture = ModelTexture(self.loader.loadTexture(res_dir['MODELS'] + "Chibi_Texture.png"))
+        chibiModel = TexturedModel(rawChibi, rawChibiTexture)
+        chibiTexture = chibiModel.getTexture()
+        chibiTexture.setShineDamper(10)
+        chibiTexture.setReflectivity(1)
+        self.chibi = Entity(chibiModel, (0.0, 0.0, 0.0), 0.0, 0.0, 0.0, 0.25)
+
+        rawCube = ModelLoader().loadPrimitive(self.loader, Primitives().cube())
+        rawCubeTexture = ModelTexture(self.loader.loadTexture(res_dir['TEXTURES'] + "CircuitTree.png", False))
+        cubeModel = TexturedModel(rawCube, rawCubeTexture)
+        cubeTexture = cubeModel.getTexture()
+        cubeTexture.setShineDamper(10)
+        cubeTexture.setReflectivity(1)
+        self.cube = Entity(cubeModel, (3.0, 1.0, 2.0), 0.0, 0.0, 0.0, 1.0)
+
+        treeModel = TexturedModel(ModelLoader().loadModel(self.loader, res_dir['MODELS']+"Tree.obj"),
+                                  ModelTexture(self.loader.loadTexture(res_dir['MODELS'] + "Tree_Texture.png")))
+
+        grassModel = TexturedModel(ModelLoader().loadModel(self.loader, res_dir['MODELS'] + "Grass.obj"),
+                                  ModelTexture(self.loader.loadTexture(res_dir['MODELS'] + "Grass_Texture.png")))
+        grassModel.getTexture().setHasTransparency(True)
+        grassModel.getTexture().setUseFakeLighting(True)
+
+        fernModel = TexturedModel(ModelLoader().loadModel(self.loader, res_dir['MODELS'] + "Fern.obj"),
+                                   ModelTexture(self.loader.loadTexture(res_dir['MODELS'] + "Fern_Texture.png")))
+        fernModel.getTexture().setHasTransparency(True)
 
 
-        self.entity = Entity(staticModel, (0.0, -6.0, -10.0), 0.0, 2.0, 0.0, 1.0)
         self.light = Light(Vector3((0, 0, 5)), Vector3((1,1,1)))
 
-        self.camera = Camera()
+        self.terrain = []
+        for i in range(-1, 1):
+            for j in range(-1, 1):
+                self.terrain.append(Terrain(i, j, self.loader, ModelTexture(self.loader.loadTexture(res_dir['TEXTURES'] + "grass2.png"))))
 
-        self.renderer = MasterRenderer()
+        import random
+        self.entities = []
+        for i in range(200):
+            self.entities.append(Entity(grassModel, (random.uniform(-.8, .8) * 120, 0.0, random.uniform(-.8, .8) * 120), 0.0, 0.0, 0.0, 1.0))
+            self.entities.append(Entity(treeModel, (random.uniform(-.8, .8) * 120, 0.0, random.uniform(-.8, .8) * 120), 0.0, 0.0, 0.0, 3.0))
+            self.entities.append(Entity(fernModel, (random.uniform(-.8, .8) * 120, 0.0, random.uniform(-.8, .8) * 120), 0.0, 0.0, 0.0, 0.4))
 
-        # for i in range(200):
-        #     x = random(range)
-        #     y = randome(range)
-        #     z = random(range)
-        #     allCubes.add(Entity(cubeModel, Vector3(x,y,z), random.nextFloat * 180, random.nextFloat * 180, 0, 1))
+        self.renderer = MasterRenderer(self.window, self.inputEvents)
+
         return True
 
     def on_render(self, gl_area, gl_context):
-        self.camera.move(self.keyboard)
+        self.renderer.processMovement(self.delta)
 
-        for entityType in myEntityTypeList:
-            self.renderer.processEntity(entityType)
+        for terrain in self.terrain:
+            self.renderer.processTerrain(terrain)
+        for entity in self.entities:
+            self.renderer.processEntity(entity)
+        self.renderer.processEntity(self.chibi)
+        self.renderer.processEntity(self.cube)
 
-        self.renderer.render(self.light, self.camera, self.running_seconds_from_start)
+        self.renderer.render(self.light, self.running_seconds_from_start)
         self.queue_draw()  # Schedules a redraw for Gtk.GLArea
 
     def on_unrealize(self, gl_area):
@@ -102,10 +151,48 @@ class GLCanvas(Gtk.GLArea):
         self.loader.cleanUp()
 
     def registerKeyPress(self, key):
-        self.keyboard.registerEvent(key)
+        self.inputEvents.registerKeyboardEvent(key)
 
     def cancelKeyPress(self, key):
-        self.keyboard.cancelEvent(key)
+        self.inputEvents.cancelKeyboardEvent(key)
+
+    def on_mouse_scroll(self, widget, event):
+        if event.direction == Gdk.ScrollDirection.UP:
+            self.renderer.getCamera().decreaseFOV()
+        elif event.direction == Gdk.ScrollDirection.DOWN:
+            self.renderer.getCamera().increaseFOV()
+
+    def on_mouse_movement(self, widget, event):
+        state = event.get_state()
+        if state & Gdk.ModifierType.BUTTON3_MASK:
+            difference = [(self.cursorCoords[0]-event.x_root)/2, (self.cursorCoords[1]-event.y_root)/2]
+            self.inputEvents.setCursorPosition(difference)
+            # Gdk.Device.warp(self.device, self.screen, self.cursorCoords[0], self.cursorCoords[1])
+
+    def on_mouse_press(self, widget, event):
+        if event.type == Gdk.EventType.BUTTON_PRESS:
+            if event.button == 1:
+                print("Left mouse button clicked")
+            if event.button == 3:
+                if self.initalizedCursor is False:
+                    self.device = event.get_device()
+                    self.cursorCoords = [event.x_root, event.y_root]
+                    self.inputEvents.setCursorPosition([0,0])
+                    blank_cursor = Gdk.Cursor(Gdk.CursorType.BLANK_CURSOR)
+                    widget.get_toplevel().get_window().set_cursor(blank_cursor)
+                    self.initalizedCursor = True
+
+    def on_mouse_release(self, widget, event):
+        if event.type == Gdk.EventType.BUTTON_RELEASE and event.button == 1:
+            # Right mouse button
+            print("Left mouse button released")
+        if event.type == Gdk.EventType.BUTTON_RELEASE and event.button == 3:
+            # Right mouse button
+            widget.get_toplevel().get_window().set_cursor(self.custom_cursor)
+            Gdk.Device.warp(self.device, self.screen, self.cursorCoords[0], self.cursorCoords[1])
+            self.inputEvents.setCursorPosition(None)
+            self.initalizedCursor = False
+
 
     def on_resize(self, area, width, height):
-        self.renderer.updateProjectionMatrix(width, height)
+        self.renderer.windowResized(width, height)

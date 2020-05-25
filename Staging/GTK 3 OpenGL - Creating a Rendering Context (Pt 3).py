@@ -60,6 +60,7 @@ class GLCanvas(Gtk.GLArea):
         self.blenderModel = self.scene.meshes[0]
         print("Name of model being loaded: ", self.blenderModel)
         self.model = np.concatenate((self.blenderModel.vertices, self.blenderModel.texturecoords[0]), axis=0)
+        print(self.blenderModel.vertices)
 
         self.vertex_array_object = GLuint()                                 # Stores the name of the vertex array object
         glCreateVertexArrays(1, ctypes.byref(self.vertex_array_object))     # Creates the vertex array object and initalizes it to default values
