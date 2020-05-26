@@ -165,7 +165,8 @@ class GLCanvas(Gtk.GLArea):
             self.renderer.getCamera().increaseFOV()
 
     def on_mouse_movement(self, widget, event):
-        if Gdk.ModifierType.BUTTON3_MASK:
+        state = event.get_state()
+        if state == Gdk.ModifierType.MOD2_MASK | Gdk.ModifierType.BUTTON3_MASK:
             self.inputEvents.setCursorPosition((int(event.x_root), int(event.y_root)))
 
     def on_mouse_press(self, widget, event):
