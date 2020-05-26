@@ -166,7 +166,7 @@ class GLCanvas(Gtk.GLArea):
 
     def on_mouse_movement(self, widget, event):
         state = event.get_state()
-        if state == Gdk.ModifierType.BUTTON3_MASK:
+        if state == Gdk.ModifierType.MOD2_MASK | Gdk.ModifierType.BUTTON3_MASK:
             self.inputEvents.setCursorPosition((int(event.x_root), int(event.y_root)))
 
     def on_mouse_press(self, widget, event):
