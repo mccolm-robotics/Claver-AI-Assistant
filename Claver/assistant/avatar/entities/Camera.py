@@ -29,9 +29,12 @@ class Camera:
         self.__viewMatrix = None
         self.__projectionMatrix = None
         self.__previousMouseMovement = False
-        self.__lastPosition = [0,0]
+        self.__lastPosition = None
+        self.__startingCoordinate = None
         self.__screen = Gdk.Screen.get_default()
         self.initialized = False
+        self.__setWarp = False
+        self.__warpCounter = 0
 
     def __updateViewMatrix(self):
         self.__viewMatrix = createViewMatrix(self)
@@ -61,28 +64,31 @@ class Camera:
         self.__updateProjectionMatrix()
         self.__loadProjectionMatrixToShader()
 
-    def setLastMovePosition(self, position, device):
+    def setLastMovePosition(self, position):
         self.__lastPosition = position
-        self.__device = device
 
+    def setStartingPosition(self, startPosition):
+        print("Camera: setting start position")
+        self.__startingCoordinate = startPosition
+
+    def activateWarp(self):
+        self.__setWarp = True
+
+    def deactivateWarp(self):
+        self.__setWarp = False
 
     def move(self, delta):
-        # print("move")
+
         newCursorPosition = self.__inputEvents.getCursorPosition()
-        # if newCursorPosition is None:
-        #     self.__previousMouseMovement = False
-        # else:
-        #     if self.__previousMouseMovement is False:
-        #         self.__lastPosition = newCursorPosition
-        #         self.__previousMouseMovement = True
+        if self.__inputEvents.getDevice() is not None:
+            device = self.__inputEvents.getDevice()
+            self.initialized = True
 
-            # xoffset = newCursorPosition[0] - self.__lastPosition[0]
-            # yoffset = self.__lastPosition[1] - newCursorPosition[1]
-            # self.__lastPosition[0] = newCursorPosition[0]
-            # self.__lastPosition[1] = newCursorPosition[1]
+        if self.__lastPosition is None:
+            self.__lastPosition = [300, 600]
 
-        xoffset = -newCursorPosition[0]
-        yoffset = newCursorPosition[1]
+        xoffset = newCursorPosition[0] - self.__lastPosition[0]
+        yoffset = self.__lastPosition[1] - newCursorPosition[1]
 
         mouse_sensitivity = 0.1
         xoffset *= mouse_sensitivity
@@ -103,7 +109,6 @@ class Camera:
         front.z = sin(radians(self.__yaw)) * cos(radians(self.__pitch))
         self.__front = pyrr.vector3.normalize(front)
 
-        #--------------------------------------------------------
         speed = self.__MOVEMENT_SPEED * delta / 1000000
         if self.__inputEvents.isKeyDown('w'):
             self.__position += speed * self.__front
@@ -115,10 +120,15 @@ class Camera:
             self.__position -= pyrr.vector3.normalize(pyrr.vector3.cross(self.__front, self.__up)) * speed
         self.__updateViewMatrix()
 
-        if self.initialized is False:
-            self.initialized is True
-        else:
-            Gdk.Device.warp(self.__device, self.__screen, self.__lastPosition[0], self.__lastPosition[1])
+        if self.initialized is True and self.__setWarp is True:
+            self.__warpCounter += 1
+            if self.__warpCounter > 5:
+                self.__lastPosition = self.__startingCoordinate
+                # warp is an extremely unoptimized function that introduces considerable lag. Call it every 6 frames to reduce overhead
+                Gdk.Device.warp(device, self.__screen, self.__lastPosition[0], self.__lastPosition[1])
+                self.__warpCounter = 0
+            else:
+                self.__lastPosition = newCursorPosition
 
     def increaseFOV(self):
         self.__changeFOV(1)
