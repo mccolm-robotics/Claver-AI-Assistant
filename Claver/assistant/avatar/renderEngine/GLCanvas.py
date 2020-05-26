@@ -125,7 +125,7 @@ class GLCanvas(Gtk.GLArea):
 
         import random
         self.entities = []
-        for i in range(200):
+        for i in range(30):
             self.entities.append(Entity(grassModel, (random.uniform(-.8, .8) * 120, 0.0, random.uniform(-.8, .8) * 120), 0.0, 0.0, 0.0, 1.0))
             self.entities.append(Entity(treeModel, (random.uniform(-.8, .8) * 120, 0.0, random.uniform(-.8, .8) * 120), 0.0, 0.0, 0.0, 3.0))
             self.entities.append(Entity(fernModel, (random.uniform(-.8, .8) * 120, 0.0, random.uniform(-.8, .8) * 120), 0.0, 0.0, 0.0, 0.4))
@@ -152,11 +152,9 @@ class GLCanvas(Gtk.GLArea):
         self.loader.cleanUp()
 
     def registerKeyPress(self, key):
-        print("Keybord Pressed")
         self.inputEvents.registerKeyboardEvent(key)
 
     def cancelKeyPress(self, key):
-        print("Keyboard Released")
         self.inputEvents.cancelKeyboardEvent(key)
 
 
@@ -167,26 +165,8 @@ class GLCanvas(Gtk.GLArea):
             self.renderer.getCamera().increaseFOV()
 
     def on_mouse_movement(self, widget, event):
-        state = event.get_state()
-        if state & Gdk.ModifierType.BUTTON3_MASK:
-            print("mouse pressed")
-            difference = [self.previousCursorCoords[0]-event.x_root, self.previousCursorCoords[1]-event.y_root]
-            self.inputEvents.setCursorPosition(difference)
-            # self.previousCursorCoords = [int(event.x_root), int(event.y_root)]
-
-            self.previousCursorCoords = self.cursorCoords
-
-
-            # if self.count < 8:
-            #     self.previousCursorCoords = [int(event.x_root), int(event.y_root)]
-            #     self.flip = False
-            #     self.count += 1
-            # else:
-            #     self.previousCursorCoords = self.cursorCoords
-            #     Gdk.Device.warp(self.device, self.screen, self.cursorCoords[0], self.cursorCoords[1])
-            #     self.flip = True
-            #     self.count = 0
-
+        if Gdk.ModifierType.BUTTON3_MASK:
+            self.inputEvents.setCursorPosition((int(event.x_root), int(event.y_root)))
 
     def on_mouse_press(self, widget, event):
         if event.type == Gdk.EventType.BUTTON_PRESS:
@@ -195,25 +175,28 @@ class GLCanvas(Gtk.GLArea):
             if event.button == 3:
                 if self.initalizedCursor is False:
                     self.device = event.get_device()
-                    self.cursorCoords = [int(event.x_root), int(event.y_root)]
-                    self.previousCursorCoords = self.cursorCoords
-                    self.renderer.getCamera().setLastMovePosition(self.cursorCoords, self.device)
-                    self.inputEvents.setCursorPosition([0,0])
+                    self.inputEvents.setDevice(event.get_device())
+                    self.cursorCoords = (int(event.x_root), int(event.y_root))
+                    self.renderer.getCamera().setStartingPosition((int(event.x_root), int(event.y_root)))
+                    self.renderer.getCamera().activateWarp()
+                    self.inputEvents.setCursorPosition(self.cursorCoords)
+                    self.inputEvents.setStaringCoordinate(self.cursorCoords)
                     blank_cursor = Gdk.Cursor(Gdk.CursorType.BLANK_CURSOR)
                     widget.get_toplevel().get_window().set_cursor(blank_cursor)
-                    # self.initalizedCursor = True
-                    self.flip = True
-                    self.count = 0
+                    self.initalizedCursor = True
+
 
     def on_mouse_release(self, widget, event):
         if event.type == Gdk.EventType.BUTTON_RELEASE and event.button == 1:
             # Right mouse button
             print("Left mouse button released")
         if event.type == Gdk.EventType.BUTTON_RELEASE and event.button == 3:
-            # Right mouse button
+            # Left mouse button
             widget.get_toplevel().get_window().set_cursor(self.custom_cursor)
             Gdk.Device.warp(self.device, self.screen, self.cursorCoords[0], self.cursorCoords[1])
-            self.inputEvents.setCursorPosition([0,0])
+            self.renderer.getCamera().deactivateWarp()
+            self.renderer.getCamera().setLastMovePosition((int(event.x_root), int(event.y_root)))
+            self.inputEvents.setCursorPosition((int(event.x_root), int(event.y_root)))
             self.initalizedCursor = False
 
 
