@@ -1,15 +1,13 @@
 class InputEvent:
     def __init__(self):
-        self.__keysPressed = []
-        self.__cursor_position = None
+        self.__keysPressed = set()
+        self.__cursor_position = [0,0]
 
     def registerKeyboardEvent(self, key):
-        if key not in self.__keysPressed:
-            self.__keysPressed.append(key)
+        self.__keysPressed.add(key)
 
     def cancelKeyboardEvent(self, key):
-        if key in self.__keysPressed:
-            self.__keysPressed.remove(key)
+        self.__keysPressed.discard(key)
 
     def isKeyDown(self, character):
         if ord(character) in self.__keysPressed:

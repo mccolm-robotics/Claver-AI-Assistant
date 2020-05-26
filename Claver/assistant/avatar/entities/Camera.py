@@ -1,3 +1,8 @@
+import gi
+
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk, Gdk
+
 import pyrr
 from math import sin, cos, radians
 from pyrr import Vector3
@@ -24,7 +29,9 @@ class Camera:
         self.__viewMatrix = None
         self.__projectionMatrix = None
         self.__previousMouseMovement = False
-        self.__lastPosition = []
+        self.__lastPosition = [0,0]
+        self.__screen = Gdk.Screen.get_default()
+        self.initialized = False
 
     def __updateViewMatrix(self):
         self.__viewMatrix = createViewMatrix(self)
@@ -54,44 +61,49 @@ class Camera:
         self.__updateProjectionMatrix()
         self.__loadProjectionMatrixToShader()
 
+    def setLastMovePosition(self, position, device):
+        self.__lastPosition = position
+        self.__device = device
+
 
     def move(self, delta):
+        # print("move")
         newCursorPosition = self.__inputEvents.getCursorPosition()
-        if newCursorPosition is None:
-            self.__previousMouseMovement = False
-        else:
-            print(newCursorPosition)
-            if self.__previousMouseMovement is False:
-                self.__lastPosition = newCursorPosition
-                self.__previousMouseMovement = True
+        # if newCursorPosition is None:
+        #     self.__previousMouseMovement = False
+        # else:
+        #     if self.__previousMouseMovement is False:
+        #         self.__lastPosition = newCursorPosition
+        #         self.__previousMouseMovement = True
 
             # xoffset = newCursorPosition[0] - self.__lastPosition[0]
             # yoffset = self.__lastPosition[1] - newCursorPosition[1]
             # self.__lastPosition[0] = newCursorPosition[0]
             # self.__lastPosition[1] = newCursorPosition[1]
 
-            xoffset = -newCursorPosition[0]
-            yoffset = newCursorPosition[1]
+        xoffset = -newCursorPosition[0]
+        yoffset = newCursorPosition[1]
 
-            mouse_sensitivity = 0.1
-            xoffset *= mouse_sensitivity
-            yoffset *= mouse_sensitivity
+        mouse_sensitivity = 0.1
+        xoffset *= mouse_sensitivity
+        yoffset *= mouse_sensitivity
 
-            self.__yaw += xoffset
-            self.__pitch += yoffset
+        self.__yaw += xoffset
+        self.__pitch += yoffset
 
-            # prevent screen from flipping when pitch is out of bounds
-            if self.__pitch > 89.0:
-                self.__pitch = 89.0
-            if self.__pitch < -89.0:
-                self.__pitch = -89.0
+        # prevent screen from flipping when pitch is out of bounds
+        if self.__pitch > 89.0:
+            self.__pitch = 89.0
+        if self.__pitch < -89.0:
+            self.__pitch = -89.0
 
-            front = Vector3((0.0, 0.0, 0.0))
-            front.x = cos(radians(self.__yaw)) * cos(radians(self.__pitch))
-            front.y = sin(radians(self.__pitch))
-            front.z = sin(radians(self.__yaw)) * cos(radians(self.__pitch))
-            self.__front = pyrr.vector3.normalize(front)
+        front = Vector3((0.0, 0.0, 0.0))
+        front.x = cos(radians(self.__yaw)) * cos(radians(self.__pitch))
+        front.y = sin(radians(self.__pitch))
+        front.z = sin(radians(self.__yaw)) * cos(radians(self.__pitch))
+        self.__front = pyrr.vector3.normalize(front)
 
+        #--------------------------------------------------------
         speed = self.__MOVEMENT_SPEED * delta / 1000000
         if self.__inputEvents.isKeyDown('w'):
             self.__position += speed * self.__front
@@ -102,6 +114,11 @@ class Camera:
         if self.__inputEvents.isKeyDown('a'):
             self.__position -= pyrr.vector3.normalize(pyrr.vector3.cross(self.__front, self.__up)) * speed
         self.__updateViewMatrix()
+
+        if self.initialized is False:
+            self.initialized is True
+        else:
+            Gdk.Device.warp(self.__device, self.__screen, self.__lastPosition[0], self.__lastPosition[1])
 
     def increaseFOV(self):
         self.__changeFOV(1)

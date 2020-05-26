@@ -37,6 +37,7 @@ class GLCanvas(Gtk.GLArea):
         self.set_has_depth_buffer(True)
         self.inputEvents = InputEvent()
         self.cursorCoords = None
+        self.previousCursorCoords = None
         self.initalizedCursor = False
 
     def tick(self, widget, frame_clock):
@@ -151,10 +152,13 @@ class GLCanvas(Gtk.GLArea):
         self.loader.cleanUp()
 
     def registerKeyPress(self, key):
+        print("Keybord Pressed")
         self.inputEvents.registerKeyboardEvent(key)
 
     def cancelKeyPress(self, key):
+        print("Keyboard Released")
         self.inputEvents.cancelKeyboardEvent(key)
+
 
     def on_mouse_scroll(self, widget, event):
         if event.direction == Gdk.ScrollDirection.UP:
@@ -165,9 +169,24 @@ class GLCanvas(Gtk.GLArea):
     def on_mouse_movement(self, widget, event):
         state = event.get_state()
         if state & Gdk.ModifierType.BUTTON3_MASK:
-            difference = [(self.cursorCoords[0]-event.x_root)/2, (self.cursorCoords[1]-event.y_root)/2]
+            print("mouse pressed")
+            difference = [self.previousCursorCoords[0]-event.x_root, self.previousCursorCoords[1]-event.y_root]
             self.inputEvents.setCursorPosition(difference)
-            # Gdk.Device.warp(self.device, self.screen, self.cursorCoords[0], self.cursorCoords[1])
+            # self.previousCursorCoords = [int(event.x_root), int(event.y_root)]
+
+            self.previousCursorCoords = self.cursorCoords
+
+
+            # if self.count < 8:
+            #     self.previousCursorCoords = [int(event.x_root), int(event.y_root)]
+            #     self.flip = False
+            #     self.count += 1
+            # else:
+            #     self.previousCursorCoords = self.cursorCoords
+            #     Gdk.Device.warp(self.device, self.screen, self.cursorCoords[0], self.cursorCoords[1])
+            #     self.flip = True
+            #     self.count = 0
+
 
     def on_mouse_press(self, widget, event):
         if event.type == Gdk.EventType.BUTTON_PRESS:
@@ -176,11 +195,15 @@ class GLCanvas(Gtk.GLArea):
             if event.button == 3:
                 if self.initalizedCursor is False:
                     self.device = event.get_device()
-                    self.cursorCoords = [event.x_root, event.y_root]
+                    self.cursorCoords = [int(event.x_root), int(event.y_root)]
+                    self.previousCursorCoords = self.cursorCoords
+                    self.renderer.getCamera().setLastMovePosition(self.cursorCoords, self.device)
                     self.inputEvents.setCursorPosition([0,0])
                     blank_cursor = Gdk.Cursor(Gdk.CursorType.BLANK_CURSOR)
                     widget.get_toplevel().get_window().set_cursor(blank_cursor)
-                    self.initalizedCursor = True
+                    # self.initalizedCursor = True
+                    self.flip = True
+                    self.count = 0
 
     def on_mouse_release(self, widget, event):
         if event.type == Gdk.EventType.BUTTON_RELEASE and event.button == 1:
@@ -190,7 +213,7 @@ class GLCanvas(Gtk.GLArea):
             # Right mouse button
             widget.get_toplevel().get_window().set_cursor(self.custom_cursor)
             Gdk.Device.warp(self.device, self.screen, self.cursorCoords[0], self.cursorCoords[1])
-            self.inputEvents.setCursorPosition(None)
+            self.inputEvents.setCursorPosition([0,0])
             self.initalizedCursor = False
 
 
