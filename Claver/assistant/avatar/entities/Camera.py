@@ -68,7 +68,6 @@ class Camera:
         self.__lastPosition = position
 
     def setStartingPosition(self, startPosition):
-        print("Camera: setting start position")
         self.__startingCoordinate = startPosition
 
     def activateWarp(self):

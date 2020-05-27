@@ -41,6 +41,9 @@ class ShaderProgram(ABC):
     def loadFloat(self, location, value):
         glUniform1f(location, value)
 
+    def loadInt(self, location, value):
+        glUniform1i(location, value)
+
     def loadVector(self, location, vector):
         glUniform3f(location, vector[0], vector[1], vector[2])
 

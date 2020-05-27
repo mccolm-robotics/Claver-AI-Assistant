@@ -26,6 +26,18 @@ class TerrainShader(ShaderProgram):
         self.__location_shineDamper = super().getUniformLocation("shineDamper")
         self.__location_reflectivity = super().getUniformLocation("reflectivity")
         self.__location_skyColour = super().getUniformLocation("skyColour")
+        self.__location_backgroundTexture = super().getUniformLocation("backgroundTexture")
+        self.__location_rTexture = super().getUniformLocation("rTexture")
+        self.__location_gTexture = super().getUniformLocation("gTexture")
+        self.__location_bTexture = super().getUniformLocation("bTexture")
+        self.__location_blendMap = super().getUniformLocation("blendMap")
+
+    def connectTextureUnits(self):
+        super().loadInt(self.__location_backgroundTexture, 0)
+        super().loadInt(self.__location_rTexture, 1)
+        super().loadInt(self.__location_gTexture, 2)
+        super().loadInt(self.__location_bTexture, 3)
+        super().loadInt(self.__location_blendMap, 4)
 
     def loadSkyColour(self, r, g, b):
         super().loadVector(self.__location_skyColour, (r, g, b))

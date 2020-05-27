@@ -9,6 +9,7 @@ class TerrainRenderer:
         self.__shader = shader
         self.__shader.start()
         self.__shader.loadProjectionMatrix(projectionMatrix)
+        self.__shader.connectTextureUnits()
         self.__shader.stop()
 
     # * ( [Terrain] ) terrains
@@ -26,10 +27,21 @@ class TerrainRenderer:
         glEnableVertexAttribArray(0)
         glEnableVertexAttribArray(1)
         glEnableVertexAttribArray(2)
-        texture = terrain.getTexture()
-        self.__shader.loadShineVariables(texture.getShineDamper(), texture.getReflectivity())
+        self.bindTextures(terrain)
+        self.__shader.loadShineVariables(1, 0)
+
+    def bindTextures(self, terrain):
+        texturePack = terrain.getTexturePack()
         glActiveTexture(GL_TEXTURE0)
-        glBindTexture(GL_TEXTURE_2D, texture.getID())
+        glBindTexture(GL_TEXTURE_2D, texturePack.getBackgroundTexture().getTextureID())
+        glActiveTexture(GL_TEXTURE1)
+        glBindTexture(GL_TEXTURE_2D, texturePack.getrTexture().getTextureID())
+        glActiveTexture(GL_TEXTURE2)
+        glBindTexture(GL_TEXTURE_2D, texturePack.getgTexture().getTextureID())
+        glActiveTexture(GL_TEXTURE3)
+        glBindTexture(GL_TEXTURE_2D, texturePack.getbTexture().getTextureID())
+        glActiveTexture(GL_TEXTURE4)
+        glBindTexture(GL_TEXTURE_2D, terrain.getBlendMap().getTextureID())
 
     def unbindTexturedModel(self):
         glDisableVertexAttribArray(0)

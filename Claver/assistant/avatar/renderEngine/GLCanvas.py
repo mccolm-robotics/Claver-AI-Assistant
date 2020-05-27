@@ -8,6 +8,8 @@ from Claver.assistant.avatar.renderEngine.Loader import Loader
 from Claver.assistant.avatar.renderEngine.MasterRenderer import MasterRenderer
 from Claver.assistant.avatar.shaders.StaticShader import StaticShader
 from Claver.assistant.avatar.terrain.Terrain import Terrain
+from Claver.assistant.avatar.textures.TerrainTexture import TerrainTexture
+from Claver.assistant.avatar.textures.TerrainTexturePack import TerrainTexturePack
 from Claver.assistant.avatar.textures.ModelTexture import ModelTexture
 from Claver.assistant.avatar.models.TexturedModel import TexturedModel
 from Claver.assistant.avatar.entities.Entity import Entity
@@ -75,15 +77,14 @@ class GLCanvas(Gtk.GLArea):
             print(gl_area.get_error(), file=sys.stderr)
 
         # Get information about current GTK GLArea canvas
-        self.window = gl_area.get_allocation()
+        self.window_rect = gl_area.get_allocation()
         self.screen = Gdk.Screen.get_default()
 
         cursor = cairo.ImageSurface.create_from_png("../res/cursors/pointer.png")
         display = Gdk.Display.get_default()
 
         self.custom_cursor = Gdk.Cursor.new_from_surface(display, cursor, 0, 0)
-        gl_area.get_toplevel().get_window().set_cursor(self.custom_cursor)
-
+        gl_area.get_window().set_cursor(self.custom_cursor)
 
         self.loader = Loader()
 
@@ -118,10 +119,18 @@ class GLCanvas(Gtk.GLArea):
 
         self.light = Light(Vector3((0, 0, 5)), Vector3((1,1,1)))
 
+        backgroundTexture = TerrainTexture(self.loader.loadTexture(res_dir['TEXTURES'] + "grass2.png"))
+        rTexture = TerrainTexture(self.loader.loadTexture(res_dir['TEXTURES'] + "mud.png"))
+        gTexture = TerrainTexture(self.loader.loadTexture(res_dir['TEXTURES'] + "grassFlowers2.png"))
+        bTexture = TerrainTexture(self.loader.loadTexture(res_dir['TEXTURES'] + "path.png"))
+
+        texturePack = TerrainTexturePack(backgroundTexture, rTexture, gTexture, bTexture)
+        blendMap = TerrainTexture(self.loader.loadTexture(res_dir['TEXTURES'] + "blendMap.png"))
+
         self.terrain = []
         for i in range(-1, 1):
             for j in range(-1, 1):
-                self.terrain.append(Terrain(i, j, self.loader, ModelTexture(self.loader.loadTexture(res_dir['TEXTURES'] + "grass2.png"))))
+                self.terrain.append(Terrain(i, j, self.loader, texturePack, blendMap))
 
         import random
         self.entities = []
@@ -130,7 +139,7 @@ class GLCanvas(Gtk.GLArea):
             self.entities.append(Entity(treeModel, (random.uniform(-.8, .8) * 120, 0.0, random.uniform(-.8, .8) * 120), 0.0, 0.0, 0.0, 3.0))
             self.entities.append(Entity(fernModel, (random.uniform(-.8, .8) * 120, 0.0, random.uniform(-.8, .8) * 120), 0.0, 0.0, 0.0, 0.4))
 
-        self.renderer = MasterRenderer(self.window, self.inputEvents)
+        self.renderer = MasterRenderer(self.window_rect, self.inputEvents)
 
         return True
 
@@ -179,6 +188,7 @@ class GLCanvas(Gtk.GLArea):
                     self.inputEvents.setDevice(event.get_device())
                     self.cursorCoords = (int(event.x_root), int(event.y_root))
                     self.renderer.getCamera().setStartingPosition((int(event.x_root), int(event.y_root)))
+                    self.renderer.getCamera().setLastMovePosition((int(event.x_root), int(event.y_root)))
                     self.renderer.getCamera().activateWarp()
                     self.inputEvents.setCursorPosition(self.cursorCoords)
                     self.inputEvents.setStaringCoordinate(self.cursorCoords)
