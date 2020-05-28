@@ -6,13 +6,19 @@ class InputEvent:
         self.__starting_coordinate = None
 
     def registerKeyboardEvent(self, key):
+        # Add to python set
         self.__keysPressed.add(key)
 
     def cancelKeyboardEvent(self, key):
+        # Remove from set without emitting error if not in set
         self.__keysPressed.discard(key)
 
     def isKeyDown(self, character):
+        # lower-case
         if ord(character) in self.__keysPressed:
+            return True
+        # upper-case
+        if ord(character)-32 in self.__keysPressed:
             return True
         else:
             return False

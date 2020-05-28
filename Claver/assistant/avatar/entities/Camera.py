@@ -11,11 +11,12 @@ from Claver.assistant.avatar.toolbox.Math import createViewMatrix, createProject
 class Camera:
     __MOVEMENT_SPEED = 2.5
     __SENSITIVITY = 0.1
+    __ZOOM_SENSITIVITY = 2.5
     __FOV_LIMIT = 70
     __NEAR_PLANE = 0.1
     __FAR_PLANE = 1000
 
-    def __init__(self, window, inputEvents, shaderList):
+    def __init__(self, window, inputEvents, shaderList, player):
         self.__position = Vector3((0.0, 2.5, 4.0))
         self.__front = Vector3((0.0, 0.0, -1.0))
         self.__up = Vector3((0.0, 1.0, 0.0))
@@ -137,7 +138,7 @@ class Camera:
 
     def __changeFOV(self, flag):
         if 1.0 <= self.__FOV <= self.__FOV_LIMIT:
-                self.__FOV -= flag * self.__MOVEMENT_SPEED
+                self.__FOV -= flag * self.__ZOOM_SENSITIVITY
         if self.__FOV <= 1.0:
             self.__FOV = 1.0
         if self.__FOV >= self.__FOV_LIMIT:

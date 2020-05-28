@@ -42,7 +42,7 @@ class MainWindow(Gtk.Application):
     def on_key_release(self, window, event):
         if event.keyval == Gdk.KEY_Escape:
             self.quit()
-        elif event.keyval == Gdk.KEY_f:
+        elif event.keyval == Gdk.KEY_f or event.keyval == Gdk.KEY_F:
             self.fullscreen_mode(window)
         else:
             self.glCanvas.cancelKeyPress(event.keyval)
