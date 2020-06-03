@@ -16,7 +16,7 @@ class Camera:
     __NEAR_PLANE = 0.1
     __FAR_PLANE = 1000
 
-    def __init__(self, window, inputEvents, shaderList, player):
+    def __init__(self, window, inputEvents, shaderList, player=None):
         self.__position = Vector3((0.0, 2.5, 4.0))
         self.__front = Vector3((0.0, 0.0, -1.0))
         self.__up = Vector3((0.0, 1.0, 0.0))
@@ -110,14 +110,14 @@ class Camera:
         self.__front = pyrr.vector3.normalize(front)
 
         speed = self.__MOVEMENT_SPEED * delta / 1000000
-        if self.__inputEvents.isKeyDown('w'):
-            self.__position += speed * self.__front
-        if self.__inputEvents.isKeyDown('s'):
-            self.__position -= speed * self.__front
-        if self.__inputEvents.isKeyDown('d'):
-            self.__position += pyrr.vector3.normalize(pyrr.vector3.cross(self.__front, self.__up)) * speed
-        if self.__inputEvents.isKeyDown('a'):
-            self.__position -= pyrr.vector3.normalize(pyrr.vector3.cross(self.__front, self.__up)) * speed
+        # if self.__inputEvents.isKeyDown('w'):
+        #     self.__position += speed * self.__front
+        # if self.__inputEvents.isKeyDown('s'):
+        #     self.__position -= speed * self.__front
+        # if self.__inputEvents.isKeyDown('d'):
+        #     self.__position += pyrr.vector3.normalize(pyrr.vector3.cross(self.__front, self.__up)) * speed
+        # if self.__inputEvents.isKeyDown('a'):
+        #     self.__position -= pyrr.vector3.normalize(pyrr.vector3.cross(self.__front, self.__up)) * speed
         self.__updateViewMatrix()
 
         if self.initialized is True and self.__setWarp is True:

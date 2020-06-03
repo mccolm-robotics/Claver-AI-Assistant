@@ -1,6 +1,8 @@
 import cairo
 import gi
 
+from Claver.assistant.avatar.entities.Player import Player
+
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gdk
 from pyrr import Matrix44, Vector4, Vector3, Quaternion
@@ -94,7 +96,7 @@ class GLCanvas(Gtk.GLArea):
         chibiTexture = chibiModel.getTexture()
         chibiTexture.setShineDamper(10)
         chibiTexture.setReflectivity(1)
-        self.chibi = Entity(chibiModel, (0.0, 0.0, 0.0), 0.0, 0.0, 0.0, 0.25)
+        self.chibi = Player(chibiModel, (0.0, 0.0, 0.0), 0.0, 0.0, 0.0, 0.25, self.inputEvents)
 
         rawCube = ModelLoader().loadPrimitive(self.loader, Primitives().cube())
         rawCubeTexture = ModelTexture(self.loader.loadTexture(res_dir['TEXTURES'] + "CircuitTree.png", False))
@@ -145,6 +147,7 @@ class GLCanvas(Gtk.GLArea):
 
     def on_render(self, gl_area, gl_context):
         self.renderer.processMovement(self.delta)
+        self.chibi.move(self.delta)
 
         for terrain in self.terrain:
             self.renderer.processTerrain(terrain)
