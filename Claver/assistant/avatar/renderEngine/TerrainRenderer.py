@@ -50,5 +50,5 @@ class TerrainRenderer:
         glBindVertexArray(0)
 
     def loadModelMatrix(self, terrain, clock):
-        transformationMatrix = createTransformationMatrix(Vector3((terrain.getX(), 0, terrain.getZ())), 0, 0, 0, 1, clock)
+        transformationMatrix = createTransformationMatrix(Vector3((terrain.getX(), 0, terrain.getZ())), 0, 0, 0, 1)
         self.__shader.loadTransformationMatrix(transformationMatrix)

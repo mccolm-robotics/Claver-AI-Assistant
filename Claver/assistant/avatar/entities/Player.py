@@ -15,7 +15,7 @@ class Player(Entity):
     def move(self, delta):
         self.checkInputs()
         print("Turn Speed: ", self.__currentTurnSpeed)
-        super().increaseRotation(0, self.__currentTurnSpeed * delta / 1000000, 0)
+        super().increaseRotation(0, 1, 0)
         distance = self.__currentSpeed * delta / 1000000
         dx = distance * sin(radians(super().getRotY()))
         dz = distance * cos(radians(super().getRotY()))

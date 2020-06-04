@@ -209,6 +209,7 @@ class GLCanvas(Gtk.GLArea):
 
         self.mvpMatrixLocationInShader = glGetUniformLocation(self.shader, "ModelViewPerspective")  # Get the location of the ModelViewPerspective matrix in the vertex shader.
 
+
         return True
 
     def on_render(self, gl_area, gl_context):
@@ -221,7 +222,7 @@ class GLCanvas(Gtk.GLArea):
 
         view_matrix = Matrix44.look_at(eye, target, up) # Calculate the view matrix
         # Calculate the model matrix. The rotation speed is regulated by the application clock.
-        model_matrix = Matrix44.from_translation([0.0, 0.0, 0.0]) * pyrr.matrix44.create_from_axis_rotation((0.0, 1.0, 0.0), self.application_clock) * Matrix44.from_scale([1.0, 1.0, 1.0])
+        model_matrix = Matrix44.from_translation([0.0, 0.0, 0.0]) * pyrr.matrix44.create_from_axis_rotation((0.0, 5.0, 0.0), self.application_clock) * Matrix44.from_scale([1.0, 1.0, 1.0])
 
         ModelViewPerspective = self.perspective_matrix * view_matrix * model_matrix             # Calculate the ModelViewPerspective matrix
         glUniformMatrix4fv(self.mvpMatrixLocationInShader, 1, GL_FALSE, ModelViewPerspective)   # Update the value of the ModelViewPerspective matrix attribute variable in the vertex buffer
