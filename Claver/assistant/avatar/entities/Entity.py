@@ -16,6 +16,7 @@ class Entity:
         self.__position.z += dz
 
     def increaseRotation(self, dx, dy, dz):
+        print(dx, dy, dz)
         self.__rotX += dx
         self.__rotY += dy
         self.__rotZ += dz
@@ -31,6 +32,11 @@ class Entity:
 
     def setPosition(self, position):
         self.__position = Vector3(position)
+
+    def setRotation(self, dx, dy, dz):
+        self.__rotX = dx
+        self.__rotY = dy
+        self.__rotZ = dz
 
     def getRotX(self):
         return self.__rotX
