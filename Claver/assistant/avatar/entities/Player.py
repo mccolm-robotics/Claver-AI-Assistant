@@ -4,7 +4,7 @@ from math import sin, cos, radians
 
 class Player(Entity):
     __RUN_SPEED = 10  # units / sec
-    __TURN_SPEED = 160  # deg / sec
+    __TURN_SPEED = 2.5  # rad / sec
 
     def __init__(self, model, position, rotX, rotY, rotZ, scale, inputEvents):
         super().__init__(model, position, rotX, rotY, rotZ, scale)
@@ -14,11 +14,11 @@ class Player(Entity):
 
     def move(self, delta):
         self.checkInputs()
-        print("Turn Speed: ", self.__currentTurnSpeed)
-        super().increaseRotation(0, 1, 0)
+        super().increaseRotation(0, -self.__currentTurnSpeed * delta / 1000000, 0)
+        print("RotY: ",super().getRotY())
         distance = self.__currentSpeed * delta / 1000000
-        dx = distance * sin(radians(super().getRotY()))
-        dz = distance * cos(radians(super().getRotY()))
+        dx = distance * sin(super().getRotY())
+        dz = distance * cos(super().getRotY())
         # print("Distance:{} RotY:{} radians(super().getRotY()): {} cos(radians(super().getRotY())):{}".format(distance, super().getRotY(), radians(super().getRotY()), cos(radians(super().getRotY()))))
         super().increasePosition(dx, 0, dz)
 

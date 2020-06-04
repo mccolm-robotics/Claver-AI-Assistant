@@ -1,3 +1,4 @@
+import numpy as np
 from pyrr import Vector3
 
 
@@ -16,10 +17,21 @@ class Entity:
         self.__position.z += dz
 
     def increaseRotation(self, dx, dy, dz):
-        print(dx, dy, dz)
         self.__rotX += dx
+        # if self.__rotX < 0:
+        #     self.__rotX += np.pi*2
+        # elif self.__rotX > np.pi*2:
+        #     self.__rotX -= np.pi*2
         self.__rotY += dy
+        # if self.__rotY < 0:
+        #     self.__rotY += np.pi*2
+        # elif self.__rotY > np.pi*2:
+        #     self.__rotY -= np.pi*2
         self.__rotZ += dz
+        # if self.__rotZ < 0:
+        #     self.__rotZ += np.pi*2
+        # elif self.__rotZ > np.pi*2:
+        #     self.__rotZ -= np.pi*2
 
     def getModel(self):
         return self.__model
