@@ -23,10 +23,10 @@ class Entity:
         # elif self.__rotX > np.pi*2:
         #     self.__rotX -= np.pi*2
         self.__rotY += dy
-        # if self.__rotY < 0:
-        #     self.__rotY += np.pi*2
-        # elif self.__rotY > np.pi*2:
-        #     self.__rotY -= np.pi*2
+        if self.__rotY < 0:
+            self.__rotY += np.pi*2
+        elif self.__rotY > np.pi*2:
+            self.__rotY -= np.pi*2
         self.__rotZ += dz
         # if self.__rotZ < 0:
         #     self.__rotZ += np.pi*2
