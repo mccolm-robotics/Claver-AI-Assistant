@@ -45,6 +45,9 @@ class Entity:
     def setPosition(self, position):
         self.__position = Vector3(position)
 
+    def setYPosition(self, dy):
+        self.__position.y = dy
+
     def setRotation(self, dx, dy, dz):
         self.__rotX = dx
         self.__rotY = dy

@@ -12,11 +12,13 @@ class Camera:
     __MOVEMENT_SPEED = 2.5
     __SENSITIVITY = 0.1
     __ZOOM_SENSITIVITY = 2.5
+    __ZOOM_NEAR_LIMIT = 3
+    __ZOOM_FAR_LIMIT = 10
     __FOV_LIMIT = 70
     __NEAR_PLANE = 0.1
     __FAR_PLANE = 1000
 
-    def __init__(self, window, inputEvents, shaderList, player=None):
+    def __init__(self, window, inputEvents, shaderList, player):
         self.__position = Vector3((0.0, 2.5, 4.0))
         self.__front = Vector3((0.0, 0.0, -1.0))
         self.__up = Vector3((0.0, 1.0, 0.0))
@@ -27,6 +29,8 @@ class Camera:
         self.__shaderList = shaderList
         self.__pitch = 0             # Rotation around X axis: look up and down
         self.__yaw = -90.0           # Rotation around Y axis: look left and right. yaw is initalized to -90 since a yaw of 0.0 results in a direction vector pointing to the right
+        self.__distanceFromPlayer = 5
+        self.__angleAroundPlayer = 0
         self.__viewMatrix = None
         self.__projectionMatrix = None
         self.__previousMouseMovement = False
@@ -36,6 +40,7 @@ class Camera:
         self.initialized = False
         self.__setWarp = False
         self.__warpCounter = 0
+        self.__player = player
 
     def __updateViewMatrix(self):
         self.__viewMatrix = createViewMatrix(self)
@@ -78,6 +83,19 @@ class Camera:
         self.__setWarp = False
 
     def move(self, delta):
+        self.__player.move(delta)
+
+
+
+
+
+
+
+
+
+
+
+
 
         newCursorPosition = self.__inputEvents.getCursorPosition()
         if self.__inputEvents.getDevice() is not None:
@@ -136,6 +154,12 @@ class Camera:
     def decreaseFOV(self):
         self.__changeFOV(-1)
 
+    def increaseZoom(self):
+        self.calculateZoom(1)
+
+    def decreaseZoom(self):
+        self.calculateZoom(-1)
+
     def __changeFOV(self, flag):
         if 1.0 <= self.__FOV <= self.__FOV_LIMIT:
                 self.__FOV -= flag * self.__ZOOM_SENSITIVITY
@@ -157,6 +181,14 @@ class Camera:
 
     def getFront(self):
         return self.__front
+
+    def calculateZoom(self, amount):
+        if self.__ZOOM_NEAR_LIMIT <= self.__FOV <= self.__ZOOM_FAR_LIMIT:
+                self.__distanceFromPlayer -= amount * self.__ZOOM_SENSITIVITY
+        if self.__distanceFromPlayer <= self.__ZOOM_NEAR_LIMIT:
+            self.__distanceFromPlayer = self.__ZOOM_NEAR_LIMIT
+        if self.__distanceFromPlayer >= self.__ZOOM_FAR_LIMIT:
+            self.__distanceFromPlayer = self.__ZOOM_FAR_LIMIT
 
 # if __name__ == '__main__':
 # # camera

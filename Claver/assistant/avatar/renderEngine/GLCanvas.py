@@ -141,13 +141,13 @@ class GLCanvas(Gtk.GLArea):
             self.entities.append(Entity(treeModel, (random.uniform(-.8, .8) * 120, 0.0, random.uniform(-.8, .8) * 120), 0.0, 0.0, 0.0, 3.0))
             self.entities.append(Entity(fernModel, (random.uniform(-.8, .8) * 120, 0.0, random.uniform(-.8, .8) * 120), 0.0, 0.0, 0.0, 0.4))
 
-        self.renderer = MasterRenderer(self.window_rect, self.inputEvents)
+        self.renderer = MasterRenderer(self.window_rect, self.inputEvents, self.chibi)
 
         return True
 
     def on_render(self, gl_area, gl_context):
         self.renderer.processMovement(self.delta)
-        self.chibi.move(self.delta)
+        # self.chibi.move(self.delta)
 
         for terrain in self.terrain:
             self.renderer.processTerrain(terrain)
@@ -169,14 +169,14 @@ class GLCanvas(Gtk.GLArea):
     def cancelKeyPress(self, key):
         self.inputEvents.cancelKeyboardEvent(key)
 
-
     def on_mouse_scroll(self, widget, event):
         if event.direction == Gdk.ScrollDirection.UP:
-            self.renderer.getCamera().decreaseFOV()
+            self.renderer.getCamera().decreaseZoom()
         elif event.direction == Gdk.ScrollDirection.DOWN:
-            self.renderer.getCamera().increaseFOV()
+            self.renderer.getCamera().increaseZoom()
 
     def on_mouse_movement(self, widget, event):
+        print("moved")
         state = event.get_state()
         if state & Gdk.ModifierType.BUTTON3_MASK:
             self.inputEvents.setCursorPosition((int(event.x_root), int(event.y_root)))

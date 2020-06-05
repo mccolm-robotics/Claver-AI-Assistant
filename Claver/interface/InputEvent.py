@@ -14,14 +14,18 @@ class InputEvent:
         self.__keysPressed.discard(key)
 
     def isKeyDown(self, character):
-        # lower-case
-        if ord(character) in self.__keysPressed:
-            return True
-        # upper-case
-        if ord(character)-32 in self.__keysPressed:
-            return True
+        if character == 'space':
+            if 32 in self.__keysPressed:
+                return True
         else:
-            return False
+            # lower-case
+            if ord(character) in self.__keysPressed:
+                return True
+            # upper-case
+            if ord(character)-32 in self.__keysPressed:
+                return True
+            else:
+                return False
 
     def setCursorPosition(self, position):
         self.__cursor_position = position

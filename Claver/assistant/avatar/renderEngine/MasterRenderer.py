@@ -15,7 +15,7 @@ class MasterRenderer:
     __GREEN = 0.5
     __BLUE = 0.5
 
-    def __init__(self, window, keyboardEvents):
+    def __init__(self, window, keyboardEvents, player):
         glEnable(GL_DEPTH_TEST) # Enable depth testing to ensure pixels closer to the viewer appear closest
         glDepthFunc(GL_LESS)    # Set the type of calculation used by the depth buffer
         MasterRenderer.enableCulling()
@@ -24,7 +24,7 @@ class MasterRenderer:
         shaderList.append(self.__shader)
         self.__terrainShader = TerrainShader()
         shaderList.append(self.__terrainShader)
-        self.__camera = Camera(window, keyboardEvents, shaderList)
+        self.__camera = Camera(window, keyboardEvents, shaderList, player)
         self.__projectionMatrix = self.__camera.getProjectionMatrix()
         self.__renderer = EntityRenderer(self.__shader, self.__projectionMatrix)
         self.__entityDict = {}
