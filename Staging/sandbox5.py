@@ -1,4 +1,9 @@
-import pyrr
-from pyrr import Matrix44
+import numpy as np
 
-print(pyrr.matrix44.create_from_axis_rotation((0, 1, 0), 1))
+heights = np.empty(shape=[10, 10])
+
+for i in range(10):
+    for j in range(10):
+        heights[i][j] = 5
+
+print(heights[0].size - 1)

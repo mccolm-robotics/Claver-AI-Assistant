@@ -1,5 +1,6 @@
 import cairo
 import gi
+import numpy as np
 
 from Claver.assistant.avatar.entities.Player import Player
 
@@ -42,7 +43,7 @@ class GLCanvas(Gtk.GLArea):
         self.inputEvents = InputEvent()
         self.cursorCoords = None
         self.previousCursorCoords = None
-        self.initalizedCursor = False
+        self.initializedCursor = False
 
     def tick(self, widget, frame_clock):
         self.current_frame_time = frame_clock.get_frame_time()  # Gets the current timestamp in microseconds
@@ -55,7 +56,7 @@ class GLCanvas(Gtk.GLArea):
             self.starting_time = self.current_frame_time  # Stores the timestamp set when the program was initalized
             self.set_start_time = True  # Prevents the initialization routine from running again in this instance
 
-        self.delta = self.current_frame_time - self.last_frame_delta
+        self.delta = (self.current_frame_time - self.last_frame_delta) / 1000000
         self.last_frame_delta = self.current_frame_time
         self.running_seconds_from_start = (self.current_frame_time - self.starting_time) / 1000000  # Calculate the total number of seconds that the program has been running
 
@@ -128,11 +129,12 @@ class GLCanvas(Gtk.GLArea):
 
         texturePack = TerrainTexturePack(backgroundTexture, rTexture, gTexture, bTexture)
         blendMap = TerrainTexture(self.loader.loadTexture(res_dir['TEXTURES'] + "blendMap.png"))
+        heightMap = res_dir['TEXTURES'] + "heightmap.png"
 
         self.terrain = []
         for i in range(-1, 1):
             for j in range(-1, 1):
-                self.terrain.append(Terrain(i, j, self.loader, texturePack, blendMap))
+                self.terrain.append(Terrain(i, j, self.loader, texturePack, blendMap, heightMap))
 
         import random
         self.entities = []
@@ -176,17 +178,14 @@ class GLCanvas(Gtk.GLArea):
             self.renderer.getCamera().increaseZoom()
 
     def on_mouse_movement(self, widget, event):
-        print("moved")
         state = event.get_state()
-        if state & Gdk.ModifierType.BUTTON3_MASK:
+        if state & Gdk.ModifierType.BUTTON3_MASK or state & Gdk.ModifierType.BUTTON1_MASK:
             self.inputEvents.setCursorPosition((int(event.x_root), int(event.y_root)))
 
     def on_mouse_press(self, widget, event):
         if event.type == Gdk.EventType.BUTTON_PRESS:
-            if event.button == 1:
-                print("Left mouse button clicked")
-            if event.button == 3:
-                if self.initalizedCursor is False:
+            if event.button == 1 or event.button == 3:
+                if self.initializedCursor is False:
                     self.device = event.get_device()
                     self.inputEvents.setDevice(event.get_device())
                     self.cursorCoords = (int(event.x_root), int(event.y_root))
@@ -197,22 +196,25 @@ class GLCanvas(Gtk.GLArea):
                     self.inputEvents.setStaringCoordinate(self.cursorCoords)
                     blank_cursor = Gdk.Cursor(Gdk.CursorType.BLANK_CURSOR)
                     widget.get_toplevel().get_window().set_cursor(blank_cursor)
-                    self.initalizedCursor = True
-
+                    self.initializedCursor = True
+                if event.button == 1:
+                    self.inputEvents.registerButtonEvent(1)
+                elif event.button == 3:
+                    self.inputEvents.registerButtonEvent(3)
 
     def on_mouse_release(self, widget, event):
-        if event.type == Gdk.EventType.BUTTON_RELEASE and event.button == 1:
-            # Right mouse button
-            print("Left mouse button released")
-        if event.type == Gdk.EventType.BUTTON_RELEASE and event.button == 3:
+        if event.type == Gdk.EventType.BUTTON_RELEASE and (event.button == 1 or event.button == 3):
             # Left mouse button
             widget.get_toplevel().get_window().set_cursor(self.custom_cursor)
             Gdk.Device.warp(self.device, self.screen, self.cursorCoords[0], self.cursorCoords[1])
             self.renderer.getCamera().deactivateWarp()
             self.renderer.getCamera().setLastMovePosition((int(event.x_root), int(event.y_root)))
             self.inputEvents.setCursorPosition((int(event.x_root), int(event.y_root)))
-            self.initalizedCursor = False
-
+            self.initializedCursor = False
+            if event.button == 1:
+                self.inputEvents.cancelButtonEvent(1)
+            elif event.button == 3:
+                self.inputEvents.cancelButtonEvent(3)
 
     def on_resize(self, area, width, height):
         self.renderer.windowResized(width, height)

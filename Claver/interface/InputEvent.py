@@ -1,9 +1,22 @@
 class InputEvent:
     def __init__(self):
         self.__keysPressed = set()
+        self.__buttonsPressed = set()
         self.__cursor_position = (300,600)
         self.__device = None
         self.__starting_coordinate = None
+
+    def registerButtonEvent(self, button):
+        self.__buttonsPressed.add(button)
+
+    def cancelButtonEvent(self, button):
+        self.__buttonsPressed.discard(button)
+
+    def isButtonDown(self, button):
+        if button in self.__buttonsPressed:
+            return True
+        else:
+            return False
 
     def registerKeyboardEvent(self, key):
         # Add to python set

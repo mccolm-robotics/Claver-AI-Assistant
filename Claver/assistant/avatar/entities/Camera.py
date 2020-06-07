@@ -11,7 +11,7 @@ from Claver.assistant.avatar.toolbox.Math import createViewMatrix, createProject
 class Camera:
     __MOVEMENT_SPEED = 2.5
     __SENSITIVITY = 0.1
-    __ZOOM_SENSITIVITY = 2.5
+    __ZOOM_SENSITIVITY = 0.5
     __ZOOM_NEAR_LIMIT = 3
     __ZOOM_FAR_LIMIT = 10
     __FOV_LIMIT = 70
@@ -19,7 +19,7 @@ class Camera:
     __FAR_PLANE = 1000
 
     def __init__(self, window, inputEvents, shaderList, player):
-        self.__position = Vector3((0.0, 2.5, 4.0))
+        self.__position = Vector3((0.0, 4.0, 4.0))
         self.__front = Vector3((0.0, 0.0, -1.0))
         self.__up = Vector3((0.0, 1.0, 0.0))
         self.__FOV = self.__FOV_LIMIT
@@ -27,20 +27,22 @@ class Camera:
         self.__height = window.height
         self.__inputEvents = inputEvents
         self.__shaderList = shaderList
-        self.__pitch = 0             # Rotation around X axis: look up and down
-        self.__yaw = -90.0           # Rotation around Y axis: look left and right. yaw is initalized to -90 since a yaw of 0.0 results in a direction vector pointing to the right
+        self.__pitch = 20             # Rotation around X axis: look up and down
+        self.__yaw = 0           # Rotation around Y axis: look left and right. yaw is initalized to -90 since a yaw of 0.0 results in a direction vector pointing to the right
         self.__distanceFromPlayer = 5
         self.__angleAroundPlayer = 0
         self.__viewMatrix = None
         self.__projectionMatrix = None
         self.__previousMouseMovement = False
-        self.__lastPosition = None
+        self.__lastCursorPosition = None
         self.__startingCoordinate = None
         self.__screen = Gdk.Screen.get_default()
         self.initialized = False
         self.__setWarp = False
         self.__warpCounter = 0
         self.__player = player
+        self.__playerRunSpeed = player.getRunSpeed()
+        self.__updatePlayerYaw = False
 
     def __updateViewMatrix(self):
         self.__viewMatrix = createViewMatrix(self)
@@ -71,7 +73,7 @@ class Camera:
         self.__loadProjectionMatrixToShader()
 
     def setLastMovePosition(self, position):
-        self.__lastPosition = position
+        self.__lastCursorPosition = position
 
     def setStartingPosition(self, startPosition):
         self.__startingCoordinate = startPosition
@@ -83,36 +85,22 @@ class Camera:
         self.__setWarp = False
 
     def move(self, delta):
-        self.__player.move(delta)
-
-
-
-
-
-
-
-
-
-
-
-
-
         newCursorPosition = self.__inputEvents.getCursorPosition()
         if self.__inputEvents.getDevice() is not None:
             device = self.__inputEvents.getDevice()
             self.initialized = True
 
-        if self.__lastPosition is None:
-            self.__lastPosition = [300, 600]
+        if self.__lastCursorPosition is None:
+            self.__lastCursorPosition = [300, 600]
 
-        xoffset = newCursorPosition[0] - self.__lastPosition[0]
-        yoffset = self.__lastPosition[1] - newCursorPosition[1]
+        xoffset = newCursorPosition[0] - self.__lastCursorPosition[0]
+        yoffset = self.__lastCursorPosition[1] - newCursorPosition[1]
 
         mouse_sensitivity = 0.1
         xoffset *= mouse_sensitivity
         yoffset *= mouse_sensitivity
 
-        self.__yaw += xoffset
+        self.__yaw -= xoffset
         self.__pitch += yoffset
 
         # prevent screen from flipping when pitch is out of bounds
@@ -121,32 +109,64 @@ class Camera:
         if self.__pitch < -89.0:
             self.__pitch = -89.0
 
-        front = Vector3((0.0, 0.0, 0.0))
-        front.x = cos(radians(self.__yaw)) * cos(radians(self.__pitch))
-        front.y = sin(radians(self.__pitch))
-        front.z = sin(radians(self.__yaw)) * cos(radians(self.__pitch))
-        self.__front = pyrr.vector3.normalize(front)
+        if self.__yaw > 360:
+            self.__yaw -= 360
+        elif self.__yaw < 0:
+            self.__yaw += 360
 
-        speed = self.__MOVEMENT_SPEED * delta / 1000000
-        # if self.__inputEvents.isKeyDown('w'):
-        #     self.__position += speed * self.__front
-        # if self.__inputEvents.isKeyDown('s'):
-        #     self.__position -= speed * self.__front
-        # if self.__inputEvents.isKeyDown('d'):
-        #     self.__position += pyrr.vector3.normalize(pyrr.vector3.cross(self.__front, self.__up)) * speed
-        # if self.__inputEvents.isKeyDown('a'):
-        #     self.__position -= pyrr.vector3.normalize(pyrr.vector3.cross(self.__front, self.__up)) * speed
+        distance = self.__playerRunSpeed * delta
+        fwdVector = (self.__position.x - self.__player.getPosition().x, 0, self.__position.z - self.__player.getPosition().z)
+        sideStepDirection = pyrr.vector3.normalize(pyrr.vector3.cross(fwdVector, self.__up))
+
+        if self.__inputEvents.isKeyDown('a') is True or self.__inputEvents.isKeyDown('s') is True or self.__inputEvents.isKeyDown('d') is True or self.__inputEvents.isKeyDown('w') is True:
+            if self.__inputEvents.isButtonDown(1) is True and self.__inputEvents.isButtonDown(3) is False:
+                self.__player.move(delta, sideStepDirection)
+            else:
+                self.__player.move(delta, sideStepDirection, radians(self.__yaw))
+        else:
+            self.__player.move(delta, sideStepDirection)
+
+        if self.__inputEvents.isKeyDown('a') is True and self.__inputEvents.isKeyDown('d') is False:
+            self.__position += sideStepDirection * distance
+        elif self.__inputEvents.isKeyDown('d') is True and self.__inputEvents.isKeyDown('a') is False:
+            self.__position -= sideStepDirection * distance
+
+        horizontalDistance = self.__distanceFromPlayer * cos(radians(self.__pitch))
+        verticalDistance = self.__distanceFromPlayer * sin(radians(self.__pitch))
+        self.__position.y = self.__player.getPosition().y + 2.5 + verticalDistance
+        if self.__position.y < .5:
+            self.__position.y = .5
+        theta = self.__player.getRotY() + self.__yaw
+        offsetX = horizontalDistance * sin(radians(theta))
+        offsetZ = horizontalDistance * cos(radians(theta))
+        self.__position.x = self.__player.getPosition().x - offsetX
+        self.__position.z = self.__player.getPosition().z - offsetZ
+
+
+
+
+
+        # front = Vector3((0.0, 0.0, 0.0))
+        # front.x = cos(radians(self.__yaw)) * cos(radians(self.__pitch))
+        # front.y = sin(radians(self.__pitch))
+        # front.z = sin(radians(self.__yaw)) * cos(radians(self.__pitch))
+        # self.__front = pyrr.vector3.normalize(front)
+
+
+
+
+
         self.__updateViewMatrix()
 
         if self.initialized is True and self.__setWarp is True:
             self.__warpCounter += 1
             if self.__warpCounter > 5:
-                self.__lastPosition = self.__startingCoordinate
+                self.__lastCursorPosition = self.__startingCoordinate
                 # warp is an extremely unoptimized function that introduces considerable lag. Call it every 6 frames to reduce overhead
-                Gdk.Device.warp(device, self.__screen, self.__lastPosition[0], self.__lastPosition[1])
+                Gdk.Device.warp(device, self.__screen, self.__lastCursorPosition[0], self.__lastCursorPosition[1])
                 self.__warpCounter = 0
             else:
-                self.__lastPosition = newCursorPosition
+                self.__lastCursorPosition = newCursorPosition
 
     def increaseFOV(self):
         self.__changeFOV(1)
@@ -183,12 +203,16 @@ class Camera:
         return self.__front
 
     def calculateZoom(self, amount):
-        if self.__ZOOM_NEAR_LIMIT <= self.__FOV <= self.__ZOOM_FAR_LIMIT:
-                self.__distanceFromPlayer -= amount * self.__ZOOM_SENSITIVITY
+        if self.__ZOOM_NEAR_LIMIT <= self.__distanceFromPlayer <= self.__ZOOM_FAR_LIMIT:
+                self.__distanceFromPlayer += amount * self.__ZOOM_SENSITIVITY
         if self.__distanceFromPlayer <= self.__ZOOM_NEAR_LIMIT:
             self.__distanceFromPlayer = self.__ZOOM_NEAR_LIMIT
         if self.__distanceFromPlayer >= self.__ZOOM_FAR_LIMIT:
             self.__distanceFromPlayer = self.__ZOOM_FAR_LIMIT
+
+    def getPlayer(self):
+        return self.__player
+
 
 # if __name__ == '__main__':
 # # camera

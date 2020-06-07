@@ -1,16 +1,25 @@
 import numpy as np
+import pyrr
+from math import floor
 from pyrr import Vector3
+from PIL import Image
+from Claver.assistant.avatar.toolbox.Math import barryCentric
+
 
 class Terrain:
-    __SIZE = 80              # How many unit lengths long?
-    __VERTEX_COUNT = 128      # How many sections to break the terrain into
+    __SIZE = 80  # How many unit lengths long?
+    # __VERTEX_COUNT = 128      # How many sections to break the terrain into
+    __MAX_HEIGHT = 10
+    __MAX_PIXEL_COLOUR = 256 + 256 + 256
 
-    def __init__(self, gridX, gridZ, loader, texturePack, blendMap):
+    def __init__(self, gridX, gridZ, loader, texturePack, blendMap, heightMap):
         self.__texturePack = texturePack
         self.__blendMap = blendMap
         self.__x = gridX * self.__SIZE
         self.__z = gridZ * self.__SIZE
-        self.__model = self.__generateTerrain(loader)
+        self.__model = self.__generateTerrain(loader, heightMap)
+        self.__VERTEX_COUNT = None
+        self.__heights = None
 
     def getX(self):
         return self.__x
@@ -27,22 +36,49 @@ class Terrain:
     def getBlendMap(self):
         return self.__blendMap
 
-    def __generateTerrain(self, loader):
+    def getHeightOfTerrain(self, worldX, worldZ):
+        terrainX = worldX - self.__x
+        terrainZ = worldZ - self.__z
+        gridSquareSize = self.__SIZE / (self.__heights[0].size - 1)
+        gridX = floor(terrainX / gridSquareSize)
+        gridZ = floor(terrainZ / gridSquareSize)
+        if gridX >= self.__heights[0].size - 1 or gridZ >= self.__heights[0].size - 1 or gridX < 0 or gridZ < 0:
+            return 0
+        xCoord = (terrainX % gridSquareSize) / gridSquareSize
+        zCoord = (terrainZ % gridSquareSize) / gridSquareSize
+        if xCoord <= (1-zCoord):
+            answer = barryCentric(Vector3((0, self.__heights[gridX][gridZ], 0)), Vector3((1, self.__heights[gridX + 1][gridZ], 0)), Vector3((0, self.__heights[gridX[gridZ + 1], 1])), (xCoord, zCoord))
+        else:
+            answer = barryCentric(Vector3((1, self.__heights[gridX + 1][gridZ], 0)), Vector3((1, self.__heights[gridX + 1][gridZ + 1], 1)), Vector3((0, self.__heights[gridX][gridZ + 1], 1)), (xCoord, zCoord))
+        return answer
+
+    def __generateTerrain(self, loader, heightMap):
+
+        image = Image.open(heightMap)
+        rgb_image = image.convert('RGB')
+        VERTEX_COUNT = image.height
+        image.close()
+
+        self.__heights = np.empty(shape=[VERTEX_COUNT, VERTEX_COUNT])
+
         vertices = []
         normals = []
         textureCoords = []
-        for i in range(self.__VERTEX_COUNT):
-            for j in range(self.__VERTEX_COUNT):
-                vertices.append(Vector3([j / (self.__VERTEX_COUNT - 1) * self.__SIZE, 0, i / (self.__VERTEX_COUNT - 1) * self.__SIZE]))
-                normals.append(Vector3([0.0, 1.0, 0.0]))
-                textureCoords.append(Vector3([j / (self.__VERTEX_COUNT - 1), i / (self.__VERTEX_COUNT - 1), 0.0]))
+        for i in range(VERTEX_COUNT):
+            for j in range(VERTEX_COUNT):
+                height = self.__getHeight(j, i, rgb_image)
+                self.__heights[j][i] = height
+                vertices.append(Vector3([j / (VERTEX_COUNT - 1) * self.__SIZE, height, i / (VERTEX_COUNT - 1) * self.__SIZE]))
+                normal = self.__calculateNormal(j, i, rgb_image)
+                normals.append(normal)
+                textureCoords.append(Vector3([j / (VERTEX_COUNT - 1), i / (VERTEX_COUNT - 1), 0.0]))
 
         indices = []
-        for gz in range(self.__VERTEX_COUNT - 1):
-            for gx in range(self.__VERTEX_COUNT - 1):
-                topLeft = (gz * self.__VERTEX_COUNT) + gx
+        for gz in range(VERTEX_COUNT - 1):
+            for gx in range(VERTEX_COUNT - 1):
+                topLeft = (gz * VERTEX_COUNT) + gx
                 topRight = topLeft + 1
-                bottomLeft = ((gz + 1) * self.__VERTEX_COUNT) + gx
+                bottomLeft = ((gz + 1) * VERTEX_COUNT) + gx
                 bottomRight = bottomLeft + 1
                 indices.append(topLeft)
                 indices.append(bottomLeft)
@@ -64,3 +100,20 @@ class Terrain:
         finalTextCoordsList = np.array(finalTextCoordsList)
         return loader.loadToVAO(finalVertexList, finalTextCoordsList, finalNormalList)
 
+    def __calculateNormal(self, x, z, rgb_image):
+        heightL = self.__getHeight(x - 1, z, rgb_image)
+        heightR = self.__getHeight(x + 1, z, rgb_image)
+        heightD = self.__getHeight(x, z - 1, rgb_image)
+        heightU = self.__getHeight(x, z + 1, rgb_image)
+        normal = Vector3(pyrr.vector3.normalize((heightL - heightR, 2, heightD - heightU)))
+        return normal
+
+    def __getHeight(self, x, y, rgb_image):
+        if x < 0 or x >= rgb_image.height or y < 0 or y >= rgb_image.height:
+            return 0
+        r, g, b = rgb_image.getpixel((x, y))
+        height = r+g+b
+        height -= self.__MAX_PIXEL_COLOUR / 2
+        height /= self.__MAX_PIXEL_COLOUR / 2
+        height *= self.__MAX_HEIGHT
+        return height
