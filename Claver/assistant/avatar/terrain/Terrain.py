@@ -12,14 +12,14 @@ class Terrain:
     __MAX_HEIGHT = 10
     __MAX_PIXEL_COLOUR = 256 + 256 + 256
 
-    def __init__(self, gridX, gridZ, loader, texturePack, blendMap, heightMap):
+    def __init__(self, gridX, gridZ, loader, texturePack, blendMap, heightMap, id):
         self.__texturePack = texturePack
         self.__blendMap = blendMap
         self.__x = gridX * self.__SIZE
         self.__z = gridZ * self.__SIZE
-        self.__model = self.__generateTerrain(loader, heightMap)
+        self.__model = self.generateTerrain(loader, heightMap)
         self.__VERTEX_COUNT = None
-        self.__heights = None
+        self.__id = id
 
     def getX(self):
         return self.__x
@@ -36,30 +36,17 @@ class Terrain:
     def getBlendMap(self):
         return self.__blendMap
 
-    def getHeightOfTerrain(self, worldX, worldZ):
-        terrainX = worldX - self.__x
-        terrainZ = worldZ - self.__z
-        gridSquareSize = self.__SIZE / (self.__heights[0].size - 1)
-        gridX = floor(terrainX / gridSquareSize)
-        gridZ = floor(terrainZ / gridSquareSize)
-        if gridX >= self.__heights[0].size - 1 or gridZ >= self.__heights[0].size - 1 or gridX < 0 or gridZ < 0:
-            return 0
-        xCoord = (terrainX % gridSquareSize) / gridSquareSize
-        zCoord = (terrainZ % gridSquareSize) / gridSquareSize
-        if xCoord <= (1-zCoord):
-            answer = barryCentric(Vector3((0, self.__heights[gridX][gridZ], 0)), Vector3((1, self.__heights[gridX + 1][gridZ], 0)), Vector3((0, self.__heights[gridX[gridZ + 1], 1])), (xCoord, zCoord))
-        else:
-            answer = barryCentric(Vector3((1, self.__heights[gridX + 1][gridZ], 0)), Vector3((1, self.__heights[gridX + 1][gridZ + 1], 1)), Vector3((0, self.__heights[gridX][gridZ + 1], 1)), (xCoord, zCoord))
-        return answer
+    def getID(self):
+        return 'ID: [{}][{}]'.format(self.__id[0], self.__id[1])
 
-    def __generateTerrain(self, loader, heightMap):
+    def generateTerrain(self, loader, heightMap):
 
         image = Image.open(heightMap)
         rgb_image = image.convert('RGB')
         VERTEX_COUNT = image.height
         image.close()
 
-        self.__heights = np.empty(shape=[VERTEX_COUNT, VERTEX_COUNT])
+        self.heights = np.empty(shape=[VERTEX_COUNT, VERTEX_COUNT])
 
         vertices = []
         normals = []
@@ -67,11 +54,14 @@ class Terrain:
         for i in range(VERTEX_COUNT):
             for j in range(VERTEX_COUNT):
                 height = self.__getHeight(j, i, rgb_image)
-                self.__heights[j][i] = height
+                self.heights[j][i] = height
                 vertices.append(Vector3([j / (VERTEX_COUNT - 1) * self.__SIZE, height, i / (VERTEX_COUNT - 1) * self.__SIZE]))
                 normal = self.__calculateNormal(j, i, rgb_image)
                 normals.append(normal)
                 textureCoords.append(Vector3([j / (VERTEX_COUNT - 1), i / (VERTEX_COUNT - 1), 0.0]))
+
+        # print("generating terrain. size: ", self.__heights[0].size)
+
 
         indices = []
         for gz in range(VERTEX_COUNT - 1):
@@ -100,6 +90,22 @@ class Terrain:
         finalTextCoordsList = np.array(finalTextCoordsList)
         return loader.loadToVAO(finalVertexList, finalTextCoordsList, finalNormalList)
 
+    def getHeightOfTerrain(self, worldX, worldZ):
+        terrainX = worldX - self.__x
+        terrainZ = worldZ - self.__z
+        gridSquareSize = self.__SIZE / (self.heights[0].size - 1)
+        gridX = floor(terrainX / gridSquareSize)
+        gridZ = floor(terrainZ / gridSquareSize)
+        if gridX >= self.heights[0].size - 1 or gridZ >= self.heights[0].size - 1 or gridX < 0 or gridZ < 0:
+            return 0
+        xCoord = (terrainX % gridSquareSize) / gridSquareSize
+        zCoord = (terrainZ % gridSquareSize) / gridSquareSize
+        if xCoord <= (1-zCoord):
+            answer = barryCentric(Vector3((0, self.heights[gridX][gridZ], 0)), Vector3((1, self.heights[gridX + 1][gridZ], 0)), Vector3((0, self.heights[gridX][gridZ + 1], 1)), (xCoord, zCoord))
+        else:
+            answer = barryCentric(Vector3((1, self.heights[gridX + 1][gridZ], 0)), Vector3((1, self.heights[gridX + 1][gridZ + 1], 1)), Vector3((0, self.heights[gridX][gridZ + 1], 1)), (xCoord, zCoord))
+        return answer
+
     def __calculateNormal(self, x, z, rgb_image):
         heightL = self.__getHeight(x - 1, z, rgb_image)
         heightR = self.__getHeight(x + 1, z, rgb_image)
@@ -117,3 +123,7 @@ class Terrain:
         height /= self.__MAX_PIXEL_COLOUR / 2
         height *= self.__MAX_HEIGHT
         return height
+
+    @staticmethod
+    def getSize():
+        return Terrain.__SIZE

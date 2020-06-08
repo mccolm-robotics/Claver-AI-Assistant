@@ -134,8 +134,8 @@ class Camera:
         horizontalDistance = self.__distanceFromPlayer * cos(radians(self.__pitch))
         verticalDistance = self.__distanceFromPlayer * sin(radians(self.__pitch))
         self.__position.y = self.__player.getPosition().y + 2.5 + verticalDistance
-        if self.__position.y < .5:
-            self.__position.y = .5
+        if self.__position.y < self.__player.getGroundHeight() + .5:
+            self.__position.y = self.__player.getGroundHeight() + .5
         theta = self.__player.getRotY() + self.__yaw
         offsetX = horizontalDistance * sin(radians(theta))
         offsetZ = horizontalDistance * cos(radians(theta))

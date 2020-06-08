@@ -1,8 +1,10 @@
 import pyrr
 
 from Claver.assistant.avatar.entities.Entity import Entity
-from math import sin, cos, radians
+from math import sin, cos, radians, floor
 from pyrr import Vector3
+
+from assistant.avatar.terrain.Terrain import Terrain
 
 
 class Player(Entity):
@@ -13,13 +15,15 @@ class Player(Entity):
     __TERRAIN_HEIGHT = 0
 
 
-    def __init__(self, model, position, rotX, rotY, rotZ, scale, inputEvents):
+    def __init__(self, model, position, rotX, rotY, rotZ, scale, inputEvents, terrainTiles):
         super().__init__(model, position, rotX, rotY, rotZ, scale)
         self.__inputEvents = inputEvents
         self.__currentSpeed = 0
         self.__currentSideStepSpeed = 0
         self.__upwardsSpeed = 0
         self.__isInAir = False
+        self.__terrainTiles = terrainTiles
+        self.ground = self.__TERRAIN_HEIGHT
 
     def move(self, delta, sideStepDirection, yaw=None):
 
@@ -40,10 +44,21 @@ class Player(Entity):
         self.__upwardsSpeed += self.__GRAVITY * delta
         super().increasePosition(0, self.__upwardsSpeed * delta, 0)
 
-        if super().getPosition().y < self.__TERRAIN_HEIGHT:
+        gridX = super().getPosition().x / Terrain.getSize()
+        gridZ = super().getPosition().z / Terrain.getSize()
+        tileX = int((gridX + 1) // 1)
+        tileZ = int((gridZ + 1) // 1)
+        # print("ID:{} tileX:{} tileZ:{}".format(self.__terrainTiles[tileX][tileZ].getID(), tileX, tileZ))
+        self.ground = self.__terrainTiles[tileX][tileZ].getHeightOfTerrain(super().getPosition().x, super().getPosition().z)
+
+        if super().getPosition().y < self.ground:
             self.__upwardsSpeed = 0
-            super().setYPosition(self.__TERRAIN_HEIGHT)
+            super().setYPosition(self.ground)
             self.__isInAir = False
+
+        # print("tileX:{} tileZ:{}".format(tileX, tileZ))
+        # print("X:{} Z:{}".format(int(super().getPosition().x), int(super().getPosition().z)))
+
 
     def __jump(self):
         if self.__isInAir is False:
@@ -73,3 +88,6 @@ class Player(Entity):
 
     def getRunSpeed(self):
         return self.__RUN_SPEED
+
+    def getGroundHeight(self):
+        return self.ground

@@ -91,14 +91,6 @@ class GLCanvas(Gtk.GLArea):
 
         self.loader = Loader()
 
-        rawChibi = ModelLoader().loadModel(self.loader, res_dir['MODELS']+"Chibi.obj")
-        rawChibiTexture = ModelTexture(self.loader.loadTexture(res_dir['MODELS'] + "Chibi_Texture.png"))
-        chibiModel = TexturedModel(rawChibi, rawChibiTexture)
-        chibiTexture = chibiModel.getTexture()
-        chibiTexture.setShineDamper(10)
-        chibiTexture.setReflectivity(1)
-        self.chibi = Player(chibiModel, (0.0, 0.0, 0.0), 0.0, 0.0, 0.0, 0.25, self.inputEvents)
-
         rawCube = ModelLoader().loadPrimitive(self.loader, Primitives().cube())
         rawCubeTexture = ModelTexture(self.loader.loadTexture(res_dir['TEXTURES'] + "CircuitTree.png", False))
         cubeModel = TexturedModel(rawCube, rawCubeTexture)
@@ -131,18 +123,51 @@ class GLCanvas(Gtk.GLArea):
         blendMap = TerrainTexture(self.loader.loadTexture(res_dir['TEXTURES'] + "blendMap.png"))
         heightMap = res_dir['TEXTURES'] + "heightmap.png"
 
-        self.terrain = []
-        for i in range(-1, 1):
-            for j in range(-1, 1):
-                self.terrain.append(Terrain(i, j, self.loader, texturePack, blendMap, heightMap))
+        # Generate terrain for world
+        TERRAIN_WIDTH = 2
+        TERRAIN_HEIGHT = 2
+        self.terrainTiles = np.empty(shape=[TERRAIN_WIDTH, TERRAIN_HEIGHT], dtype=np.object)
+        for i in range(TERRAIN_WIDTH):
+            for j in range(TERRAIN_HEIGHT):
+                self.terrainTiles[i][j] = Terrain(i - (TERRAIN_WIDTH / 2), j - (TERRAIN_WIDTH / 2), self.loader, texturePack, blendMap, heightMap, (i,j))
 
+        def getTerrainHeight(x, z):
+            gridX = x / Terrain.getSize()
+            gridZ = z / Terrain.getSize()
+            tileX = int((gridX + 1) // 1)
+            tileZ = int((gridZ + 1) // 1)
+            # Logic for catching values outside of bounds?
+            return self.terrainTiles[tileX][tileZ].getHeightOfTerrain(x, z)
+            # return "tileX:{} tileZ:{}".format(tileX, tileZ)
+
+        # Add objects to world
         import random
         self.entities = []
         for i in range(30):
-            self.entities.append(Entity(grassModel, (random.uniform(-.8, .8) * 120, 0.0, random.uniform(-.8, .8) * 120), 0.0, 0.0, 0.0, 1.0))
-            self.entities.append(Entity(treeModel, (random.uniform(-.8, .8) * 120, 0.0, random.uniform(-.8, .8) * 120), 0.0, 0.0, 0.0, 3.0))
-            self.entities.append(Entity(fernModel, (random.uniform(-.8, .8) * 120, 0.0, random.uniform(-.8, .8) * 120), 0.0, 0.0, 0.0, 0.4))
+            x1 = random.uniform(-.8, .8) * 100
+            z1 = random.uniform(-.8, .8) * 100
+            y1 = getTerrainHeight(x1, z1)
+            # print(getTerrainHeight(x1, z1))
+            self.entities.append(Entity(grassModel, (x1, 0, z1), 0.0, 0.0, 0.0, 1.0))
+            x2 = random.uniform(-.8, .8) * 100
+            z2 = random.uniform(-.8, .8) * 100
+            y2 = getTerrainHeight(x2, z2)
+            self.entities.append(Entity(treeModel, (x2, 0, z2), 0.0, 0.0, 0.0, 3.0))
+            x3 = random.uniform(-.8, .8) * 100
+            z3 = random.uniform(-.8, .8) * 100
+            y3 = getTerrainHeight(x3, z3)
+            self.entities.append(Entity(fernModel, (x3, 0, z3), 0.0, 0.0, 0.0, 0.4))
 
+        # Create Player Avatar
+        rawChibi = ModelLoader().loadModel(self.loader, res_dir['MODELS']+"Chibi.obj")
+        rawChibiTexture = ModelTexture(self.loader.loadTexture(res_dir['MODELS'] + "Chibi_Texture.png"))
+        chibiModel = TexturedModel(rawChibi, rawChibiTexture)
+        chibiTexture = chibiModel.getTexture()
+        chibiTexture.setShineDamper(10)
+        chibiTexture.setReflectivity(1)
+        self.chibi = Player(chibiModel, (0.0, 0.0, 0.0), 0.0, 0.0, 0.0, 0.25, self.inputEvents, self.terrainTiles)
+
+        # Create a manager to display world objects
         self.renderer = MasterRenderer(self.window_rect, self.inputEvents, self.chibi)
 
         return True
@@ -151,8 +176,8 @@ class GLCanvas(Gtk.GLArea):
         self.renderer.processMovement(self.delta)
         # self.chibi.move(self.delta)
 
-        for terrain in self.terrain:
-            self.renderer.processTerrain(terrain)
+        for terrain in np.nditer(self.terrainTiles, flags=["refs_ok"]):
+            self.renderer.processTerrain(terrain.item())
         for entity in self.entities:
             self.renderer.processEntity(entity)
         self.renderer.processEntity(self.chibi)
