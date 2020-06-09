@@ -28,6 +28,14 @@ class StaticShader(ShaderProgram):
         self.__location_reflectivity = super().getUniformLocation("reflectivity")
         self.__location_useFakeLighting = super().getUniformLocation("useFakeLighting")
         self.__location_skyColour = super().getUniformLocation("skyColour")
+        self.__location_numberOfRows = super().getUniformLocation("numberOfRows")
+        self.__location_offset = super().getUniformLocation("offset")
+
+    def loadNumberOfRows(self, numberOfRows):
+        super().loadFloat(self.__location_numberOfRows, numberOfRows)
+
+    def loadOffset(self, x, y):
+        super().load2DVector(self.__location_offset, (x, y))
 
     def loadSkyColour(self, r, g, b):
         super().loadVector(self.__location_skyColour, (r, g, b))
@@ -42,7 +50,6 @@ class StaticShader(ShaderProgram):
     def loadLight(self, light):
         super().loadVector(self.__location_lightPosition, light.getPosition())
         super().loadVector(self.__location_lightColour, light.getColour())
-
 
     def loadTransformationMatrix(self, matrix):
         super().loadMatrix(self.__location_transformationMatrix, matrix)

@@ -47,6 +47,9 @@ class ShaderProgram(ABC):
     def loadVector(self, location, vector):
         glUniform3f(location, vector[0], vector[1], vector[2])
 
+    def load2DVector(self, location, vector):
+        glUniform2f(location, vector[0], vector[1])
+
     def loadBoolean(self, location, boolean):
         toLoad = 0
         if boolean:

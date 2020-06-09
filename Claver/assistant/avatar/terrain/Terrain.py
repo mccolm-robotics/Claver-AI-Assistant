@@ -9,7 +9,7 @@ from Claver.assistant.avatar.toolbox.Math import barryCentric
 class Terrain:
     __SIZE = 80  # How many unit lengths long?
     # __VERTEX_COUNT = 128      # How many sections to break the terrain into
-    __MAX_HEIGHT = 10
+    __MAX_HEIGHT = 5
     __MAX_PIXEL_COLOUR = 256 + 256 + 256
 
     def __init__(self, gridX, gridZ, loader, texturePack, blendMap, heightMap, id):

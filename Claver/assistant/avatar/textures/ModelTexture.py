@@ -5,6 +5,13 @@ class ModelTexture:
         self.__reflectivity = 0
         self.__hasTransparency = False
         self.__useFakeLighting = False
+        self.__numberOfRows = 1
+
+    def getNumberOfRows(self):
+        return self.__numberOfRows
+
+    def setNumberOfRows(self, numberOfRows):
+        self.__numberOfRows = numberOfRows
 
     def isUseFakeLighting(self):
         return self.__useFakeLighting

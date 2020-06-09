@@ -107,8 +107,9 @@ class GLCanvas(Gtk.GLArea):
         grassModel.getTexture().setHasTransparency(True)
         grassModel.getTexture().setUseFakeLighting(True)
 
-        fernModel = TexturedModel(ModelLoader().loadModel(self.loader, res_dir['MODELS'] + "Fern.obj"),
-                                   ModelTexture(self.loader.loadTexture(res_dir['MODELS'] + "Fern_Texture.png")))
+        fernTextureAtlas = ModelTexture(self.loader.loadTexture(res_dir['TEXTURES'] + "fern.png"))
+        fernTextureAtlas.setNumberOfRows(2)
+        fernModel = TexturedModel(ModelLoader().loadModel(self.loader, res_dir['MODELS'] + "Fern.obj"), fernTextureAtlas)
         fernModel.getTexture().setHasTransparency(True)
 
 
@@ -136,9 +137,7 @@ class GLCanvas(Gtk.GLArea):
             gridZ = z / Terrain.getSize()
             tileX = int((gridX + 1) // 1)
             tileZ = int((gridZ + 1) // 1)
-            # Logic for catching values outside of bounds?
             return self.terrainTiles[tileX][tileZ].getHeightOfTerrain(x, z)
-            # return "tileX:{} tileZ:{}".format(tileX, tileZ)
 
         # Add objects to world
         import random
@@ -147,16 +146,15 @@ class GLCanvas(Gtk.GLArea):
             x1 = random.uniform(-.8, .8) * 100
             z1 = random.uniform(-.8, .8) * 100
             y1 = getTerrainHeight(x1, z1)
-            # print(getTerrainHeight(x1, z1))
-            self.entities.append(Entity(grassModel, (x1, 0, z1), 0.0, 0.0, 0.0, 1.0))
+            self.entities.append(Entity(grassModel, (x1, y1, z1), 0.0, 0.0, 0.0, 1.0))
             x2 = random.uniform(-.8, .8) * 100
             z2 = random.uniform(-.8, .8) * 100
             y2 = getTerrainHeight(x2, z2)
-            self.entities.append(Entity(treeModel, (x2, 0, z2), 0.0, 0.0, 0.0, 3.0))
+            self.entities.append(Entity(treeModel, (x2, y2, z2), 0.0, 0.0, 0.0, 3.0))
             x3 = random.uniform(-.8, .8) * 100
             z3 = random.uniform(-.8, .8) * 100
             y3 = getTerrainHeight(x3, z3)
-            self.entities.append(Entity(fernModel, (x3, 0, z3), 0.0, 0.0, 0.0, 0.4))
+            self.entities.append(Entity(fernModel, (x3, y3, z3), 0.0, 0.0, 0.0, 0.4, random.randint(0,3)))
 
         # Create Player Avatar
         rawChibi = ModelLoader().loadModel(self.loader, res_dir['MODELS']+"Chibi.obj")

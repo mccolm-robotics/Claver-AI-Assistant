@@ -1,4 +1,3 @@
-import numpy as np
+import random
 
-val = int((.9999 + 1) // 1)
-print(val)
+print(random.randint(0,4))

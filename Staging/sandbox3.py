@@ -16,8 +16,4 @@ class Foo:
         return cls(randint(0, 100))
 
 
-# test = Foo.fromRandom()
-
-print(Foo.my_var)
-Foo.my_var = 10
-print(Foo.my_var)
+test = Foo.fromRandom()

@@ -28,6 +28,7 @@ class EntityRenderer:
         glEnableVertexAttribArray(1)
         glEnableVertexAttribArray(2)
         texture = model.getTexture()
+        self.__shader.loadNumberOfRows(texture.getNumberOfRows())
         if texture.isHasTransparency():
             MasterRenderer.disableCulling()
         self.__shader.loadFakeLightingVariable(texture.isUseFakeLighting())
@@ -46,5 +47,6 @@ class EntityRenderer:
     def prepareInstance(self, entity, clock):
         transformationMatrix = createTransformationMatrix(entity.getPosition(), entity.getRotX(), entity.getRotY(), entity.getRotZ(), entity.getScale())
         self.__shader.loadTransformationMatrix(transformationMatrix)
+        self.__shader.loadOffset(entity.getTextureXOffset(), entity.getTextureYOffset())
 
 

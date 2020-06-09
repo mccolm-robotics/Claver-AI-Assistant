@@ -3,13 +3,22 @@ from pyrr import Vector3
 
 
 class Entity:
-    def __init__(self, model, position, rotX, rotY, rotZ, scale):
+    def __init__(self, model, position, rotX, rotY, rotZ, scale, index=0):
         self.__model = model
         self.__position = Vector3(position)
         self.__rotX = rotX
         self.__rotY = rotY
         self.__rotZ = rotZ
         self.__scale = scale
+        self.__textureIndex = index
+
+    def getTextureXOffset(self):
+        column = self.__textureIndex % self.__model.getTexture().getNumberOfRows()
+        return column / self.__model.getTexture().getNumberOfRows()
+
+    def getTextureYOffset(self):
+        row = self.__textureIndex / self.__model.getTexture().getNumberOfRows()
+        return row / self.__model.getTexture().getNumberOfRows()
 
     def increasePosition(self, dx, dy, dz):
         self.__position.x += dx
