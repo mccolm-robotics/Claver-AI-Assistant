@@ -41,6 +41,12 @@ class Loader:
         self.unbindVAO()
         return RawModel(vaoID, int(len(positions)))
 
+    def load2DToVAO(self, positions):
+        vaoID = self.createVAO()
+        self.storeDataInAttributeList(0, 2, positions)
+        self.unbindVAO()
+        return RawModel(vaoID, int(len(positions)/2))
+
     def storeDataInAttributeList(self, attributeNumber, coordinateSize, data):
         vboID = GLuint()  # Stores the name of the vertex buffer
         glCreateBuffers(1, ctypes.byref(vboID))  # Generates a buffer to hold the vertex data

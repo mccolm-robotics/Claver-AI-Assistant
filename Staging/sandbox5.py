@@ -1,3 +1,2 @@
-import random
-
-print(random.randint(0,4))
+positions = [-1, 1, -1, -1, 1, 1, 1, -1]
+print(positions[1])

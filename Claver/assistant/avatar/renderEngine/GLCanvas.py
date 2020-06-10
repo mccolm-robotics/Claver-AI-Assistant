@@ -22,6 +22,8 @@ from Claver.interface.InputEvent import InputEvent
 from Claver.assistant.avatar.entities.Camera import Camera
 from Claver.assistant.avatar.renderEngine.ModelLoader import ModelLoader
 from Claver.assistant.avatar.toolbox.Primitives import Primitives
+from Claver.assistant.avatar.guis.GuiTexture import GuiTexture
+from Claver.assistant.avatar.guis.GuiRenderer import GuiRenderer
 
 
 class GLCanvas(Gtk.GLArea):
@@ -165,6 +167,11 @@ class GLCanvas(Gtk.GLArea):
         chibiTexture.setReflectivity(1)
         self.chibi = Player(chibiModel, (0.0, 0.0, 0.0), 0.0, 0.0, 0.0, 0.25, self.inputEvents, self.terrainTiles)
 
+        self.guis = []
+        gui = GuiTexture(self.loader.loadTexture(res_dir['TEXTURES'] + "socuwan.png"), (0.5, 0.5), (0.25, 0.25))
+        self.guis.append(gui)
+        self.guiRenderer = GuiRenderer(self.loader)
+
         # Create a manager to display world objects
         self.renderer = MasterRenderer(self.window_rect, self.inputEvents, self.chibi)
 
@@ -182,6 +189,7 @@ class GLCanvas(Gtk.GLArea):
         self.renderer.processEntity(self.cube)
 
         self.renderer.render(self.light, self.running_seconds_from_start)
+        self.guiRenderer.render(self.guis)
         self.queue_draw()  # Schedules a redraw for Gtk.GLArea
 
     def on_unrealize(self, gl_area):
