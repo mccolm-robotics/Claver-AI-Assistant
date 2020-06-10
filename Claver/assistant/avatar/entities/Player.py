@@ -4,7 +4,7 @@ from Claver.assistant.avatar.entities.Entity import Entity
 from math import sin, cos, radians, floor
 from pyrr import Vector3
 
-from assistant.avatar.terrain.Terrain import Terrain
+from Claver.assistant.avatar.terrain.Terrain import Terrain
 
 
 class Player(Entity):

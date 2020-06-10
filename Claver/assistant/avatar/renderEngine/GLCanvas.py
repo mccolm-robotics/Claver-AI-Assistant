@@ -101,8 +101,8 @@ class GLCanvas(Gtk.GLArea):
         cubeTexture.setReflectivity(1)
         self.cube = Entity(cubeModel, (3.0, 1.0, 2.0), 0.0, 0.0, 0.0, 1.0)
 
-        treeModel = TexturedModel(ModelLoader().loadModel(self.loader, res_dir['MODELS']+"Tree.obj"),
-                                  ModelTexture(self.loader.loadTexture(res_dir['MODELS'] + "Tree_Texture.png")))
+        treeModel = TexturedModel(ModelLoader().loadModel(self.loader, res_dir['MODELS']+"Pine.obj"),
+                                  ModelTexture(self.loader.loadTexture(res_dir['MODELS'] + "Pine_Texture.png")))
 
         grassModel = TexturedModel(ModelLoader().loadModel(self.loader, res_dir['MODELS'] + "Grass.obj"),
                                   ModelTexture(self.loader.loadTexture(res_dir['MODELS'] + "Grass_Texture.png")))
@@ -115,7 +115,11 @@ class GLCanvas(Gtk.GLArea):
         fernModel.getTexture().setHasTransparency(True)
 
 
-        self.light = Light(Vector3((0, 0, 5)), Vector3((1,1,1)))
+        light = Light(Vector3((0, 10000, -7000)), Vector3((.5,.5,.5)))
+        self.lights = []
+        self.lights.append(light)
+        self.lights.append(Light(Vector3((0, 2.5, -5)), Vector3((4, 0, 0))))
+        self.lights.append(Light(Vector3((0, 2.5, -30)), Vector3((0, 0, 4))))
 
         backgroundTexture = TerrainTexture(self.loader.loadTexture(res_dir['TEXTURES'] + "grass2.png"))
         rTexture = TerrainTexture(self.loader.loadTexture(res_dir['TEXTURES'] + "mud.png"))
@@ -168,7 +172,7 @@ class GLCanvas(Gtk.GLArea):
         self.chibi = Player(chibiModel, (0.0, 0.0, 0.0), 0.0, 0.0, 0.0, 0.25, self.inputEvents, self.terrainTiles)
 
         self.guis = []
-        gui = GuiTexture(self.loader.loadTexture(res_dir['TEXTURES'] + "socuwan.png"), (0.5, 0.5), (0.25, 0.25))
+        gui = GuiTexture(self.loader.loadTexture(res_dir['TEXTURES'] + "claver-brand.png", False), (0.5, 0.5), (0.25, 0.25))
         self.guis.append(gui)
         self.guiRenderer = GuiRenderer(self.loader)
 
@@ -188,11 +192,12 @@ class GLCanvas(Gtk.GLArea):
         self.renderer.processEntity(self.chibi)
         self.renderer.processEntity(self.cube)
 
-        self.renderer.render(self.light, self.running_seconds_from_start)
+        self.renderer.render(self.lights, self.running_seconds_from_start)
         self.guiRenderer.render(self.guis)
         self.queue_draw()  # Schedules a redraw for Gtk.GLArea
 
     def on_unrealize(self, gl_area):
+        self.guiRenderer.cleanUp()
         self.renderer.cleanUp()
         self.loader.cleanUp()
 

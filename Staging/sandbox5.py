@@ -1,2 +1,2 @@
-positions = [-1, 1, -1, -1, 1, 1, 1, -1]
-print(positions[1])
+for i in range(4):
+    print(i)

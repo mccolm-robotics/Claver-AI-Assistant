@@ -9,6 +9,8 @@ class TerrainShader(ShaderProgram):
     __VERTEX_FILE = os.path.join(__THIS_FOLDER, "TerrainVertexShader.txt")
     __FRAGMENT_FILE = os.path.join(__THIS_FOLDER, "TerrainFragmentShader.txt")
 
+    __MAX_LIGHTS = 4
+
     def __init__(self):
         super().__init__(self.__VERTEX_FILE, self.__FRAGMENT_FILE)
 
@@ -21,8 +23,8 @@ class TerrainShader(ShaderProgram):
         self.__location_transformationMatrix = super().getUniformLocation("transformationMatrix")
         self.__location_viewMatrix = super().getUniformLocation("viewMatrix")
         self.__location_projectionMatrix = super().getUniformLocation("projectionMatrix")
-        self.__location_lightPosition = super().getUniformLocation("lightPosition")
-        self.__location_lightColour = super().getUniformLocation("lightColour")
+        # self.__location_lightPosition = super().getUniformLocation("lightPosition")
+        # self.__location_lightColour = super().getUniformLocation("lightColour")
         self.__location_shineDamper = super().getUniformLocation("shineDamper")
         self.__location_reflectivity = super().getUniformLocation("reflectivity")
         self.__location_skyColour = super().getUniformLocation("skyColour")
@@ -31,6 +33,12 @@ class TerrainShader(ShaderProgram):
         self.__location_gTexture = super().getUniformLocation("gTexture")
         self.__location_bTexture = super().getUniformLocation("bTexture")
         self.__location_blendMap = super().getUniformLocation("blendMap")
+
+        self.__location_lightPosition = []
+        self.__location_lightColour = []
+        for i in range(self.__MAX_LIGHTS):
+            self.__location_lightPosition.append(super().getUniformLocation("lightPosition[{}]".format(i)))
+            self.__location_lightColour.append(super().getUniformLocation("lightColour[{}]".format(i)))
 
     def connectTextureUnits(self):
         super().loadInt(self.__location_backgroundTexture, 0)
@@ -46,9 +54,14 @@ class TerrainShader(ShaderProgram):
         super().loadFloat(self.__location_shineDamper, damper)
         super().loadFloat(self.__location_reflectivity, reflectivity)
 
-    def loadLight(self, light):
-        super().loadVector(self.__location_lightPosition, light.getPosition())
-        super().loadVector(self.__location_lightColour, light.getColour())
+    def loadLights(self, lights):
+        for i in range(self.__MAX_LIGHTS):
+            if i < len(lights):
+                super().loadVector(self.__location_lightPosition[i], lights[i].getPosition())
+                super().loadVector(self.__location_lightColour[i], lights[i].getColour())
+            else:
+                super().loadVector(self.__location_lightPosition[i], (0.0, 0.0, 0.0))
+                super().loadVector(self.__location_lightColour[i], (0.0, 0.0, 0.0))
 
 
     def loadTransformationMatrix(self, matrix):

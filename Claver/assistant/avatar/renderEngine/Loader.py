@@ -54,7 +54,7 @@ class Loader:
         np_data = self.storDataInNumpyArray(data)
         glNamedBufferStorage(vboID, np_data.nbytes, np_data, GL_MAP_READ_BIT)  # Allocates buffer memory and initializes it with vertex data
         glBindBuffer(GL_ARRAY_BUFFER, vboID)  # Binds the buffer object to the OpenGL context and specifies that the buffer holds vertex data
-        glVertexAttribPointer(attributeNumber, coordinateSize, GL_FLOAT, GL_FALSE, np_data.itemsize * 3, ctypes.c_void_p(0))  # Describes the data layout of the vertex buffer used by the 'vertex_position' attribute
+        glVertexAttribPointer(attributeNumber, coordinateSize, GL_FLOAT, GL_FALSE, np_data.itemsize * coordinateSize, ctypes.c_void_p(0))  # Describes the data layout of the vertex buffer used by the 'vertex_position' attribute
         glBindBuffer(GL_ARRAY_BUFFER, vboID)
 
 

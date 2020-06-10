@@ -49,17 +49,17 @@ class MasterRenderer:
     def processMovement(self, timeDelta):
         self.__camera.move(timeDelta)
 
-    def render(self, sun, clock):
+    def render(self, lights, clock):
         self.prepare(clock)
         self.__shader.start()
         self.__shader.loadSkyColour(self.__RED, self.__GREEN, self.__BLUE)
-        self.__shader.loadLight(sun)
+        self.__shader.loadLights(lights)
         self.__shader.loadViewMatrix(self.__camera)
         self.__renderer.render(self.__entityDict, clock)
         self.__shader.stop()
         self.__terrainShader.start()
         self.__terrainShader.loadSkyColour(self.__RED, self.__GREEN, self.__BLUE)
-        self.__terrainShader.loadLight(sun)
+        self.__terrainShader.loadLights(lights)
         self.__terrainShader.loadViewMatrix(self.__camera)
         self.__terrainRenderer.render(self.__terrains, clock)
         self.__terrainShader.stop()
