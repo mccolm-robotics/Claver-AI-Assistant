@@ -8,5 +8,6 @@ res_dir = dict(
     LOADER_GUI=RES_FOLDER + "interface/program_loader/",
     FONT_ATLAS=RES_FOLDER + "fonts/atlas/",
     TEXTURES=RES_FOLDER + "textures/",
-    MODELS=RES_FOLDER + "models/"
+    MODELS=RES_FOLDER + "models/",
+    SKYBOX_CLOUDS=RES_FOLDER + "skybox/clouds/"
 )

@@ -1,6 +1,8 @@
 import numpy as np
 import os
-from Claver.assistant.avatar.models.RawModel import *
+from Claver.assistant.avatar.models.RawModel import RawModel
+from Claver.assistant.avatar.textures.TextureData import TextureData
+from Claver.interface.Settings import res_dir
 from OpenGL.GL import *
 from PIL import Image
 
@@ -41,11 +43,11 @@ class Loader:
         self.unbindVAO()
         return RawModel(vaoID, int(len(positions)))
 
-    def load2DToVAO(self, positions):
+    def load2DToVAO(self, positions, dimensions=2):
         vaoID = self.createVAO()
-        self.storeDataInAttributeList(0, 2, positions)
+        self.storeDataInAttributeList(0, dimensions, positions)
         self.unbindVAO()
-        return RawModel(vaoID, int(len(positions)/2))
+        return RawModel(vaoID, int(len(positions)/dimensions))
 
     def storeDataInAttributeList(self, attributeNumber, coordinateSize, data):
         vboID = GLuint()  # Stores the name of the vertex buffer
@@ -84,6 +86,31 @@ class Loader:
         glBindTexture(GL_TEXTURE_2D, 0)
         self.__textures = np.append(self.__textures, textureID)
         return textureID
+
+    def loadCubeMap(self, textureFiles):
+        textureID = glGenTextures(1)
+        glActiveTexture(GL_TEXTURE0)
+        glBindTexture(GL_TEXTURE_CUBE_MAP, textureID)
+
+        for i in range(len(textureFiles)):
+            data = self.decodeTextureFile(res_dir['SKYBOX_CLOUDS'] + "{}.png".format(textureFiles[i]))
+            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA, data.getWidth(), data.getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, data.getBuffer())
+
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+        self.__textures = np.append(self.__textures, textureID)
+        return textureID
+
+    def decodeTextureFile(self, fileName, flipped=True):
+        image = Image.open(fileName)
+        width, height = image.size
+        if flipped is True:
+            flipped_image = image.transpose(Image.FLIP_TOP_BOTTOM)
+            img_data = np.array(list(flipped_image.getdata()), np.uint8)
+        else:
+            img_data = np.array(list(image.getdata()), np.uint8)
+        image.close()
+        return TextureData(img_data, width, height)
 
     def cleanUp(self):
         if self.__vaos.size != 0:

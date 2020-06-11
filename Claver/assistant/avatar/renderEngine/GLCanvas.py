@@ -121,9 +121,10 @@ class GLCanvas(Gtk.GLArea):
         self.lights = []
         self.lights.append(Light(Vector3((0, 10000, -7000)), Vector3((.2,.2,.2))))
         self.lights.append(Light(Vector3((10, 8, 30)), Vector3((2, 2, 0)), Vector3((1, 0.01, 0.002))))
-        self.lights.append(Light(Vector3((0, 2.5, -30)), Vector3((0, 0, 2)), Vector3((1, 0.01, 0.002))))
+        self.lights.append(Light(Vector3((0, 8, -30)), Vector3((4, 0, 0)), Vector3((1, 0.01, 0.002))))
 
         self.lamp = Entity(lampModel, (10, 0, 30), 0.0, 0.0, 0.0, .3)
+        self.blueLamp = Entity(lampModel, (0, 0, -30), 0.0, 0.0, 0.0, .3)
 
         backgroundTexture = TerrainTexture(self.loader.loadTexture(res_dir['TEXTURES'] + "grass2.png"))
         rTexture = TerrainTexture(self.loader.loadTexture(res_dir['TEXTURES'] + "mud.png"))
@@ -196,6 +197,7 @@ class GLCanvas(Gtk.GLArea):
         self.renderer.processEntity(self.chibi)
         self.renderer.processEntity(self.cube)
         self.renderer.processEntity(self.lamp)
+        self.renderer.processEntity(self.blueLamp)
 
         self.renderer.render(self.lights, self.running_seconds_from_start)
         self.guiRenderer.render(self.guis)
