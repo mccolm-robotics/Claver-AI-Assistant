@@ -33,11 +33,13 @@ class StaticShader(ShaderProgram):
         self.__location_numberOfRows = super().getUniformLocation("numberOfRows")
         self.__location_offset = super().getUniformLocation("offset")
 
+        self.__location_attenuation = []
         self.__location_lightPosition = []
         self.__location_lightColour = []
         for i in range(self.__MAX_LIGHTS):
             self.__location_lightPosition.append(super().getUniformLocation("lightPosition[{}]".format(i)))
             self.__location_lightColour.append(super().getUniformLocation("lightColour[{}]".format(i)))
+            self.__location_attenuation.append(super().getUniformLocation("attenuation[{}]".format(i)))
 
 
     def loadNumberOfRows(self, numberOfRows):
@@ -61,9 +63,11 @@ class StaticShader(ShaderProgram):
             if i < len(lights):
                 super().loadVector(self.__location_lightPosition[i], lights[i].getPosition())
                 super().loadVector(self.__location_lightColour[i], lights[i].getColour())
+                super().loadVector(self.__location_attenuation[i], lights[i].getAttenuation())
             else:
                 super().loadVector(self.__location_lightPosition[i], (0.0, 0.0, 0.0))
                 super().loadVector(self.__location_lightColour[i], (0.0, 0.0, 0.0))
+                super().loadVector(self.__location_attenuation[i], (1.0, 0.0, 0.0))
 
 
     def loadTransformationMatrix(self, matrix):

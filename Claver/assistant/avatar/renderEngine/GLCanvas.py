@@ -101,6 +101,10 @@ class GLCanvas(Gtk.GLArea):
         cubeTexture.setReflectivity(1)
         self.cube = Entity(cubeModel, (3.0, 1.0, 2.0), 0.0, 0.0, 0.0, 1.0)
 
+        lampModel = TexturedModel(ModelLoader().loadModel(self.loader, res_dir['MODELS']+"lamp_poly2.obj"),
+                                  ModelTexture(self.loader.loadTexture(res_dir['MODELS'] + "poly_2.png")))
+        lampModel.getTexture().setUseFakeLighting(True)
+
         treeModel = TexturedModel(ModelLoader().loadModel(self.loader, res_dir['MODELS']+"Pine.obj"),
                                   ModelTexture(self.loader.loadTexture(res_dir['MODELS'] + "Pine_Texture.png")))
 
@@ -114,12 +118,12 @@ class GLCanvas(Gtk.GLArea):
         fernModel = TexturedModel(ModelLoader().loadModel(self.loader, res_dir['MODELS'] + "Fern.obj"), fernTextureAtlas)
         fernModel.getTexture().setHasTransparency(True)
 
-
-        light = Light(Vector3((0, 10000, -7000)), Vector3((.5,.5,.5)))
         self.lights = []
-        self.lights.append(light)
-        self.lights.append(Light(Vector3((0, 2.5, -5)), Vector3((4, 0, 0))))
-        self.lights.append(Light(Vector3((0, 2.5, -30)), Vector3((0, 0, 4))))
+        self.lights.append(Light(Vector3((0, 10000, -7000)), Vector3((.2,.2,.2))))
+        self.lights.append(Light(Vector3((10, 8, 30)), Vector3((2, 2, 0)), Vector3((1, 0.01, 0.002))))
+        self.lights.append(Light(Vector3((0, 2.5, -30)), Vector3((0, 0, 2)), Vector3((1, 0.01, 0.002))))
+
+        self.lamp = Entity(lampModel, (10, 0, 30), 0.0, 0.0, 0.0, .3)
 
         backgroundTexture = TerrainTexture(self.loader.loadTexture(res_dir['TEXTURES'] + "grass2.png"))
         rTexture = TerrainTexture(self.loader.loadTexture(res_dir['TEXTURES'] + "mud.png"))
@@ -191,6 +195,7 @@ class GLCanvas(Gtk.GLArea):
             self.renderer.processEntity(entity)
         self.renderer.processEntity(self.chibi)
         self.renderer.processEntity(self.cube)
+        self.renderer.processEntity(self.lamp)
 
         self.renderer.render(self.lights, self.running_seconds_from_start)
         self.guiRenderer.render(self.guis)

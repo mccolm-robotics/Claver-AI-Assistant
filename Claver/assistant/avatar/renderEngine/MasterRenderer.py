@@ -11,9 +11,9 @@ from Claver.assistant.avatar.toolbox.Math import createProjectionMatrix
 
 class MasterRenderer:
 
-    __RED = 0.5
-    __GREEN = 0.5
-    __BLUE = 0.5
+    __RED = 0.05
+    __GREEN = 0.05
+    __BLUE = 0.1
 
     def __init__(self, window, keyboardEvents, player):
         glEnable(GL_DEPTH_TEST) # Enable depth testing to ensure pixels closer to the viewer appear closest
