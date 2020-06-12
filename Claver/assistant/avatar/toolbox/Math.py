@@ -19,7 +19,7 @@ def createProjectionMatrix(fov, width, height, near, far):
 
 def createViewMatrix(camera):
     position = camera.getPosition()  # Eye coordinates (location of the camera)
-    front = camera.getFront()
+    # front = camera.getFront()
     # target = position + front                           # Target coordinates (where the camera is looking)
     target = list(camera.getPlayer().getPosition())
     target[1] = 2.5
