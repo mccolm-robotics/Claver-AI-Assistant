@@ -208,9 +208,9 @@ class GLCanvas(Gtk.GLArea):
         self.load_geometry()      # Calls load_geometry() to create vertex and colour data
 
         self.mvpMatrixLocationInShader = glGetUniformLocation(self.shader, "ModelViewPerspective")  # Get the location of the ModelViewPerspective matrix in the vertex shader.
-        test = pyrr.matrix44.create_from_axis_rotation((0.0, 10.0, 0.0), 2)
+        test = pyrr.matrix44.create_from_axis_rotation((1.0, 1.0, 0.0), 1)
         print(test)
-        test2 = pyrr.matrix44.create_from_x_rotation(-1) * pyrr.matrix44.create_from_y_rotation(-1)
+        test2 =  pyrr.matrix44.create_from_x_rotation(1) @ pyrr.matrix44.create_from_y_rotation(1)
         print(test2)
 
         return True

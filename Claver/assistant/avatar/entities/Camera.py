@@ -43,6 +43,7 @@ class Camera:
         self.__player = player
         self.__playerRunSpeed = player.getRunSpeed()
         self.__updatePlayerYaw = False
+        self.__playerPosition = Vector3((0,0,0))
 
     def __updateViewMatrix(self):
         self.__viewMatrix = createViewMatrix(self)
@@ -142,6 +143,8 @@ class Camera:
         self.__position.x = self.__player.getPosition().x - offsetX
         self.__position.z = self.__player.getPosition().z - offsetZ
 
+        self.__playerPosition = self.__player.getPosition()
+
 
 
 
@@ -192,6 +195,9 @@ class Camera:
 
     def getPosition(self):
         return self.__position
+
+    def getPlayerPosition(self):
+        return self.__playerPosition
 
     def getPitch(self):
         return self.__pitch

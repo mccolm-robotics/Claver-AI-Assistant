@@ -1,5 +1,9 @@
+import numpy as np
+import pyrr
 from OpenGL.GL import *
+from math import radians
 from pyrr import Matrix44, Vector4, Vector3, Quaternion
+from Claver.assistant.avatar.toolbox.Math import createTransformationMatrix
 from Claver.assistant.avatar.skybox.SkyboxShader import SkyboxShader
 
 class SkyboxRenderer:
@@ -66,6 +70,7 @@ class SkyboxRenderer:
     def render(self, camera, r, g, b, clock):
         self.__shader.start()
         self.__shader.loadViewMatrix(camera, clock)
+        self.loadModelMatrix(camera, clock)
         self.__shader.loadFogColour(r, g, b)
         glBindVertexArray(self.__cube.getVaoID())
         glEnableVertexAttribArray(0)
@@ -75,3 +80,11 @@ class SkyboxRenderer:
         glDisableVertexAttribArray(0)
         glBindVertexArray(0)
         self.__shader.stop()
+
+    def loadModelMatrix(self, camera, clock):
+        # self.__rotation = clock
+        # rot = pyrr.matrix44.create_from_axis_rotation((0, 1, 0), radians(self.__rotation))
+        # final = pyrr.matrix44.multiply(matrix, rot)
+        # transformationMatrix = createTransformationMatrix((0, 0, 0), 0, 0, 0, 0)
+        transformationMatrix = createTransformationMatrix((0,0,0), 0, .003*clock, 0, 1)
+        self.__shader.loadTransformationMatrix(transformationMatrix)

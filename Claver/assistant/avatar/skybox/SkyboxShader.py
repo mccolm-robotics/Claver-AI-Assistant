@@ -16,6 +16,9 @@ class SkyboxShader(ShaderProgram):
         self.__ROTATE_SPEED = 1.0
         self.__rotation = 0
 
+    def loadTransformationMatrix(self, matrix):
+        super().loadMatrix(self.__location_transformationMatrix, matrix)
+
     def loadProjectionMatrix(self, matrix):
         super().loadMatrix(self.__location_projectionMatrix, matrix)
 
@@ -24,15 +27,13 @@ class SkyboxShader(ShaderProgram):
         matrix.m41 = 0
         matrix.m42 = 0
         matrix.m43 = 0
-        self.__rotation += self.__ROTATE_SPEED * delta
-        rot = pyrr.matrix44.create_from_axis_rotation((0, 1, 0), radians(self.__rotation))
-        final = pyrr.matrix44.multiply(matrix, rot)
         super().loadMatrix(self.__location_viewMatrix, matrix)
 
     def loadFogColour(self, r, g, b):
         super().loadVector(self.__location_fogColour, Vector3((r, g, b)))
 
     def getAllUniformLocations(self):
+        self.__location_transformationMatrix = super().getUniformLocation("transformationMatrix")
         self.__location_projectionMatrix = super().getUniformLocation("projectionMatrix")
         self.__location_viewMatrix = super().getUniformLocation("viewMatrix")
         self.__location_fogColour = super().getUniformLocation("fogColour")
