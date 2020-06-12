@@ -182,7 +182,7 @@ class GLCanvas(Gtk.GLArea):
         self.guiRenderer = GuiRenderer(self.loader)
 
         # Create a manager to display world objects
-        self.renderer = MasterRenderer(self.window_rect, self.inputEvents, self.chibi)
+        self.renderer = MasterRenderer(self.window_rect, self.inputEvents, self.chibi, self.loader)
 
         return True
 

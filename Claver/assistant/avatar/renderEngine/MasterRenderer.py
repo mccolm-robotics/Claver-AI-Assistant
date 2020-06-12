@@ -4,6 +4,7 @@ from Claver.assistant.avatar.shaders.StaticShader import StaticShader
 from Claver.assistant.avatar.renderEngine.EntityRenderer import EntityRenderer
 from Claver.assistant.avatar.shaders.TerrainShader import TerrainShader
 from Claver.assistant.avatar.renderEngine.TerrainRenderer import TerrainRenderer
+from Claver.assistant.avatar.skybox.SkyboxRenderer import SkyboxRenderer
 from Claver.assistant.avatar.entities.Entity import Entity
 from Claver.assistant.avatar.entities.Light import  Light
 from Claver.assistant.avatar.entities.Camera import Camera
@@ -15,7 +16,7 @@ class MasterRenderer:
     __GREEN = 0.05
     __BLUE = 0.1
 
-    def __init__(self, window, keyboardEvents, player):
+    def __init__(self, window, keyboardEvents, player, loader):
         glEnable(GL_DEPTH_TEST) # Enable depth testing to ensure pixels closer to the viewer appear closest
         glDepthFunc(GL_LESS)    # Set the type of calculation used by the depth buffer
         MasterRenderer.enableCulling()
@@ -31,6 +32,8 @@ class MasterRenderer:
         # Added for terrains
         self.__terrains = []
         self.__terrainRenderer = TerrainRenderer(self.__terrainShader, self.__projectionMatrix)
+        # Added for skybox
+        self.__skyboxRenderer = SkyboxRenderer(loader, self.__projectionMatrix)
 
     @staticmethod
     def enableCulling():
@@ -63,6 +66,7 @@ class MasterRenderer:
         self.__terrainShader.loadViewMatrix(self.__camera)
         self.__terrainRenderer.render(self.__terrains, clock)
         self.__terrainShader.stop()
+        self.__skyboxRenderer.render(self.__camera, self.__RED, self.__GREEN, self.__BLUE, clock)
         self.__terrains.clear()
         self.__entityDict.clear()
 
