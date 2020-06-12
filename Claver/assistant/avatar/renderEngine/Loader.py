@@ -87,13 +87,13 @@ class Loader:
         self.__textures = np.append(self.__textures, textureID)
         return textureID
 
-    def loadCubeMap(self, textureFiles):
+    def loadCubeMap(self, textureFiles, directory):
         textureID = glGenTextures(1)
         glActiveTexture(GL_TEXTURE0)
         glBindTexture(GL_TEXTURE_CUBE_MAP, textureID)
 
         for i in range(len(textureFiles)):
-            data = self.decodeTextureFile(res_dir['SKYBOX_CLOUDS'] + "{}.png".format(textureFiles[i]))
+            data = self.decodeTextureFile(directory + "{}.png".format(textureFiles[i]))
             glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA, data.getWidth(), data.getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, data.getBuffer())
 
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR)

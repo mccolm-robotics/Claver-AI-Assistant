@@ -13,8 +13,6 @@ class SkyboxShader(ShaderProgram):
 
     def __init__(self):
         super().__init__(self.__VERTEX_FILE, self.__FRAGMENT_FILE)
-        self.__ROTATE_SPEED = 1.0
-        self.__rotation = 0
 
     def loadTransformationMatrix(self, matrix):
         super().loadMatrix(self.__location_transformationMatrix, matrix)
@@ -32,11 +30,21 @@ class SkyboxShader(ShaderProgram):
     def loadFogColour(self, r, g, b):
         super().loadVector(self.__location_fogColour, Vector3((r, g, b)))
 
+    def connectTextureUnits(self):
+        super().loadInt(self.__location_cubeMap, 0)
+        super().loadInt(self.__location_cubeMap2, 1)
+
+    def loadBlendFactor(self, blend):
+        super().loadFloat(self.__location_blendFactor, blend)
+
     def getAllUniformLocations(self):
         self.__location_transformationMatrix = super().getUniformLocation("transformationMatrix")
         self.__location_projectionMatrix = super().getUniformLocation("projectionMatrix")
         self.__location_viewMatrix = super().getUniformLocation("viewMatrix")
         self.__location_fogColour = super().getUniformLocation("fogColour")
+        self.__location_cubeMap = super().getUniformLocation("cubeMap")
+        self.__location_cubeMap2 = super().getUniformLocation("cubeMap2")
+        self.__location_blendFactor = super().getUniformLocation("blendFactor")
 
     def bindAttributes(self):
         super().bindAttribute(0, "position")
