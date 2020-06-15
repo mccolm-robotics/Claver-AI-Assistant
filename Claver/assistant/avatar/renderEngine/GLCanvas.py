@@ -189,10 +189,10 @@ class GLCanvas(Gtk.GLArea):
         self.guis.append(gui)
         self.guiRenderer = GuiRenderer(self.loader)
 
-        # Create a manager to display world objects
-        self.renderer = MasterRenderer(self.window_rect, self.inputEvents, self.chibi, self.loader)
-
         self.water = WaterTile(self.loader, (13.0, -0.2, 12.25))
+
+        # Create a manager to display world objects
+        self.renderer = MasterRenderer(self.loader, self.window_rect, self.inputEvents, self.chibi)
 
         return True
 

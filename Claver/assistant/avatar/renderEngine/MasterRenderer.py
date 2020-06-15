@@ -19,9 +19,9 @@ class MasterRenderer:
     __GREEN = 0.05
     __BLUE = 0.1
 
-    def __init__(self, window, keyboardEvents, player, loader):
+    def __init__(self, loader, window, keyboardEvents, player):
         glEnable(GL_DEPTH_TEST) # Enable depth testing to ensure pixels closer to the viewer appear closest
-        glDepthFunc(GL_LESS)    # Set the type of calculation used by the depth buffer
+        glDepthFunc(GL_LESS)    # Set the type of calculation used by the depth bufferloader
         MasterRenderer.enableCulling()
         shaderList = []
         self.__shader = StaticShader()

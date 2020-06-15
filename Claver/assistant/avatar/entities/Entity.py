@@ -1,5 +1,6 @@
 import numpy as np
 from pyrr import Vector3
+from Claver.assistant.avatar.toolbox.Math import createTransformationMatrix
 
 
 class Entity:
@@ -11,6 +12,10 @@ class Entity:
         self.__rotZ = rotZ
         self.__scale = scale
         self.__textureIndex = index
+        self.__transformationMatrix = createTransformationMatrix(self.__position, self.__rotX, self.__rotY, self.__rotZ, self.__scale)
+
+    def getTransformationMatrix(self):
+        return self.__transformationMatrix
 
     def getTextureXOffset(self):
         column = self.__textureIndex % self.__model.getTexture().getNumberOfRows()

@@ -45,8 +45,7 @@ class EntityRenderer:
         glBindVertexArray(0)
 
     def prepareInstance(self, entity, clock):
-        transformationMatrix = createTransformationMatrix(entity.getPosition(), entity.getRotX(), entity.getRotY(), entity.getRotZ(), entity.getScale())
-        self.__shader.loadTransformationMatrix(transformationMatrix)
+        self.__shader.loadTransformationMatrix(entity.getTransformationMatrix())
         self.__shader.loadOffset(entity.getTextureXOffset(), entity.getTextureYOffset())
 
 

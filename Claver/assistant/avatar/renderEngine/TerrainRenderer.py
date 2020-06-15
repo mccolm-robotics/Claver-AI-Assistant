@@ -16,7 +16,7 @@ class TerrainRenderer:
     def render(self, terrains, clock):
         for terrain in terrains:
             self.prepareTerrain(terrain)
-            self.loadModelMatrix(terrain, clock)
+            self.loadModelMatrix(terrain)
             glDrawArrays(GL_TRIANGLES, 0, terrain.getModel().getVertexCount())
             self.unbindTexturedModel()
 
@@ -49,6 +49,5 @@ class TerrainRenderer:
         glDisableVertexAttribArray(2)
         glBindVertexArray(0)
 
-    def loadModelMatrix(self, terrain, clock):
-        transformationMatrix = createTransformationMatrix(Vector3((terrain.getX(), 0, terrain.getZ())), 0, 0, 0, 1)
-        self.__shader.loadTransformationMatrix(transformationMatrix)
+    def loadModelMatrix(self, terrain):
+        self.__shader.loadTransformationMatrix(terrain.getTransformationMatrix())

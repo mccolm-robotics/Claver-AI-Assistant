@@ -5,6 +5,7 @@ from math import sin, cos, radians, floor
 from pyrr import Vector3
 
 from Claver.assistant.avatar.terrain.Terrain import Terrain
+from Claver.assistant.avatar.toolbox.Math import createTransformationMatrix
 
 
 class Player(Entity):
@@ -24,6 +25,11 @@ class Player(Entity):
         self.__isInAir = False
         self.__terrainTiles = terrainTiles
         self.ground = self.__TERRAIN_HEIGHT
+
+    def getTransformationMatrix(self):
+        transformationMatrix = createTransformationMatrix(super().getPosition(), super().getRotX(), super().getRotY(),
+                                                          super().getRotZ(), super().getScale())
+        return transformationMatrix
 
     def move(self, delta, sideStepDirection, yaw=None):
 

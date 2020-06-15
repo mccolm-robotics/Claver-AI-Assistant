@@ -4,6 +4,7 @@ from math import floor
 from pyrr import Vector3
 from PIL import Image
 from Claver.assistant.avatar.toolbox.Math import barryCentric
+from Claver.assistant.avatar.toolbox.Math import createTransformationMatrix
 
 
 class Terrain:
@@ -20,12 +21,16 @@ class Terrain:
         self.__model = self.generateTerrain(loader, heightMap)
         self.__VERTEX_COUNT = None
         self.__id = id
+        self.__transformationMatrix = createTransformationMatrix(Vector3((self.__x, 0, self.__z)), 0, 0, 0, 1)
 
     def getX(self):
         return self.__x
 
     def getZ(self):
         return self.__z
+
+    def getTransformationMatrix(self):
+        return self.__transformationMatrix
 
     def getModel(self):
         return self.__model
