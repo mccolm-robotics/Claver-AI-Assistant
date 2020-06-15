@@ -128,3 +128,6 @@ class SkyboxRenderer:
         glActiveTexture(GL_TEXTURE1)
         glBindTexture(GL_TEXTURE_CUBE_MAP, texture2)
         self.__shader.loadBlendFactor(blendFactor)
+
+    def cleanUp(self):
+        self.__shader.cleanUp()

@@ -41,7 +41,12 @@ class Loader:
         #                       ctypes.c_void_p(self.texture_offset))
         # glEnableVertexAttribArray(self.texture_in)
         self.unbindVAO()
-        return RawModel(vaoID, int(len(positions)))
+        length = len(positions) // 3
+        if textureCoords is not None:
+            length += len(textureCoords) // 3
+        if normals is not None:
+            length += len(normals) // 3
+        return RawModel(vaoID, length)
 
     def load2DToVAO(self, positions, dimensions=2):
         vaoID = self.createVAO()

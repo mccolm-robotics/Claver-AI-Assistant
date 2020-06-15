@@ -60,9 +60,6 @@ class Terrain:
                 normals.append(normal)
                 textureCoords.append(Vector3([j / (VERTEX_COUNT - 1), i / (VERTEX_COUNT - 1), 0.0]))
 
-        # print("generating terrain. size: ", self.__heights[0].size)
-
-
         indices = []
         for gz in range(VERTEX_COUNT - 1):
             for gx in range(VERTEX_COUNT - 1):

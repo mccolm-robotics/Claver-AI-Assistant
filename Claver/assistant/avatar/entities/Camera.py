@@ -13,7 +13,8 @@ class Camera:
     __SENSITIVITY = 0.1
     __ZOOM_SENSITIVITY = 0.5
     __ZOOM_NEAR_LIMIT = 3
-    __ZOOM_FAR_LIMIT = 10
+    __ZOOM_FAR_LIMIT = 15
+    __STARTING_DISTANCE_FROM_PLAYER = 7
     __FOV_LIMIT = 70
     __NEAR_PLANE = 0.1
     __FAR_PLANE = 1000
@@ -29,7 +30,7 @@ class Camera:
         self.__shaderList = shaderList
         self.__pitch = 20             # Rotation around X axis: look up and down
         self.__yaw = 0           # Rotation around Y axis: look left and right. yaw is initalized to -90 since a yaw of 0.0 results in a direction vector pointing to the right
-        self.__distanceFromPlayer = 5
+        self.__distanceFromPlayer = self.__STARTING_DISTANCE_FROM_PLAYER
         self.__angleAroundPlayer = 0
         self.__viewMatrix = None
         self.__projectionMatrix = None

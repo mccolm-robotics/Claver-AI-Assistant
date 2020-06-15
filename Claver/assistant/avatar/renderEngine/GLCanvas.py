@@ -24,6 +24,7 @@ from Claver.assistant.avatar.renderEngine.ModelLoader import ModelLoader
 from Claver.assistant.avatar.toolbox.Primitives import Primitives
 from Claver.assistant.avatar.guis.GuiTexture import GuiTexture
 from Claver.assistant.avatar.guis.GuiRenderer import GuiRenderer
+from Claver.assistant.avatar.lake.LakeTile import LakeTile
 
 
 class GLCanvas(Gtk.GLArea):
@@ -46,6 +47,7 @@ class GLCanvas(Gtk.GLArea):
         self.cursorCoords = None
         self.previousCursorCoords = None
         self.initializedCursor = False
+        self.entities = []
 
     def tick(self, widget, frame_clock):
         self.current_frame_time = frame_clock.get_frame_time()  # Gets the current timestamp in microseconds
@@ -100,6 +102,8 @@ class GLCanvas(Gtk.GLArea):
         cubeTexture.setShineDamper(10)
         cubeTexture.setReflectivity(1)
         self.cube = Entity(cubeModel, (3.0, 1.0, 2.0), 0.0, 0.0, 0.0, 1.0)
+        self.entities.append(self.cube)
+
 
         lampModel = TexturedModel(ModelLoader().loadModel(self.loader, res_dir['MODELS']+"lamp_poly2.obj"),
                                   ModelTexture(self.loader.loadTexture(res_dir['MODELS'] + "poly_2.png")))
@@ -107,6 +111,7 @@ class GLCanvas(Gtk.GLArea):
 
         treeModel = TexturedModel(ModelLoader().loadModel(self.loader, res_dir['MODELS']+"Pine.obj"),
                                   ModelTexture(self.loader.loadTexture(res_dir['MODELS'] + "Pine_Texture.png")))
+        treeModel.getTexture().setHasTransparency(True)
 
         grassModel = TexturedModel(ModelLoader().loadModel(self.loader, res_dir['MODELS'] + "Grass.obj"),
                                   ModelTexture(self.loader.loadTexture(res_dir['MODELS'] + "Grass_Texture.png")))
@@ -124,7 +129,9 @@ class GLCanvas(Gtk.GLArea):
         self.lights.append(Light(Vector3((0, 8, -30)), Vector3((4, 0, 0)), Vector3((1, 0.01, 0.002))))
 
         self.lamp = Entity(lampModel, (10, 0, 30), 0.0, 0.0, 0.0, .3)
+        self.entities.append(self.lamp)
         self.blueLamp = Entity(lampModel, (0, 0, -30), 0.0, 0.0, 0.0, .3)
+        self.entities.append(self.blueLamp)
 
         backgroundTexture = TerrainTexture(self.loader.loadTexture(res_dir['TEXTURES'] + "grass2.png"))
         rTexture = TerrainTexture(self.loader.loadTexture(res_dir['TEXTURES'] + "mud.png"))
@@ -152,18 +159,18 @@ class GLCanvas(Gtk.GLArea):
 
         # Add objects to world
         import random
-        self.entities = []
+        RANGE = .8
         for i in range(30):
-            x1 = random.uniform(-.8, .8) * 100
-            z1 = random.uniform(-.8, .8) * 100
+            x1 = random.uniform(-RANGE, RANGE) * 100
+            z1 = random.uniform(-RANGE, RANGE) * 100
             y1 = getTerrainHeight(x1, z1)
             self.entities.append(Entity(grassModel, (x1, y1, z1), 0.0, 0.0, 0.0, 1.0))
-            x2 = random.uniform(-.8, .8) * 100
-            z2 = random.uniform(-.8, .8) * 100
+            x2 = random.uniform(-RANGE, RANGE) * 100
+            z2 = random.uniform(-RANGE, RANGE) * 100
             y2 = getTerrainHeight(x2, z2)
             self.entities.append(Entity(treeModel, (x2, y2, z2), 0.0, 0.0, 0.0, 3.0))
-            x3 = random.uniform(-.8, .8) * 100
-            z3 = random.uniform(-.8, .8) * 100
+            x3 = random.uniform(-RANGE, RANGE) * 100
+            z3 = random.uniform(-RANGE, RANGE) * 100
             y3 = getTerrainHeight(x3, z3)
             self.entities.append(Entity(fernModel, (x3, y3, z3), 0.0, 0.0, 0.0, 0.4, random.randint(0,3)))
 
@@ -175,6 +182,7 @@ class GLCanvas(Gtk.GLArea):
         chibiTexture.setShineDamper(10)
         chibiTexture.setReflectivity(1)
         self.chibi = Player(chibiModel, (0.0, 0.0, 0.0), 0.0, 0.0, 0.0, 0.25, self.inputEvents, self.terrainTiles)
+        self.entities.append(self.chibi)
 
         self.guis = []
         gui = GuiTexture(self.loader.loadTexture(res_dir['TEXTURES'] + "claver-brand.png", False), (0.5, 0.5), (0.25, 0.25))
@@ -184,22 +192,15 @@ class GLCanvas(Gtk.GLArea):
         # Create a manager to display world objects
         self.renderer = MasterRenderer(self.window_rect, self.inputEvents, self.chibi, self.loader)
 
+        self.lake = LakeTile(self.loader, (13.0, -0.2, 12.25))
+
         return True
 
     def on_render(self, gl_area, gl_context):
         self.renderer.processMovement(self.delta)
-        # self.chibi.move(self.delta)
 
-        for terrain in np.nditer(self.terrainTiles, flags=["refs_ok"]):
-            self.renderer.processTerrain(terrain.item())
-        for entity in self.entities:
-            self.renderer.processEntity(entity)
-        self.renderer.processEntity(self.chibi)
-        self.renderer.processEntity(self.cube)
-        self.renderer.processEntity(self.lamp)
-        self.renderer.processEntity(self.blueLamp)
+        self.renderer.renderScene(self.entities, self.terrainTiles, self.lights, self.lake, self.running_seconds_from_start)
 
-        self.renderer.render(self.lights, self.running_seconds_from_start)
         self.guiRenderer.render(self.guis)
         self.queue_draw()  # Schedules a redraw for Gtk.GLArea
 
