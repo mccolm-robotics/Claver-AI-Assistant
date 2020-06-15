@@ -1,19 +1,40 @@
-class WaterTile:
-    TILE_SIZE = 10
+import numpy as np
+from pyrr import Vector3
 
-    def __init__(self, centerX, height, centerZ):
-        self.__x = centerX
-        self.__height = height
-        self.__z = centerZ
+
+class WaterTile:
+
+    TILE_SIZE = 11
+
+    vertices = [
+        1.0, 0.0, -1.0,
+        -1.0, 0.0, 1.0,
+        1.0, 0.0, 1.0,
+        -1.0, 0.0, -1.0,
+        -1.0, 0.0, 1.0,
+        1.0, 0.0, -1.0
+    ]
+
+    def __init__(self, loader, position):
+        # self.__model = loader.loadToVAO(self.vertices)
+        self.__model = loader.load2DToVAO(self.vertices, 3)
+        self.__position = Vector3(position)
+        self.__x = self.__position.x
+        self.__z = self.__position.z
+        self.__height = self.__position.y
+
+
+    def getModel(self):
+        return self.__model
+
+    def getPosition(self):
+        return self.__position
 
     def getX(self):
         return self.__x
 
-    def getHeight(self):
-        return self.__height
-
     def getZ(self):
         return self.__z
 
-    def __str__(self):
-        return "WaterTile (centerX:{} centerZ:{} height:{})".format(self.__x, self.__z, self.__height)
+    def getHeight(self):
+        return self.__height

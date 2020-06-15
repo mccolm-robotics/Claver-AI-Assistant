@@ -4,8 +4,8 @@ from Claver.assistant.avatar.shaders.ShaderProgram import ShaderProgram
 
 class WaterShader(ShaderProgram):
     __THIS_FOLDER = os.path.dirname(os.path.abspath(__file__))
-    __VERTEX_FILE = os.path.join(__THIS_FOLDER, "WaterVertexShader.txt")
-    __FRAGMENT_FILE = os.path.join(__THIS_FOLDER, "WaterFragmentShader.txt")
+    __VERTEX_FILE = os.path.join(__THIS_FOLDER, "waterVertexShader.txt")
+    __FRAGMENT_FILE = os.path.join(__THIS_FOLDER, "waterFragmentShader.txt")
 
     def __init__(self):
         super().__init__(self.__VERTEX_FILE, self.__FRAGMENT_FILE)
@@ -21,9 +21,9 @@ class WaterShader(ShaderProgram):
     def loadModelMatrix(self, matrix):
         super().loadMatrix(self.__location_modelMatrix, matrix)
 
+    def loadProjectionMatrix(self, matrix):
+        super().loadMatrix(self.__location_projectionMatrix, matrix)
+
     def loadViewMatrix(self, camera):
         matrix = camera.getViewMatrix()
         super().loadMatrix(self.__location_viewMatrix, matrix)
-
-    def loadProjectionMatrix(self, matrix):
-        super().loadMatrix(self.__location_projectionMatrix, matrix)

@@ -1,10 +1,10 @@
 from OpenGL.GL import *
 
 from Claver.assistant.avatar.toolbox.Math import createTransformationMatrix
-from Claver.assistant.avatar.lake.LakeTile import LakeTile
+from Claver.assistant.avatar.basicShader.BasicTile import BasicTile
 
 
-class LakeRenderer:
+class BasicRenderer:
 
     def __init__(self, shader, projectionMatrix, camera):
         self.__camera = camera
@@ -13,11 +13,11 @@ class LakeRenderer:
         self.__shader.loadProjectionMatrix(projectionMatrix)
         self.__shader.stop()
 
-    def render(self, lakeModel, clock):
-        self.prepareRender(lakeModel.getModel())
-        modelMatrix = createTransformationMatrix(lakeModel.getPosition(), 0, 0, 0, LakeTile.TILE_SIZE)
+    def render(self, basicModel, clock):
+        self.prepareRender(basicModel.getModel())
+        modelMatrix = createTransformationMatrix(basicModel.getPosition(), 0, 0, 0, BasicTile.TILE_SIZE)
         self.__shader.loadModelMatrix(modelMatrix)
-        glDrawArrays(GL_TRIANGLES, 0, lakeModel.getModel().getVertexCount())
+        glDrawArrays(GL_TRIANGLES, 0, basicModel.getModel().getVertexCount())
         self.unbind()
 
     def prepareRender(self, model):

@@ -10,8 +10,8 @@ from Claver.assistant.avatar.entities.Entity import Entity
 from Claver.assistant.avatar.entities.Light import Light
 from Claver.assistant.avatar.entities.Camera import Camera
 from Claver.assistant.avatar.toolbox.Math import createProjectionMatrix
-from Claver.assistant.avatar.lake.LakeRenderer import LakeRenderer
-from Claver.assistant.avatar.lake.LakeShader import LakeShader
+from Claver.assistant.avatar.water.WaterRenderer import WaterRenderer
+from Claver.assistant.avatar.water.WaterShader import WaterShader
 
 class MasterRenderer:
 
@@ -31,9 +31,9 @@ class MasterRenderer:
         self.__camera = Camera(window, keyboardEvents, shaderList, player)
         self.__projectionMatrix = self.__camera.getProjectionMatrix()
         self.__renderer = EntityRenderer(self.__shader, self.__projectionMatrix)
-        self.__lakeShader = LakeShader()
-        shaderList.append(self.__lakeShader)
-        self.__lakeRenderer = LakeRenderer(self.__lakeShader, self.__projectionMatrix, self.__camera)
+        self.__waterShader = WaterShader()
+        shaderList.append(self.__waterShader)
+        self.__waterRenderer = WaterRenderer(self.__waterShader, self.__projectionMatrix, self.__camera)
         self.__entityDict = {}
         self.__lakeDict = {}
         # Added for terrains
@@ -59,12 +59,12 @@ class MasterRenderer:
     def processMovement(self, timeDelta):
         self.__camera.move(timeDelta)
 
-    def renderScene(self, entities, terrainTiles, lights, lake, clock):
+    def renderScene(self, entities, terrainTiles, lights, water, clock):
         for terrain in np.nditer(terrainTiles, flags=["refs_ok"]):
             self.processTerrain(terrain.item())
         for entity in entities:
             self.processEntity(entity)
-        self.lake = lake
+        self.water = water
         self.render(lights, clock)
 
     def render(self, lights, clock):
@@ -77,7 +77,7 @@ class MasterRenderer:
         self.__shader.stop()
 
 
-        self.__lakeRenderer.render(self.lake, clock)
+        self.__waterRenderer.render(self.water, clock)
 
 
         self.__terrainShader.start()
@@ -103,7 +103,7 @@ class MasterRenderer:
     def cleanUp(self):
         self.__shader.cleanUp()
         self.__terrainShader.cleanUp()
-        self.__lakeShader.cleanUp()
+        self.__waterShader.cleanUp()
         self.__skyboxRenderer.cleanUp()
 
     def windowResized(self, width, height):
@@ -111,6 +111,3 @@ class MasterRenderer:
 
     def getCamera(self):
         return self.__camera
-
-    def getProjectionMatrix(self):
-        return self.__projectionMatrix

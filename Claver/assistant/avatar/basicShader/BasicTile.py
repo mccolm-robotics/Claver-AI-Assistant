@@ -2,7 +2,7 @@ import numpy as np
 from pyrr import Vector3
 
 
-class LakeTile:
+class BasicTile:
 
     TILE_SIZE = 11
 

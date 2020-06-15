@@ -2,10 +2,10 @@ import os
 from Claver.assistant.avatar.shaders.ShaderProgram import ShaderProgram
 
 
-class LakeShader(ShaderProgram):
+class BasicShader(ShaderProgram):
     __THIS_FOLDER = os.path.dirname(os.path.abspath(__file__))
-    __VERTEX_FILE = os.path.join(__THIS_FOLDER, "lakeVertexShader.txt")
-    __FRAGMENT_FILE = os.path.join(__THIS_FOLDER, "lakeFragmentShader.txt")
+    __VERTEX_FILE = os.path.join(__THIS_FOLDER, "basicVertexShader.txt")
+    __FRAGMENT_FILE = os.path.join(__THIS_FOLDER, "basicFragmentShader.txt")
 
     def __init__(self):
         super().__init__(self.__VERTEX_FILE, self.__FRAGMENT_FILE)

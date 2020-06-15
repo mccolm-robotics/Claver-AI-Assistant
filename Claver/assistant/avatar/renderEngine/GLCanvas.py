@@ -24,7 +24,7 @@ from Claver.assistant.avatar.renderEngine.ModelLoader import ModelLoader
 from Claver.assistant.avatar.toolbox.Primitives import Primitives
 from Claver.assistant.avatar.guis.GuiTexture import GuiTexture
 from Claver.assistant.avatar.guis.GuiRenderer import GuiRenderer
-from Claver.assistant.avatar.lake.LakeTile import LakeTile
+from Claver.assistant.avatar.water.WaterTile import WaterTile
 
 
 class GLCanvas(Gtk.GLArea):
@@ -192,14 +192,14 @@ class GLCanvas(Gtk.GLArea):
         # Create a manager to display world objects
         self.renderer = MasterRenderer(self.window_rect, self.inputEvents, self.chibi, self.loader)
 
-        self.lake = LakeTile(self.loader, (13.0, -0.2, 12.25))
+        self.water = WaterTile(self.loader, (13.0, -0.2, 12.25))
 
         return True
 
     def on_render(self, gl_area, gl_context):
         self.renderer.processMovement(self.delta)
 
-        self.renderer.renderScene(self.entities, self.terrainTiles, self.lights, self.lake, self.running_seconds_from_start)
+        self.renderer.renderScene(self.entities, self.terrainTiles, self.lights, self.water, self.running_seconds_from_start)
 
         self.guiRenderer.render(self.guis)
         self.queue_draw()  # Schedules a redraw for Gtk.GLArea
