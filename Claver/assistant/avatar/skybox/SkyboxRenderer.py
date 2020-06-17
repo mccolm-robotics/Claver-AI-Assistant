@@ -93,7 +93,8 @@ class SkyboxRenderer:
         self.__shader.stop()
 
     def loadModelMatrix(self, camera, clock):
-        transformationMatrix = createTransformationMatrix((0,0,0), 0, .003*clock, 0, 1)
+        # .003 * clock
+        transformationMatrix = createTransformationMatrix((0,0,0), 0, 0, 0, 1)
         self.__shader.loadTransformationMatrix(transformationMatrix)
 
     # def bindTextures(self):

@@ -1,7 +1,7 @@
 import cairo
 import gi
 import numpy as np
-
+from OpenGL.GL import glGetIntegerv,GL_FRAMEBUFFER_BINDING
 from Claver.assistant.avatar.entities.Player import Player
 
 gi.require_version('Gtk', '3.0')
@@ -25,6 +25,9 @@ from Claver.assistant.avatar.toolbox.Primitives import Primitives
 from Claver.assistant.avatar.guis.GuiTexture import GuiTexture
 from Claver.assistant.avatar.guis.GuiRenderer import GuiRenderer
 from Claver.assistant.avatar.water.WaterTile import WaterTile
+from Claver.assistant.avatar.water.WaterFrameBuffers import WaterFrameBuffers
+from Claver.assistant.avatar.water.WaterRenderer import WaterRenderer
+from Claver.assistant.avatar.water.WaterShader import WaterShader
 
 
 class GLCanvas(Gtk.GLArea):
@@ -43,6 +46,7 @@ class GLCanvas(Gtk.GLArea):
         self.add_tick_callback(self.tick)  # This is a frame time clock that is called each time a frame is rendered
         self.set_start_time = False  # Boolean to track whether the clock has been initialized
         self.set_has_depth_buffer(True)
+        self.set_has_stencil_buffer(True)
         self.inputEvents = InputEvent()
         self.cursorCoords = None
         self.previousCursorCoords = None
@@ -189,22 +193,30 @@ class GLCanvas(Gtk.GLArea):
         self.guis.append(gui)
         self.guiRenderer = GuiRenderer(self.loader)
 
-        self.water = WaterTile(self.loader, (13.0, -0.2, 12.25))
+        # self.FBO = WaterFrameBuffers()
 
         # Create a manager to display world objects
         self.renderer = MasterRenderer(self.loader, self.window_rect, self.inputEvents, self.chibi)
 
+        self.waterShader = WaterShader()
+        self.waterRenderer = WaterRenderer(self.waterShader, self.renderer.getProjectionMatrix(), self.renderer.getCamera())
+        self.water = WaterTile(self.loader, (13.0, -0.2, 12.25))
+
         return True
 
     def on_render(self, gl_area, gl_context):
+        self.default_FBO = glGetIntegerv(GL_FRAMEBUFFER_BINDING)  # GLArea does not seem to use FBO 0 as the default.
         self.renderer.processMovement(self.delta)
 
-        self.renderer.renderScene(self.entities, self.terrainTiles, self.lights, self.water, self.running_seconds_from_start)
+        self.renderer.renderScene(self.entities, self.terrainTiles, self.lights, self.running_seconds_from_start)
 
+        self.waterRenderer.render(self.water, self.running_seconds_from_start)
         self.guiRenderer.render(self.guis)
         self.queue_draw()  # Schedules a redraw for Gtk.GLArea
 
     def on_unrealize(self, gl_area):
+        # self.FBO.cleanUp()
+        self.waterShader.cleanUp()
         self.guiRenderer.cleanUp()
         self.renderer.cleanUp()
         self.loader.cleanUp()

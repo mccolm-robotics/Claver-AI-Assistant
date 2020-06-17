@@ -173,12 +173,14 @@ class GLCanvas(Gtk.GLArea):
         glUseProgram(self.shader) # Tells OpenGL to use the shader program for rendering geometry
         self.load_geometry()      # Calls load_geometry() to create vertex and colour data
 
-        self.__location_modelMatrix = glGetUniformLocation("modelMatrix")
-        self.__location_viewMatrix = glGetUniformLocation("viewMatrix")
-        self.__location_projectionMatrix = glGetUniformLocation("projectionMatrix")
+        self.__location_modelMatrix = glGetUniformLocation(self.shader, "modelMatrix")
+        self.__location_viewMatrix = glGetUniformLocation(self.shader, "viewMatrix")
+        self.__location_projectionMatrix = glGetUniformLocation(self.shader, "projectionMatrix")
 
         # Construct perspective matrix using width and height of window allocated by GTK
         self.perspective_matrix = Matrix44.perspective_projection(45.0, window.width / window.height, 0.1, 200.0)
+
+        glUniformMatrix4fv(self.__location_projectionMatrix, 1, GL_FALSE, self.perspective_matrix)
 
         return True
 
@@ -189,13 +191,12 @@ class GLCanvas(Gtk.GLArea):
         eye = (0.0, 5, 18.0)        # Eye coordinates (location of the camera)
         target = (0.0, 7.0, 0.0)    # Target coordinates (where the camera is looking)
         up = (0.0, 1.0, 0.0)        # A vector representing the 'up' direction.
-
         view_matrix = Matrix44.look_at(eye, target, up) # Calculate the view matrix
-        # Calculate the model matrix. The rotation speed is regulated by the application clock.
-        model_matrix = Matrix44.from_translation([0.0, 0.0, 0.0]) * pyrr.matrix44.create_from_axis_rotation((0.0, 1.0, 0.0), self.application_clock) * Matrix44.from_scale([1.0, 1.0, 1.0])
+        glUniformMatrix4fv(self.__location_viewMatrix, 1, GL_FALSE, view_matrix)
 
-        ModelViewPerspective = self.perspective_matrix * view_matrix * model_matrix             # Calculate the ModelViewPerspective matrix
-        glUniformMatrix4fv(self.mvpMatrixLocationInShader, 1, GL_FALSE, ModelViewPerspective)   # Update the value of the ModelViewPerspective matrix attribute variable in the vertex buffer
+
+        model_matrix = Matrix44.from_translation([0.0, 0.0, 0.0]) * pyrr.matrix44.create_from_axis_rotation((0.0, 1.0, 0.0), self.application_clock) * Matrix44.from_scale([1.0, 1.0, 1.0])
+        glUniformMatrix4fv(self.__location_modelMatrix, 1, GL_FALSE, model_matrix)   # Update the value of the ModelViewPerspective matrix attribute variable in the vertex buffer
 
         glBindVertexArray(self.chibi[0])
         glEnableVertexAttribArray(0)

@@ -31,9 +31,9 @@ class WaterFrameBuffers:
         # Call before rendering to this FBO
         self.__bindFrameBuffer(self.__refractionFrameBuffer, self.__REFRACTION_WIDTH, self.__REFRACTION_HEIGHT)
 
-    def unbindCurrentFrameBuffer(self):
+    def unbindCurrentFrameBuffer(self, default_FBO):
         # Call to switch to default frame buffer
-        glBindFramebuffer(GL_FRAMEBUFFER, 0)
+        glBindFramebuffer(GL_FRAMEBUFFER, default_FBO)
         glViewport(0, 0, self.__window_rect.width, self.__window_rect.height)
 
     def getReflectionTexture(self):
