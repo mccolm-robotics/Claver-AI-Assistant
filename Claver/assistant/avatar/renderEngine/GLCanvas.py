@@ -89,7 +89,9 @@ class GLCanvas(Gtk.GLArea):
 
         # Get information about current GTK GLArea canvas
         self.window_rect = gl_area.get_allocation()
+        self.window_size = (self.window_rect.width, self.window_rect.height)
         self.screen = Gdk.Screen.get_default()
+
 
         cursor = cairo.ImageSurface.create_from_png("../res/cursors/pointer.png")
         display = Gdk.Display.get_default()
@@ -193,13 +195,12 @@ class GLCanvas(Gtk.GLArea):
         self.guis.append(gui)
         self.guiRenderer = GuiRenderer(self.loader)
 
-        # self.FBO = WaterFrameBuffers()
+        self.FBO = WaterFrameBuffers(self.window_size)
 
         # Create a manager to display world objects
         self.renderer = MasterRenderer(self.loader, self.window_rect, self.inputEvents, self.chibi)
 
-        self.waterShader = WaterShader()
-        self.waterRenderer = WaterRenderer(self.waterShader, self.renderer.getProjectionMatrix(), self.renderer.getCamera())
+        self.waterRenderer = WaterRenderer(self.renderer.getCamera())
         self.water = WaterTile(self.loader, (13.0, -0.2, 12.25))
 
         return True
@@ -208,6 +209,11 @@ class GLCanvas(Gtk.GLArea):
         self.default_FBO = glGetIntegerv(GL_FRAMEBUFFER_BINDING)  # GLArea does not seem to use FBO 0 as the default.
         self.renderer.processMovement(self.delta)
 
+        self.FBO.bindReflectionFrameBuffer(self.default_FBO, self.window_size)
+        self.renderer.renderScene(self.entities, self.terrainTiles, self.lights, self.running_seconds_from_start)
+        self.FBO.unbindCurrentFrameBuffer()
+
+
         self.renderer.renderScene(self.entities, self.terrainTiles, self.lights, self.running_seconds_from_start)
 
         self.waterRenderer.render(self.water, self.running_seconds_from_start)
@@ -215,8 +221,8 @@ class GLCanvas(Gtk.GLArea):
         self.queue_draw()  # Schedules a redraw for Gtk.GLArea
 
     def on_unrealize(self, gl_area):
-        # self.FBO.cleanUp()
-        self.waterShader.cleanUp()
+        self.FBO.cleanUp()
+        self.waterRenderer.cleanUp()
         self.guiRenderer.cleanUp()
         self.renderer.cleanUp()
         self.loader.cleanUp()
@@ -273,4 +279,12 @@ class GLCanvas(Gtk.GLArea):
                 self.inputEvents.cancelButtonEvent(3)
 
     def on_resize(self, area, width, height):
+        self.window_size = (width, height)
         self.renderer.windowResized(width, height)
+        # display = Gdk.Display.get_default()
+        # monitor = display.get_monitor_at_window(gl_area.get_window())
+        # geometry = monitor.get_geometry()
+        # scale_factor = monitor.get_scale_factor()
+        # width = scale_factor * geometry.width
+        # height = scale_factor * geometry.height
+        # print("width:{} height:{}".format(width, height))

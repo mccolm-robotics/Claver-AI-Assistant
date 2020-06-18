@@ -8,22 +8,28 @@ class WaterFrameBuffers:
     __REFRACTION_WIDTH = 1280
     __REFRACTION_HEIGHT = 720
 
-    def __init__(self, window_rect):
+    def __init__(self, window_size):
         # Call during game initialization
-        self.__initializeReflectionFrameBuffer()
-        self.__initializeRefractionFrameBuffer()
-        self.__window_rect = window_rect
+        self.__reflectionBufferInitialized = False
+        self.__refractionBufferInitialized = False
+        self.__window_rect = window_size
+
 
     def cleanUp(self):
         # Call when closing game
-        glDeleteFramebuffers(self.__reflectionFrameBuffer)
+        glDeleteFramebuffers(1, self.__reflectionFrameBuffer)
         glDeleteTextures(self.__reflectionTexture)
         glDeleteRenderbuffers(self.__reflectionDepthBuffer)
-        glDeleteFramebuffers(self.__refractionFrameBuffer)
-        glDeleteTextures(self.__refractionTexture)
-        glDeleteTextures(self.__refractionDepthTexture)
+        # glDeleteFramebuffers(1, self.__refractionFrameBuffer)
+        # glDeleteTextures(self.__refractionTexture)
+        # glDeleteTextures(self.__refractionDepthTexture)
 
-    def bindReflectionFrameBuffer(self):
+    def bindReflectionFrameBuffer(self, default_FBO, window_size):
+        self.default_FBO = default_FBO
+        self.__window_rect = window_size
+        if self.__reflectionBufferInitialized is False:
+            self.__initializeReflectionFrameBuffer()
+            self.__reflectionBufferInitialized = True
         # Call before rendering to this FBO
         self.__bindFrameBuffer(self.__reflectionFrameBuffer, self.__REFLECTION_WIDTH, self.__REFLECTION_HEIGHT)
 
@@ -31,10 +37,10 @@ class WaterFrameBuffers:
         # Call before rendering to this FBO
         self.__bindFrameBuffer(self.__refractionFrameBuffer, self.__REFRACTION_WIDTH, self.__REFRACTION_HEIGHT)
 
-    def unbindCurrentFrameBuffer(self, default_FBO):
+    def unbindCurrentFrameBuffer(self):
         # Call to switch to default frame buffer
-        glBindFramebuffer(GL_FRAMEBUFFER, default_FBO)
-        glViewport(0, 0, self.__window_rect.width, self.__window_rect.height)
+        glBindFramebuffer(GL_FRAMEBUFFER, self.default_FBO)
+        glViewport(0, 0, self.__window_rect[0], self.__window_rect[1])
 
     def getReflectionTexture(self):
         # Get the resulting texture
@@ -66,7 +72,7 @@ class WaterFrameBuffers:
         glViewport(0, 0, width, height)
 
     def __createFrameBuffer(self):
-        frameBuffer = glGenFramebuffers()
+        frameBuffer = glGenFramebuffers(1)
         # Generate name for frame buffer
         glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer)
         # Create the framebuffer
@@ -75,7 +81,7 @@ class WaterFrameBuffers:
         return frameBuffer
 
     def __createTextureAttachment(self, width, height):
-        texture = glGenTextures()
+        texture = glGenTextures(1)
         glBindTexture(GL_TEXTURE_2D, texture)
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, None)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
@@ -84,7 +90,7 @@ class WaterFrameBuffers:
         return texture
 
     def __createDepthTextureAttachment(self, width, height):
-        texture = glGenTextures()
+        texture = glGenTextures(1)
         glBindTexture(GL_TEXTURE_2D, texture)
         glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, None)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
@@ -93,7 +99,7 @@ class WaterFrameBuffers:
         return texture
 
     def __createDepthBufferAttachment(self, width, height):
-        depthBuffer = glGenRenderbuffers()
+        depthBuffer = glGenRenderbuffers(1)
         glBindRenderbuffer(GL_RENDERBUFFER, depthBuffer)
         glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height)
         glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthBuffer)

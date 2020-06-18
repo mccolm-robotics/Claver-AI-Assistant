@@ -14,17 +14,29 @@ class SkyboxShader(ShaderProgram):
     def __init__(self):
         super().__init__(self.__VERTEX_FILE, self.__FRAGMENT_FILE)
 
+    def bindAttributes(self):
+        super().bindAttribute(0, "position")
+
+    def getAllUniformLocations(self):
+        self.__location_transformationMatrix = super().getUniformLocation("transformationMatrix")
+        self.__location_projectionMatrix = super().getUniformLocation("projectionMatrix")
+        self.__location_viewMatrix = super().getUniformLocation("viewMatrix")
+        self.__location_fogColour = super().getUniformLocation("fogColour")
+        self.__location_cubeMap = super().getUniformLocation("cubeMap")
+        self.__location_cubeMap2 = super().getUniformLocation("cubeMap2")
+        self.__location_blendFactor = super().getUniformLocation("blendFactor")
+
     def loadTransformationMatrix(self, matrix):
         super().loadMatrix(self.__location_transformationMatrix, matrix)
 
     def loadProjectionMatrix(self, matrix):
         super().loadMatrix(self.__location_projectionMatrix, matrix)
 
-    def loadViewMatrix(self, camera, delta):
+    def loadViewMatrix(self, camera):
         matrix = camera.getViewMatrix()
-        matrix.m41 = 0
-        matrix.m42 = 0
-        matrix.m43 = 0
+        # matrix.m41 = 0
+        # matrix.m42 = 0
+        # matrix.m43 = 0
         super().loadMatrix(self.__location_viewMatrix, matrix)
 
     def loadFogColour(self, r, g, b):
@@ -37,14 +49,3 @@ class SkyboxShader(ShaderProgram):
     def loadBlendFactor(self, blend):
         super().loadFloat(self.__location_blendFactor, blend)
 
-    def getAllUniformLocations(self):
-        self.__location_transformationMatrix = super().getUniformLocation("transformationMatrix")
-        self.__location_projectionMatrix = super().getUniformLocation("projectionMatrix")
-        self.__location_viewMatrix = super().getUniformLocation("viewMatrix")
-        self.__location_fogColour = super().getUniformLocation("fogColour")
-        self.__location_cubeMap = super().getUniformLocation("cubeMap")
-        self.__location_cubeMap2 = super().getUniformLocation("cubeMap2")
-        self.__location_blendFactor = super().getUniformLocation("blendFactor")
-
-    def bindAttributes(self):
-        super().bindAttribute(0, "position")

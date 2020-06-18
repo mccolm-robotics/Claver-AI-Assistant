@@ -2,14 +2,16 @@ from OpenGL.GL import *
 
 from Claver.assistant.avatar.toolbox.Math import createTransformationMatrix
 from Claver.assistant.avatar.water.WaterTile import WaterTile
+from Claver.assistant.avatar.water.WaterShader import WaterShader
 
 
 class WaterRenderer:
 
-    def __init__(self, shader, projectionMatrix, camera):
+    def __init__(self, camera):
         self.__camera = camera
-        self.__shader = shader
+        self.__shader = WaterShader()
         self.__shader.start()
+        projectionMatrix = camera.getProjectionMatrix()
         self.__shader.loadProjectionMatrix(projectionMatrix)
         self.__shader.stop()
 
@@ -30,3 +32,6 @@ class WaterRenderer:
         glDisableVertexAttribArray(0)
         glBindVertexArray(0)
         self.__shader.stop()
+
+    def cleanUp(self):
+        self.__shader.cleanUp()

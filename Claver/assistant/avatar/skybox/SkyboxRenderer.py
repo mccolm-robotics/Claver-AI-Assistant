@@ -8,7 +8,7 @@ from Claver.assistant.avatar.toolbox.Math import createTransformationMatrix
 from Claver.assistant.avatar.skybox.SkyboxShader import SkyboxShader
 
 class SkyboxRenderer:
-    def __init__(self, loader, projectionMatrix):
+    def __init__(self, loader, projectionMatrix, camera):
         __SIZE = 100
         __VERTICES = [
             -__SIZE, __SIZE, -__SIZE,
@@ -69,23 +69,25 @@ class SkyboxRenderer:
             "nightBack",
             "nightFront"
         ]
+        self.__camera = camera
         self.__time = 0
         self.__cube = loader.load2DToVAO(__VERTICES, 3)
         self.__texture = loader.loadCubeMap(__TEXTURE_FILES, res_dir['SKYBOX_CLOUDS'])
         self.__nightTexture = loader.loadCubeMap(__NIGHT_TEXTURE_FILES, res_dir['SKYBOX_NIGHT'])
         self.__shader = SkyboxShader()
+
         self.__shader.start()
         self.__shader.connectTextureUnits()
         self.__shader.loadProjectionMatrix(projectionMatrix)
         self.__shader.stop()
 
-    def render(self, camera, r, g, b, clock):
+    def render(self, r, g, b, clock):
         self.__shader.start()
-        self.__shader.loadViewMatrix(camera, clock)
-        self.loadModelMatrix(camera, clock)
+        self.__shader.loadViewMatrix(self.__camera)
         self.__shader.loadFogColour(r, g, b)
         glBindVertexArray(self.__cube.getVaoID())
         glEnableVertexAttribArray(0)
+        self.loadModelMatrix(self.__camera, clock)
         self.bindTextures(clock)
         glDrawArrays(GL_TRIANGLES, 0, self.__cube.getVertexCount())
         glDisableVertexAttribArray(0)
@@ -93,8 +95,7 @@ class SkyboxRenderer:
         self.__shader.stop()
 
     def loadModelMatrix(self, camera, clock):
-        # .003 * clock
-        transformationMatrix = createTransformationMatrix((0,0,0), 0, 0, 0, 1)
+        transformationMatrix = createTransformationMatrix(camera.getPosition(), 0, .003 * clock, 0, 1)
         self.__shader.loadTransformationMatrix(transformationMatrix)
 
     # def bindTextures(self):

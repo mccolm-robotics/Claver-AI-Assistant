@@ -35,7 +35,7 @@ class MasterRenderer:
         self.__terrains = []
         self.__terrainRenderer = TerrainRenderer(self.__terrainShader, self.__projectionMatrix)
         # Added for skybox
-        self.__skyboxRenderer = SkyboxRenderer(loader, self.__projectionMatrix)
+        self.__skyboxRenderer = SkyboxRenderer(loader, self.__projectionMatrix, self.__camera)
 
     @staticmethod
     def enableCulling():
@@ -63,7 +63,7 @@ class MasterRenderer:
 
     def render(self, lights, clock):
         self.prepare(clock)
-        self.__skyboxRenderer.render(self.__camera, self.__RED, self.__GREEN, self.__BLUE, clock)
+        self.__skyboxRenderer.render(self.__RED, self.__GREEN, self.__BLUE, clock)
         self.__shader.start()
         self.__shader.loadSkyColour(self.__RED, self.__GREEN, self.__BLUE)
         self.__shader.loadLights(lights)

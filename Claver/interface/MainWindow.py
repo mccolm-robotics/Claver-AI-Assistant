@@ -36,7 +36,15 @@ class MainWindow(Gtk.Application):
         window.add(self.glCanvas)
 
         if self.is_fullscreen == True:
+            display = Gdk.Display.get_default()
             window.fullscreen_on_monitor(Gdk.Screen.get_default(), self.monitor_num_for_display)
+            monitor = display.get_monitor(self.monitor_num_for_display)
+            geometry = monitor.get_geometry()
+            scale_factor = monitor.get_scale_factor()
+            width = scale_factor * geometry.width
+            height = scale_factor * geometry.height
+            # print("Monitor resolution: {}x{}".format(width, height))
+
         window.show_all()
 
     def on_key_release(self, window, event):
