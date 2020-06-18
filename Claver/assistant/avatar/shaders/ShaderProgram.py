@@ -44,6 +44,9 @@ class ShaderProgram(ABC):
     def loadInt(self, location, value):
         glUniform1i(location, value)
 
+    def load4DVector(self, location, vector):
+        glUniform4f(location, vector[0], vector[1], vector[2], vector[3])
+
     def loadVector(self, location, vector):
         glUniform3f(location, vector[0], vector[1], vector[2])
 

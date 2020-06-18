@@ -33,6 +33,7 @@ class TerrainShader(ShaderProgram):
         self.__location_gTexture = super().getUniformLocation("gTexture")
         self.__location_bTexture = super().getUniformLocation("bTexture")
         self.__location_blendMap = super().getUniformLocation("blendMap")
+        self.__location_plane = super().getUniformLocation("plane")
 
         self.__location_attenuation = []
         self.__location_lightPosition = []
@@ -41,6 +42,9 @@ class TerrainShader(ShaderProgram):
             self.__location_lightPosition.append(super().getUniformLocation("lightPosition[{}]".format(i)))
             self.__location_lightColour.append(super().getUniformLocation("lightColour[{}]".format(i)))
             self.__location_attenuation.append(super().getUniformLocation("attenuation[{}]".format(i)))
+
+    def loadClipPlane(self, plane):
+        super().load4DVector(self.__location_plane, plane)
 
     def connectTextureUnits(self):
         super().loadInt(self.__location_backgroundTexture, 0)

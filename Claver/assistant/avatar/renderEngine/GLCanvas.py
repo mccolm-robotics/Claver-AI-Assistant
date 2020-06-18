@@ -1,7 +1,7 @@
 import cairo
 import gi
 import numpy as np
-from OpenGL.GL import glGetIntegerv,GL_FRAMEBUFFER_BINDING
+from OpenGL.GL import *
 from Claver.assistant.avatar.entities.Player import Player
 
 gi.require_version('Gtk', '3.0')
@@ -191,8 +191,6 @@ class GLCanvas(Gtk.GLArea):
         self.entities.append(self.chibi)
 
         self.guis = []
-        gui = GuiTexture(self.loader.loadTexture(res_dir['TEXTURES'] + "claver-brand.png", False), (0.5, 0.5), (0.25, 0.25))
-        self.guis.append(gui)
         self.guiRenderer = GuiRenderer(self.loader)
 
         self.FBO = WaterFrameBuffers(self.window_size)
@@ -203,19 +201,35 @@ class GLCanvas(Gtk.GLArea):
         self.waterRenderer = WaterRenderer(self.renderer.getCamera())
         self.water = WaterTile(self.loader, (13.0, -0.2, 12.25))
 
+        # gui = GuiTexture(self.loader.loadTexture(res_dir['TEXTURES'] + "claver-brand.png", False), (0.5, 0.5), (0.25, 0.25))
+        # self.guis.append(gui)
+        self.FBO_initialized = False
+
         return True
 
     def on_render(self, gl_area, gl_context):
-        self.default_FBO = glGetIntegerv(GL_FRAMEBUFFER_BINDING)  # GLArea does not seem to use FBO 0 as the default.
+        if self.FBO_initialized is False:
+            self.default_FBO = glGetIntegerv(GL_FRAMEBUFFER_BINDING)  # GLArea does not seem to use FBO 0 as the default.
+            self.FBO.initializeFramebuffer(self.default_FBO, self.window_size)
+            refraction = GuiTexture(self.FBO.getRefractionTexture(), (0.5, 0.5), (0.25, 0.25))
+            reflection = GuiTexture(self.FBO.getReflectionTexture(), (-0.5, 0.5), (0.25, 0.25))
+            self.guis.append(reflection)
+            self.guis.append(refraction)
+            self.FBO_initialized = True
+
         self.renderer.processMovement(self.delta)
 
-        self.FBO.bindReflectionFrameBuffer(self.default_FBO, self.window_size)
-        self.renderer.renderScene(self.entities, self.terrainTiles, self.lights, self.running_seconds_from_start)
+        glEnable(GL_CLIP_DISTANCE0)
+
+        self.FBO.bindReflectionFrameBuffer()
+        self.renderer.renderScene(self.entities, self.terrainTiles, self.lights, self.running_seconds_from_start, Vector4((0, 1, 0, -self.water.getHeight())))
+
+        self.FBO.bindRefractionFrameBuffer()
+        self.renderer.renderScene(self.entities, self.terrainTiles, self.lights, self.running_seconds_from_start, Vector4((0, -1, 0, self.water.getHeight())))
+
+        glDisable(GL_CLIP_DISTANCE0)
         self.FBO.unbindCurrentFrameBuffer()
-
-
-        self.renderer.renderScene(self.entities, self.terrainTiles, self.lights, self.running_seconds_from_start)
-
+        self.renderer.renderScene(self.entities, self.terrainTiles, self.lights, self.running_seconds_from_start, Vector4((0, -1, 0, 15)))
         self.waterRenderer.render(self.water, self.running_seconds_from_start)
         self.guiRenderer.render(self.guis)
         self.queue_draw()  # Schedules a redraw for Gtk.GLArea

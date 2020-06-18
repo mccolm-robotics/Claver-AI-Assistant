@@ -54,23 +54,25 @@ class MasterRenderer:
     def processMovement(self, timeDelta):
         self.__camera.move(timeDelta)
 
-    def renderScene(self, entities, terrainTiles, lights, clock):
+    def renderScene(self, entities, terrainTiles, lights, clock, clipPlane):
         for terrain in np.nditer(terrainTiles, flags=["refs_ok"]):
             self.processTerrain(terrain.item())
         for entity in entities:
             self.processEntity(entity)
-        self.render(lights, clock)
+        self.render(lights, clock, clipPlane)
 
-    def render(self, lights, clock):
+    def render(self, lights, clock, clipPlane):
         self.prepare(clock)
         self.__skyboxRenderer.render(self.__RED, self.__GREEN, self.__BLUE, clock)
         self.__shader.start()
+        self.__shader.loadClipPlane(clipPlane)
         self.__shader.loadSkyColour(self.__RED, self.__GREEN, self.__BLUE)
         self.__shader.loadLights(lights)
         self.__shader.loadViewMatrix(self.__camera)
         self.__renderer.render(self.__entityDict, clock)
         self.__shader.stop()
         self.__terrainShader.start()
+        self.__terrainShader.loadClipPlane(clipPlane)
         self.__terrainShader.loadSkyColour(self.__RED, self.__GREEN, self.__BLUE)
         self.__terrainShader.loadLights(lights)
         self.__terrainShader.loadViewMatrix(self.__camera)

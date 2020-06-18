@@ -157,9 +157,6 @@ class Camera:
         # self.__front = pyrr.vector3.normalize(front)
 
 
-
-
-
         self.__updateViewMatrix()
 
         if self.initialized is True and self.__setWarp is True:

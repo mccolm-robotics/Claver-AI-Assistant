@@ -32,6 +32,7 @@ class StaticShader(ShaderProgram):
         self.__location_skyColour = super().getUniformLocation("skyColour")
         self.__location_numberOfRows = super().getUniformLocation("numberOfRows")
         self.__location_offset = super().getUniformLocation("offset")
+        self.__location_plane = super().getUniformLocation("plane")
 
         self.__location_attenuation = []
         self.__location_lightPosition = []
@@ -41,6 +42,8 @@ class StaticShader(ShaderProgram):
             self.__location_lightColour.append(super().getUniformLocation("lightColour[{}]".format(i)))
             self.__location_attenuation.append(super().getUniformLocation("attenuation[{}]".format(i)))
 
+    def loadClipPlane(self, plane):
+        super().load4DVector(self.__location_plane, plane)
 
     def loadNumberOfRows(self, numberOfRows):
         super().loadFloat(self.__location_numberOfRows, numberOfRows)

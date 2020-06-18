@@ -1,3 +1,4 @@
+import numpy as np
 from OpenGL.GL import *
 
 
@@ -10,9 +11,13 @@ class WaterFrameBuffers:
 
     def __init__(self, window_size):
         # Call during game initialization
-        self.__reflectionBufferInitialized = False
-        self.__refractionBufferInitialized = False
         self.__window_rect = window_size
+
+    def initializeFramebuffer(self, default_FBO, window_size):
+        self.default_FBO = default_FBO
+        self.__window_rect = window_size
+        self.__initializeReflectionFrameBuffer()
+        self.__initializeRefractionFrameBuffer()
 
 
     def cleanUp(self):
@@ -20,16 +25,11 @@ class WaterFrameBuffers:
         glDeleteFramebuffers(1, self.__reflectionFrameBuffer)
         glDeleteTextures(self.__reflectionTexture)
         glDeleteRenderbuffers(self.__reflectionDepthBuffer)
-        # glDeleteFramebuffers(1, self.__refractionFrameBuffer)
-        # glDeleteTextures(self.__refractionTexture)
-        # glDeleteTextures(self.__refractionDepthTexture)
+        glDeleteFramebuffers(1, self.__refractionFrameBuffer)
+        glDeleteTextures(self.__refractionTexture)
+        glDeleteTextures(self.__refractionDepthTexture)
 
-    def bindReflectionFrameBuffer(self, default_FBO, window_size):
-        self.default_FBO = default_FBO
-        self.__window_rect = window_size
-        if self.__reflectionBufferInitialized is False:
-            self.__initializeReflectionFrameBuffer()
-            self.__reflectionBufferInitialized = True
+    def bindReflectionFrameBuffer(self):
         # Call before rendering to this FBO
         self.__bindFrameBuffer(self.__reflectionFrameBuffer, self.__REFLECTION_WIDTH, self.__REFLECTION_HEIGHT)
 
