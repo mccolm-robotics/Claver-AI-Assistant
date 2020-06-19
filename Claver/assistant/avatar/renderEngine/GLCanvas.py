@@ -223,7 +223,7 @@ class GLCanvas(Gtk.GLArea):
         self.renderer.getCamera().setCameraHeight(self.renderer.getCamera().getPosition().y + distance)
 
         self.FBO.bindRefractionFrameBuffer()
-        self.renderer.renderScene(self.entities, self.terrainTiles, self.lights, self.running_seconds_from_start, Vector4((0, -1, 0, self.water.getHeight())))
+        self.renderer.renderScene(self.entities, self.terrainTiles, self.lights, self.running_seconds_from_start, Vector4((0, -1, 0, self.water.getHeight())), refraction=True)
 
         glDisable(GL_CLIP_DISTANCE0)
         self.FBO.unbindCurrentFrameBuffer()

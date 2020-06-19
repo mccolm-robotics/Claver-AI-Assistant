@@ -6,8 +6,8 @@ from Claver.assistant.avatar.shaders.ShaderProgram import ShaderProgram
 
 class TerrainShader(ShaderProgram):
     __THIS_FOLDER = os.path.dirname(os.path.abspath(__file__))
-    __VERTEX_FILE = os.path.join(__THIS_FOLDER, "TerrainVertexShader.txt")
-    __FRAGMENT_FILE = os.path.join(__THIS_FOLDER, "TerrainFragmentShader.txt")
+    __VERTEX_FILE = os.path.join(__THIS_FOLDER, "TerrainVertexShader.glsl")
+    __FRAGMENT_FILE = os.path.join(__THIS_FOLDER, "TerrainFragmentShader.glsl")
 
     __MAX_LIGHTS = 4
 

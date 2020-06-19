@@ -8,8 +8,8 @@ from Claver.assistant.avatar.shaders.ShaderProgram import ShaderProgram
 
 class SkyboxShader(ShaderProgram):
     __THIS_FOLDER = os.path.dirname(os.path.abspath(__file__))
-    __VERTEX_FILE = os.path.join(__THIS_FOLDER, "SkyboxVertexShader.txt")
-    __FRAGMENT_FILE = os.path.join(__THIS_FOLDER, "SkyboxFragmentShader.txt")
+    __VERTEX_FILE = os.path.join(__THIS_FOLDER, "SkyboxVertexShader.glsl")
+    __FRAGMENT_FILE = os.path.join(__THIS_FOLDER, "SkyboxFragmentShader.glsl")
 
     def __init__(self):
         super().__init__(self.__VERTEX_FILE, self.__FRAGMENT_FILE)

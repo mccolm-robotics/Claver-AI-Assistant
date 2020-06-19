@@ -7,8 +7,8 @@ from Claver.assistant.avatar.toolbox.Math import createViewMatrix
 
 class StaticShader(ShaderProgram):
     __THIS_FOLDER = os.path.dirname(os.path.abspath(__file__))
-    __VERTEX_FILE = os.path.join(__THIS_FOLDER, "vertexShader.txt")
-    __FRAGMENT_FILE = os.path.join(__THIS_FOLDER, "fragmentShader.txt")
+    __VERTEX_FILE = os.path.join(__THIS_FOLDER, "vertexShader.glsl")
+    __FRAGMENT_FILE = os.path.join(__THIS_FOLDER, "fragmentShader.glsl")
 
     __MAX_LIGHTS = 4
 

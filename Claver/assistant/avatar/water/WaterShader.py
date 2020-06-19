@@ -4,8 +4,8 @@ from Claver.assistant.avatar.shaders.ShaderProgram import ShaderProgram
 
 class WaterShader(ShaderProgram):
     __THIS_FOLDER = os.path.dirname(os.path.abspath(__file__))
-    __VERTEX_FILE = os.path.join(__THIS_FOLDER, "waterVertexShader.txt")
-    __FRAGMENT_FILE = os.path.join(__THIS_FOLDER, "waterFragmentShader.txt")
+    __VERTEX_FILE = os.path.join(__THIS_FOLDER, "waterVertexShader.glsl")
+    __FRAGMENT_FILE = os.path.join(__THIS_FOLDER, "waterFragmentShader.glsl")
 
     def __init__(self):
         super().__init__(self.__VERTEX_FILE, self.__FRAGMENT_FILE)
