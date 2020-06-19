@@ -1,4 +1,5 @@
 import gi
+import numpy as np
 
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gdk
@@ -6,7 +7,7 @@ from gi.repository import Gtk, Gdk
 import pyrr
 from math import sin, cos, radians
 from pyrr import Vector3
-from Claver.assistant.avatar.toolbox.Math import createViewMatrix, createProjectionMatrix
+from Claver.assistant.avatar.toolbox.Math import createViewMatrix, createProjectionMatrix, createTestViewMatrix
 
 class Camera:
     __MOVEMENT_SPEED = 2.5
@@ -48,6 +49,36 @@ class Camera:
 
     def __updateViewMatrix(self):
         self.__viewMatrix = createViewMatrix(self)
+
+    def setCameraHeight(self, y_position, flip=False):
+        self.__position.y = y_position
+
+        # self.__distance = self.__playerRunSpeed * delta
+        # self.fwdVector = (self.__position.x - self.__player.getPosition().x, self.__position.y, self.__position.z - self.__player.getPosition().z)
+        # self.sideStepDirection = pyrr.vector3.normalize(pyrr.vector3.cross(self.fwdVector, self.__up))
+
+
+
+        horizontalDistance = self.__distanceFromPlayer * cos(radians(self.__pitch))
+        # verticalDistance = self.__distanceFromPlayer * sin(radians(self.__pitch))
+        # self.__position.y = self.__player.getPosition().y + 2.5 + verticalDistance
+        # if self.__position.y < self.__player.getGroundHeight() + .5:
+        #     self.__position.y = self.__player.getGroundHeight() + .5
+        # self.theta = self.__player.getRotY() + self.__yaw
+
+        offsetX = horizontalDistance * sin(radians(self.theta))
+        offsetZ = horizontalDistance * cos(radians(self.theta))
+        if flip is False:
+            self.__position.x = self.__player.getPosition().x - offsetX
+            self.__position.z = self.__player.getPosition().z - offsetZ
+            self.__viewMatrix = createViewMatrix(self)
+        else:
+            self.__position.x = self.__player.getPosition().x
+            self.__position.z = self.__player.getPosition().z
+            self.__viewMatrix = createTestViewMatrix(self, offsetX*1.5, offsetZ*1.5)
+
+
+
 
     def getViewMatrix(self):
         if self.__viewMatrix is None:
@@ -116,31 +147,31 @@ class Camera:
         elif self.__yaw < 0:
             self.__yaw += 360
 
-        distance = self.__playerRunSpeed * delta
-        fwdVector = (self.__position.x - self.__player.getPosition().x, 0, self.__position.z - self.__player.getPosition().z)
-        sideStepDirection = pyrr.vector3.normalize(pyrr.vector3.cross(fwdVector, self.__up))
+        self.__distance = self.__playerRunSpeed * delta
+        self.fwdVector = (self.__position.x - self.__player.getPosition().x, 0, self.__position.z - self.__player.getPosition().z)
+        self.sideStepDirection = pyrr.vector3.normalize(pyrr.vector3.cross(self.fwdVector, self.__up))
 
         if self.__inputEvents.isKeyDown('a') is True or self.__inputEvents.isKeyDown('s') is True or self.__inputEvents.isKeyDown('d') is True or self.__inputEvents.isKeyDown('w') is True:
             if self.__inputEvents.isButtonDown(1) is True and self.__inputEvents.isButtonDown(3) is False:
-                self.__player.move(delta, sideStepDirection)
+                self.__player.move(delta, self.sideStepDirection)
             else:
-                self.__player.move(delta, sideStepDirection, radians(self.__yaw))
+                self.__player.move(delta, self.sideStepDirection, radians(self.__yaw))
         else:
-            self.__player.move(delta, sideStepDirection)
+            self.__player.move(delta, self.sideStepDirection)
 
         if self.__inputEvents.isKeyDown('a') is True and self.__inputEvents.isKeyDown('d') is False:
-            self.__position += sideStepDirection * distance
+            self.__position += self.sideStepDirection * self.__distance
         elif self.__inputEvents.isKeyDown('d') is True and self.__inputEvents.isKeyDown('a') is False:
-            self.__position -= sideStepDirection * distance
+            self.__position -= self.sideStepDirection * self.__distance
 
         horizontalDistance = self.__distanceFromPlayer * cos(radians(self.__pitch))
         verticalDistance = self.__distanceFromPlayer * sin(radians(self.__pitch))
-        self.__position.y = self.__player.getPosition().y + 2.5 + verticalDistance
+        self.__position.y = self.__player.getPosition().y + verticalDistance
         if self.__position.y < self.__player.getGroundHeight() + .5:
             self.__position.y = self.__player.getGroundHeight() + .5
-        theta = self.__player.getRotY() + self.__yaw
-        offsetX = horizontalDistance * sin(radians(theta))
-        offsetZ = horizontalDistance * cos(radians(theta))
+        self.theta = self.__player.getRotY() + self.__yaw
+        offsetX = horizontalDistance * sin(radians(self.theta))
+        offsetZ = horizontalDistance * cos(radians(self.theta))
         self.__position.x = self.__player.getPosition().x - offsetX
         self.__position.z = self.__player.getPosition().z - offsetZ
 

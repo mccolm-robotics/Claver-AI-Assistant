@@ -7,10 +7,12 @@ from Claver.assistant.avatar.water.WaterShader import WaterShader
 
 class WaterRenderer:
 
-    def __init__(self, camera):
+    def __init__(self, camera, waterFrameBuffers):
         self.__camera = camera
+        self.__fbos = waterFrameBuffers
         self.__shader = WaterShader()
         self.__shader.start()
+        self.__shader.connectTextureUnits()
         projectionMatrix = camera.getProjectionMatrix()
         self.__shader.loadProjectionMatrix(projectionMatrix)
         self.__shader.stop()
@@ -27,6 +29,10 @@ class WaterRenderer:
         self.__shader.loadViewMatrix(self.__camera)
         glBindVertexArray(model.getVaoID())
         glEnableVertexAttribArray(0)
+        glActiveTexture(GL_TEXTURE0)
+        glBindTexture(GL_TEXTURE_2D, self.__fbos.getReflectionTexture())
+        glActiveTexture(GL_TEXTURE1)
+        glBindTexture(GL_TEXTURE_2D, self.__fbos.getRefractionTexture())
 
     def unbind(self):
         glDisableVertexAttribArray(0)

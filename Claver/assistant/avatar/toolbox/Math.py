@@ -26,6 +26,17 @@ def createViewMatrix(camera):
     up = (0.0, 1.0, 0.0)  # A vector representing the 'up' direction.
     return Matrix44.look_at(position, target, up)  # Calculate the view matrix
 
+def createTestViewMatrix(camera, xoffset, zoffset):
+    position = camera.getPosition()  # Eye coordinates (location of the camera)
+    # front = camera.getFront()
+    # target = position + front                           # Target coordinates (where the camera is looking)
+    target = list(camera.getPlayer().getPosition())
+    target[0] += xoffset
+    target[1] = 0
+    target[2] += zoffset
+    up = (0.0, 1.0, 0.0)  # A vector representing the 'up' direction.
+    return Matrix44.look_at(position, target, up)  # Calculate the view matrix
+
 
 def barryCentric(p1, p2, p3, pos):
     # pos is a Vector2

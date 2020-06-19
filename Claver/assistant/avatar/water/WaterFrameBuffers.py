@@ -24,7 +24,7 @@ class WaterFrameBuffers:
         # Call when closing game
         glDeleteFramebuffers(1, self.__reflectionFrameBuffer)
         glDeleteTextures(self.__reflectionTexture)
-        glDeleteRenderbuffers(self.__reflectionDepthBuffer)
+        glDeleteRenderbuffers(1, self.__reflectionDepthBuffer)
         glDeleteFramebuffers(1, self.__refractionFrameBuffer)
         glDeleteTextures(self.__refractionTexture)
         glDeleteTextures(self.__refractionDepthTexture)

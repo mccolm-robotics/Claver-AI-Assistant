@@ -17,6 +17,12 @@ class WaterShader(ShaderProgram):
         self.__location_modelMatrix = super().getUniformLocation("modelMatrix")
         self.__location_viewMatrix = super().getUniformLocation("viewMatrix")
         self.__location_projectionMatrix = super().getUniformLocation("projectionMatrix")
+        self.__location_reflectionTexture = super().getUniformLocation("reflectionTexture")
+        self.__location_refractionTexture = super().getUniformLocation("refractionTexture")
+
+    def connectTextureUnits(self):
+        super().loadInt(self.__location_reflectionTexture, 0)
+        super().loadInt(self.__location_refractionTexture, 1)
 
     def loadModelMatrix(self, matrix):
         super().loadMatrix(self.__location_modelMatrix, matrix)
