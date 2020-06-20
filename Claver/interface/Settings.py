@@ -10,5 +10,6 @@ res_dir = dict(
     TEXTURES=RES_FOLDER + "textures/",
     MODELS=RES_FOLDER + "models/",
     SKYBOX_CLOUDS=RES_FOLDER + "skybox/clouds/",
-    SKYBOX_NIGHT=RES_FOLDER + "skybox/night/"
+    SKYBOX_NIGHT=RES_FOLDER + "skybox/night/",
+    HEIGHT_MAPS=RES_FOLDER + "heightmaps/"
 )

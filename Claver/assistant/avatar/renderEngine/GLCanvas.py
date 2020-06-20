@@ -146,7 +146,7 @@ class GLCanvas(Gtk.GLArea):
 
         texturePack = TerrainTexturePack(backgroundTexture, rTexture, gTexture, bTexture)
         blendMap = TerrainTexture(self.loader.loadTexture(res_dir['TEXTURES'] + "blendMap.png"))
-        heightMap = res_dir['TEXTURES'] + "heightmap.png"
+        heightMap = res_dir['HEIGHT_MAPS'] + "heightmap.png"
 
         # Generate terrain for world
         TERRAIN_WIDTH = 2
@@ -197,7 +197,7 @@ class GLCanvas(Gtk.GLArea):
         self.renderer = MasterRenderer(self.loader, self.window_rect, self.inputEvents, self.chibi)
 
         self.FBO = WaterFrameBuffers(self.window_size)
-        self.waterRenderer = WaterRenderer(self.renderer.getCamera(), self.FBO)
+        self.waterRenderer = WaterRenderer(self.loader, self.renderer.getCamera(), self.FBO)
         self.water = WaterTile(self.loader, (13.0, -0.2, 12.25))
 
         # gui = GuiTexture(self.loader.loadTexture(res_dir['TEXTURES'] + "claver-brand.png", False), (0.5, 0.5), (0.25, 0.25))
@@ -217,18 +217,21 @@ class GLCanvas(Gtk.GLArea):
         glEnable(GL_CLIP_DISTANCE0)
 
         self.FBO.bindReflectionFrameBuffer()
-        distance = 2 * (self.renderer.getCamera().getPosition().y - self.water.getHeight())
-        self.renderer.getCamera().setCameraHeight(self.renderer.getCamera().getPosition().y - distance, True)
+        # distance = 2 * (self.renderer.getCamera().getPosition().y - self.water.getHeight())
+        # self.renderer.getCamera().setCameraHeight(self.renderer.getCamera().getPosition().y - distance, True)
+        distance_above_water = self.renderer.getCamera().getPosition().y - self.water.getHeight()
+        self.renderer.getCamera().setCameraHeight(distance_above_water, self.water.getHeight(), True)
         self.renderer.renderScene(self.entities, self.terrainTiles, self.lights, self.running_seconds_from_start, Vector4((0, 1, 0, -self.water.getHeight())))
-        self.renderer.getCamera().setCameraHeight(self.renderer.getCamera().getPosition().y + distance)
+        # self.renderer.getCamera().setCameraHeight(self.renderer.getCamera().getPosition().y + distance)
+        self.renderer.getCamera().setCameraHeight(distance_above_water, self.water.getHeight())
 
         self.FBO.bindRefractionFrameBuffer()
-        self.renderer.renderScene(self.entities, self.terrainTiles, self.lights, self.running_seconds_from_start, Vector4((0, -1, 0, self.water.getHeight())), refraction=True)
+        self.renderer.renderScene(self.entities, self.terrainTiles, self.lights, self.running_seconds_from_start, Vector4((0, -1, 0, self.water.getHeight())))
 
         glDisable(GL_CLIP_DISTANCE0)
         self.FBO.unbindCurrentFrameBuffer()
         self.renderer.renderScene(self.entities, self.terrainTiles, self.lights, self.running_seconds_from_start, Vector4((0, -1, 0, 15)))
-        self.waterRenderer.render(self.water, self.running_seconds_from_start)
+        self.waterRenderer.render(self.water, self.delta)
         self.guiRenderer.render(self.guis)
         self.queue_draw()  # Schedules a redraw for Gtk.GLArea
 

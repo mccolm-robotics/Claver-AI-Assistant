@@ -32,6 +32,7 @@ class Camera:
         self.__pitch = 20             # Rotation around X axis: look up and down
         self.__yaw = 0           # Rotation around Y axis: look left and right. yaw is initalized to -90 since a yaw of 0.0 results in a direction vector pointing to the right
         self.__distanceFromPlayer = self.__STARTING_DISTANCE_FROM_PLAYER
+        self.__saved_distanceFromPlayer = self.__distanceFromPlayer
         self.__angleAroundPlayer = 0
         self.__viewMatrix = None
         self.__projectionMatrix = None
@@ -50,31 +51,57 @@ class Camera:
     def __updateViewMatrix(self):
         self.__viewMatrix = createViewMatrix(self)
 
-    def setCameraHeight(self, y_position, flip=False):
-        self.__position.y = y_position
+    # def setCameraHeight(self, y_position, flip=False):
+    #     self.__position.y = y_positiondistance_above_water
 
-        # self.__distance = self.__playerRunSpeed * delta
-        # self.fwdVector = (self.__position.x - self.__player.getPosition().x, self.__position.y, self.__position.z - self.__player.getPosition().z)
-        # self.sideStepDirection = pyrr.vector3.normalize(pyrr.vector3.cross(self.fwdVector, self.__up))
-
-
-
-        horizontalDistance = self.__distanceFromPlayer * cos(radians(self.__pitch))
-        # verticalDistance = self.__distanceFromPlayer * sin(radians(self.__pitch))
-        # self.__position.y = self.__player.getPosition().y + 2.5 + verticalDistance
-        # if self.__position.y < self.__player.getGroundHeight() + .5:
-        #     self.__position.y = self.__player.getGroundHeight() + .5
-        # self.theta = self.__player.getRotY() + self.__yaw
-
-        offsetX = horizontalDistance * sin(radians(self.theta))
-        offsetZ = horizontalDistance * cos(radians(self.theta))
+    def setCameraHeight(self, distance_above_water, heightOfWater, flip=False):
         if flip is False:
-            self.__position.x = self.__player.getPosition().x - offsetX
-            self.__position.z = self.__player.getPosition().z - offsetZ
+            # self.__position = self.saved_position
+            # self.__distanceFromPlayer = self.__saved_distanceFromPlayer
+            #
+            # horizontalDistance = self.__distanceFromPlayer * cos(radians(self.__pitch))
+            # verticalDistance = self.__distanceFromPlayer * sin(radians(self.__pitch))
+            # self.__position.y = self.__player.getPosition().y + verticalDistance
+            # offsetX = horizontalDistance * sin(radians(self.theta))
+            # offsetZ = horizontalDistance * cos(radians(self.theta))
+            # self.__position.x = self.__player.getPosition().x - offsetX
+            # self.__position.z = self.__player.getPosition().z - offsetZ
+
+            # distance = 2 * distance_above_water
+            # newPosition = self.__position.y + distance
+            # self.__position.y = newPosition
+
+            self.__position.y += 2 * distance_above_water
+
             self.__viewMatrix = createViewMatrix(self)
         else:
+            # distanceFromWaterToCamera = distance_above_water / sin(radians(self.__pitch))
+            # shortenedCameraDistance = self.__distanceFromPlayer - 5
+            # reflectionDistance = distanceFromWaterToCamera - shortenedCameraDistance
+            # newCameraHeight = reflectionDistance * sin(radians(self.__pitch))
+            # self.__position.y -= 2 * newCameraHeight
+
+            # distance = 2 * distance_above_water
+            # newPosition = self.__position.y - distance
+            # self.__position.y = newPosition
+
+            self.__position.y -= 2 * distance_above_water
+
+            # self.__distanceFromPlayer = 5
+
+            horizontalDistance = self.__distanceFromPlayer * cos(radians(self.__pitch))
+            # verticalDistance = self.__distanceFromPlayer * sin(radians(self.__pitch))
+            # self.__position.y = self.__player.getPosition().y + verticalDistance
+
+            offsetX = horizontalDistance * sin(radians(self.theta))
+            offsetZ = horizontalDistance * cos(radians(self.theta))
+
             self.__position.x = self.__player.getPosition().x
             self.__position.z = self.__player.getPosition().z
+
+            # newDistanceAboveWater = self.__position.y - heightOfWater
+            # self.__position.y -= 2 * newDistanceAboveWater
+
             self.__viewMatrix = createTestViewMatrix(self, offsetX*1.5, offsetZ*1.5)
 
 
@@ -176,6 +203,7 @@ class Camera:
         self.__position.z = self.__player.getPosition().z - offsetZ
 
         self.__playerPosition = self.__player.getPosition()
+        self.saved_position = self.__position
 
 
 
@@ -244,6 +272,7 @@ class Camera:
             self.__distanceFromPlayer = self.__ZOOM_NEAR_LIMIT
         if self.__distanceFromPlayer >= self.__ZOOM_FAR_LIMIT:
             self.__distanceFromPlayer = self.__ZOOM_FAR_LIMIT
+        self.__saved_distanceFromPlayer = self.__distanceFromPlayer
 
     def getPlayer(self):
         return self.__player
