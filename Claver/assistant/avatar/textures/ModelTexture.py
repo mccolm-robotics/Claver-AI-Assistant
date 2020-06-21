@@ -6,12 +6,19 @@ class ModelTexture:
         self.__hasTransparency = False
         self.__useFakeLighting = False
         self.__numberOfRows = 1
+        self.__normalMap = 0
 
     def getNumberOfRows(self):
         return self.__numberOfRows
 
     def setNumberOfRows(self, numberOfRows):
         self.__numberOfRows = numberOfRows
+
+    def getNormalMap(self):
+        return self.__normalMap
+
+    def setNormalMap(self, normalMap):
+        self.__normalMap = normalMap
 
     def isUseFakeLighting(self):
         return self.__useFakeLighting

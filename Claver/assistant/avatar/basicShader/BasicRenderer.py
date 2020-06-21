@@ -14,14 +14,15 @@ class BasicRenderer:
         self.__shader.stop()
 
     def render(self, basicModel, clock):
+        self.__shader.start()
         self.prepareRender(basicModel.getModel())
         modelMatrix = createTransformationMatrix(basicModel.getPosition(), 0, 0, 0, BasicTile.TILE_SIZE)
         self.__shader.loadModelMatrix(modelMatrix)
         glDrawArrays(GL_TRIANGLES, 0, basicModel.getModel().getVertexCount())
         self.unbind()
+        self.__shader.stop()
 
     def prepareRender(self, model):
-        self.__shader.start()
         self.__shader.loadViewMatrix(self.__camera)
         glBindVertexArray(model.getVaoID())
         glEnableVertexAttribArray(0)
@@ -29,4 +30,4 @@ class BasicRenderer:
     def unbind(self):
         glDisableVertexAttribArray(0)
         glBindVertexArray(0)
-        self.__shader.stop()
+

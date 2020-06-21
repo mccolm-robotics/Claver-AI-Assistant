@@ -52,6 +52,7 @@ class GLCanvas(Gtk.GLArea):
         self.previousCursorCoords = None
         self.initializedCursor = False
         self.entities = []
+        self.normalMapEntities = []
 
     def tick(self, widget, frame_clock):
         self.current_frame_time = frame_clock.get_frame_time()  # Gets the current timestamp in microseconds
@@ -114,6 +115,23 @@ class GLCanvas(Gtk.GLArea):
         lampModel = TexturedModel(ModelLoader().loadModel(self.loader, res_dir['MODELS']+"Lamp.obj"),
                                   ModelTexture(self.loader.loadTexture(res_dir['MODELS'] + "Lamp_Texture.png")))
         lampModel.getTexture().setUseFakeLighting(True)
+
+        # Normal Mapped Model
+        barrelModel = TexturedModel(ModelLoader().loadNormalMappedModel(self.loader, res_dir['MODELS']+"Barrel.obj"),
+                                  ModelTexture(self.loader.loadTexture(res_dir['MODELS'] + "Barrel_Texture.png")))
+        barrelModel.getTexture().setNormalMap(self.loader.loadTexture(res_dir['MODELS'] + "Barrel_Normal.png"))
+        barrelModel.getTexture().setShineDamper(10)
+        barrelModel.getTexture().setReflectivity(0.5)
+        barrel = Entity(barrelModel, (-3.0, 1.75, -2.0), 0.0, 0.0, 0.0, 0.3)
+        self.normalMapEntities.append(barrel)
+
+        boulderModel = TexturedModel(ModelLoader().loadNormalMappedModel(self.loader, res_dir['MODELS'] + "Boulder.obj"),
+                                    ModelTexture(self.loader.loadTexture(res_dir['MODELS'] + "Boulder_Texture.png")))
+        boulderModel.getTexture().setNormalMap(self.loader.loadTexture(res_dir['MODELS'] + "Boulder_Normal.png"))
+        boulderModel.getTexture().setShineDamper(10)
+        boulderModel.getTexture().setReflectivity(0.5)
+        boulder = Entity(boulderModel, (10.0, 0, 8.0), 0.0, 0.0, 0.0, 0.3)
+        self.normalMapEntities.append(boulder)
 
         treeModel = TexturedModel(ModelLoader().loadModel(self.loader, res_dir['MODELS']+"Pine.obj"),
                                   ModelTexture(self.loader.loadTexture(res_dir['MODELS'] + "Pine_Texture.png")))
@@ -220,15 +238,15 @@ class GLCanvas(Gtk.GLArea):
         self.FBO.bindReflectionFrameBuffer()
         distance = 2 * (self.renderer.getCamera().getPosition().y - self.water.getHeight())
         self.renderer.getCamera().setCameraHeight(self.renderer.getCamera().getPosition().y - distance, True)
-        self.renderer.renderScene(self.entities, self.terrainTiles, self.lights, self.running_seconds_from_start, Vector4((0, 1, 0, -self.water.getHeight() + 0.5)))
+        self.renderer.renderScene(self.entities, self.normalMapEntities, self.terrainTiles, self.lights, self.running_seconds_from_start, Vector4((0, 1, 0, -self.water.getHeight() + 0.5)))
         self.renderer.getCamera().setCameraHeight(self.renderer.getCamera().getPosition().y + distance)
 
         self.FBO.bindRefractionFrameBuffer()
-        self.renderer.renderScene(self.entities, self.terrainTiles, self.lights, self.running_seconds_from_start, Vector4((0, -1, 0, self.water.getHeight())))
+        self.renderer.renderScene(self.entities, self.normalMapEntities, self.terrainTiles, self.lights, self.running_seconds_from_start, Vector4((0, -1, 0, self.water.getHeight())))
 
         glDisable(GL_CLIP_DISTANCE0)
         self.FBO.unbindCurrentFrameBuffer()
-        self.renderer.renderScene(self.entities, self.terrainTiles, self.lights, self.running_seconds_from_start, Vector4((0, -1, 0, 15)))
+        self.renderer.renderScene(self.entities, self.normalMapEntities, self.terrainTiles, self.lights, self.running_seconds_from_start, Vector4((0, -1, 0, 15)))
         self.waterRenderer.render(self.delta, self.water, self.sun)
         self.guiRenderer.render(self.guis)
         self.queue_draw()  # Schedules a redraw for Gtk.GLArea

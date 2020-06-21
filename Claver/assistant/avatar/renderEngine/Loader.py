@@ -13,13 +13,15 @@ class Loader:
         self.__textures = np.empty(0, dtype=np.uint32)
 
     # * ( [float] ) positions
-    def loadToVAO(self, positions, textureCoords=None, normals=None):
+    def loadToVAO(self, positions, textureCoords=None, normals=None, tangents=None):
         vaoID = self.createVAO()
         self.storeDataInAttributeList(0, 3, positions)
         if textureCoords is not None:
             self.storeDataInAttributeList(1, 3, textureCoords)
         if normals is not None:
             self.storeDataInAttributeList(2, 3, normals)
+        if tangents is not None:
+            self.storeDataInAttributeList(3, 3, tangents)
         # Creates a buffer to hold the vertex data and binds it to the OpenGL pipeline
         # self.model = np.concatenate((positions, textureCoords), axis=0)
         #
@@ -41,12 +43,14 @@ class Loader:
         #                       ctypes.c_void_p(self.texture_offset))
         # glEnableVertexAttribArray(self.texture_in)
         self.unbindVAO()
-        length = len(positions) // 3
-        if textureCoords is not None:
-            length += len(textureCoords) // 3
-        if normals is not None:
-            length += len(normals) // 3
-        return RawModel(vaoID, length)
+        # length = len(positions) // 3
+        # if textureCoords is not None:
+        #     length += len(textureCoords) // 3
+        # if normals is not None:
+        #     length += len(normals) // 3
+        # if tangents is not None:
+        #     length += len(tangents) // 3
+        return RawModel(vaoID, len(positions))
 
     def load2DToVAO(self, positions, dimensions=2):
         vaoID = self.createVAO()
