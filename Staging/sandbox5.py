@@ -1,5 +1,4 @@
-from pyrr import Vector3, Vector4, matrix44
+words = [5]
+spaceSize = "It's got stuff"
 
-v1 = Vector4((1, 2, 3, 4))
-v2 = Vector3((v1))
-print(v2)
+print(spaceSize if words else 0)

@@ -405,7 +405,7 @@ class TextMeshCreator:
 # Loader loader = new Loader();
 # TextMaster.init(loader);
 # font = FontType(loader.loadTexture("verdana"), new File("verdana.fnt"));
-font = FontType(0, "res/pop.fnt")
+font = FontType(0, "pop.fnt")
 print(font)
 
 # # Parameters (
