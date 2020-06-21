@@ -102,7 +102,7 @@ class GLCanvas(Gtk.GLArea):
         self.loader = Loader()
 
         rawCube = ModelLoader().loadPrimitive(self.loader, Primitives().cube())
-        rawCubeTexture = ModelTexture(self.loader.loadTexture(res_dir['TEXTURES'] + "CircuitTree.png", False))
+        rawCubeTexture = ModelTexture(self.loader.loadTexture(res_dir['TEXTURES'] + "circuitTree.png", False))
         cubeModel = TexturedModel(rawCube, rawCubeTexture)
         cubeTexture = cubeModel.getTexture()
         cubeTexture.setShineDamper(10)
@@ -111,8 +111,8 @@ class GLCanvas(Gtk.GLArea):
         self.entities.append(self.cube)
 
 
-        lampModel = TexturedModel(ModelLoader().loadModel(self.loader, res_dir['MODELS']+"lamp_poly2.obj"),
-                                  ModelTexture(self.loader.loadTexture(res_dir['MODELS'] + "poly_2.png")))
+        lampModel = TexturedModel(ModelLoader().loadModel(self.loader, res_dir['MODELS']+"Lamp.obj"),
+                                  ModelTexture(self.loader.loadTexture(res_dir['MODELS'] + "Lamp_Texture.png")))
         lampModel.getTexture().setUseFakeLighting(True)
 
         treeModel = TexturedModel(ModelLoader().loadModel(self.loader, res_dir['MODELS']+"Pine.obj"),
@@ -130,7 +130,8 @@ class GLCanvas(Gtk.GLArea):
         fernModel.getTexture().setHasTransparency(True)
 
         self.lights = []
-        self.lights.append(Light(Vector3((0, 10000, -7000)), Vector3((.2,.2,.2))))
+        self.sun = Light(Vector3((0, 10000, -7000)), Vector3((.2,.2,.2)))
+        self.lights.append(self.sun)
         self.lights.append(Light(Vector3((10, 8, 30)), Vector3((2, 2, 0)), Vector3((1, 0.01, 0.002))))
         self.lights.append(Light(Vector3((0, 8, -30)), Vector3((4, 0, 0)), Vector3((1, 0.01, 0.002))))
 
@@ -217,13 +218,10 @@ class GLCanvas(Gtk.GLArea):
         glEnable(GL_CLIP_DISTANCE0)
 
         self.FBO.bindReflectionFrameBuffer()
-        # distance = 2 * (self.renderer.getCamera().getPosition().y - self.water.getHeight())
-        # self.renderer.getCamera().setCameraHeight(self.renderer.getCamera().getPosition().y - distance, True)
-        distance_above_water = self.renderer.getCamera().getPosition().y - self.water.getHeight()
-        self.renderer.getCamera().setCameraHeight(distance_above_water, self.water.getHeight(), True)
-        self.renderer.renderScene(self.entities, self.terrainTiles, self.lights, self.running_seconds_from_start, Vector4((0, 1, 0, -self.water.getHeight())))
-        # self.renderer.getCamera().setCameraHeight(self.renderer.getCamera().getPosition().y + distance)
-        self.renderer.getCamera().setCameraHeight(distance_above_water, self.water.getHeight())
+        distance = 2 * (self.renderer.getCamera().getPosition().y - self.water.getHeight())
+        self.renderer.getCamera().setCameraHeight(self.renderer.getCamera().getPosition().y - distance, True)
+        self.renderer.renderScene(self.entities, self.terrainTiles, self.lights, self.running_seconds_from_start, Vector4((0, 1, 0, -self.water.getHeight() + 0.5)))
+        self.renderer.getCamera().setCameraHeight(self.renderer.getCamera().getPosition().y + distance)
 
         self.FBO.bindRefractionFrameBuffer()
         self.renderer.renderScene(self.entities, self.terrainTiles, self.lights, self.running_seconds_from_start, Vector4((0, -1, 0, self.water.getHeight())))
@@ -231,7 +229,7 @@ class GLCanvas(Gtk.GLArea):
         glDisable(GL_CLIP_DISTANCE0)
         self.FBO.unbindCurrentFrameBuffer()
         self.renderer.renderScene(self.entities, self.terrainTiles, self.lights, self.running_seconds_from_start, Vector4((0, -1, 0, 15)))
-        self.waterRenderer.render(self.water, self.delta)
+        self.waterRenderer.render(self.delta, self.water, self.sun)
         self.guiRenderer.render(self.guis)
         self.queue_draw()  # Schedules a redraw for Gtk.GLArea
 

@@ -4,7 +4,7 @@ from pyrr import Vector3
 
 class WaterTile:
 
-    TILE_SIZE = 11
+    TILE_SIZE = 70
 
     vertices = [
         1.0, 0.0, -1.0,

@@ -16,6 +16,8 @@ class WaterFrameBuffers:
     def initializeFramebuffer(self, default_FBO, window_size):
         self.default_FBO = default_FBO
         self.__window_rect = window_size
+        self.__REFRACTION_WIDTH = window_size[0]
+        self.__REFRACTION_HEIGHT = window_size[1]
         self.__initializeReflectionFrameBuffer()
         self.__initializeRefractionFrameBuffer()
 

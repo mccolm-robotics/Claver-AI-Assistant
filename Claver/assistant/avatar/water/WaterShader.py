@@ -21,11 +21,22 @@ class WaterShader(ShaderProgram):
         self.__location_refractionTexture = super().getUniformLocation("refractionTexture")
         self.__location_dudvMap = super().getUniformLocation("dudvMap")
         self.__location_moveFactor = super().getUniformLocation("moveFactor")
+        self.__location_cameraPosition = super().getUniformLocation("cameraPosition")
+        self.__location_normalMap = super().getUniformLocation("normalMap")
+        self.__location_lightColour = super().getUniformLocation("lightColour")
+        self.__location_lightPosition = super().getUniformLocation("lightPosition")
+        self.__location_depthMap = super().getUniformLocation("depthMap")
 
     def connectTextureUnits(self):
         super().loadInt(self.__location_reflectionTexture, 0)
         super().loadInt(self.__location_refractionTexture, 1)
         super().loadInt(self.__location_dudvMap, 2)
+        super().loadInt(self.__location_normalMap, 3)
+        super().loadInt(self.__location_depthMap, 4)
+
+    def loadLight(self, sun):
+        super().loadVector(self.__location_lightColour, sun.getColour())
+        super().loadVector(self.__location_lightPosition, sun.getPosition())
 
     def loadMoveFactor(self, factor):
         super().loadFloat(self.__location_moveFactor, factor)
@@ -39,3 +50,4 @@ class WaterShader(ShaderProgram):
     def loadViewMatrix(self, camera):
         matrix = camera.getViewMatrix()
         super().loadMatrix(self.__location_viewMatrix, matrix)
+        super().loadVector(self.__location_cameraPosition, camera.getPosition())
