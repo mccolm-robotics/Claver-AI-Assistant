@@ -6,9 +6,9 @@ from Claver.assistant.avatar.basicShader.BasicTile import BasicTile
 
 class BasicRenderer:
 
-    def __init__(self, shader, projectionMatrix, camera):
+    def __init__(self, projectionMatrix, camera):
         self.__camera = camera
-        self.__shader = shader
+        self.__shader = BasicShader()
         self.__shader.start()
         self.__shader.loadProjectionMatrix(projectionMatrix)
         self.__shader.stop()

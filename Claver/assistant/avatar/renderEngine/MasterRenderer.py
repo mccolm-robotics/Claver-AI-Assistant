@@ -28,6 +28,7 @@ class MasterRenderer:
         shaderList.append(self.__shader)
         self.__terrainShader = TerrainShader()
         shaderList.append(self.__terrainShader)
+        self.__player = player
         self.__camera = Camera(window, keyboardEvents, shaderList, player)
         self.__projectionMatrix = self.__camera.getProjectionMatrix()
         self.__renderer = EntityRenderer(self.__shader, self.__projectionMatrix)

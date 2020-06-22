@@ -1,16 +1,11 @@
-class Test:
-    __value = None
+from pyrr import Vector3
 
-    @staticmethod
-    def init(value):
-        Test.__value = value
 
-    @staticmethod
-    def getValue():
-        return Test.__value
+li = [1,2,3,4,5,6,7,8,9]
 
-x = Test()
-print(x.getValue())
-x.init("hello world")
-print(x.getValue())
+print(li)
+for num in li:
+    if num == 4:
+        li.remove(num)
 
+print(li)

@@ -11,7 +11,7 @@ from Claver.assistant.avatar.toolbox.Math import createTransformationMatrix
 class Player(Entity):
     __RUN_SPEED = 10  # units / sec
     __SIDE_STEP_SPEED = __RUN_SPEED  # units / sec
-    __GRAVITY = -17
+    GRAVITY = -17
     __JUMP_POWER = 7
     __TERRAIN_HEIGHT = 0
 
@@ -47,7 +47,7 @@ class Player(Entity):
         dx = runDistance * sin(yaw)
         dz = runDistance * cos(yaw)
         super().increasePosition(dx, 0, dz)
-        self.__upwardsSpeed += self.__GRAVITY * delta
+        self.__upwardsSpeed += self.GRAVITY * delta
         super().increasePosition(0, self.__upwardsSpeed * delta, 0)
 
         gridX = super().getPosition().x / Terrain.getSize()

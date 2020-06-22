@@ -31,6 +31,8 @@ from Claver.assistant.avatar.water.WaterShader import WaterShader
 from Claver.assistant.avatar.fontRendering.TextMaster import TextMaster
 from Claver.assistant.avatar.fontMeshCreator.FontType import FontType
 from Claver.assistant.avatar.fontMeshCreator.GUIText import GUIText
+from Claver.assistant.avatar.particles.ParticleMaster import ParticleMaster
+from Claver.assistant.avatar.particles.Particle import Particle
 
 
 class GLCanvas(Gtk.GLArea):
@@ -108,8 +110,8 @@ class GLCanvas(Gtk.GLArea):
 
         font = FontType(self.loader.loadTexture(res_dir['FONT_DISTANCE'] + "candara.png", False), res_dir['FONT_DISTANCE'] + "candara.fnt", self.window_rect)
         maximumLineLength = 0.5
-        text = GUIText("Claver AI Sandbox", 3, font, (0.25, 0.85), maximumLineLength, True)
-        text.setColour(0.9, 0.9, 0.9)
+        text = GUIText("Claver AI", 3, font, (0.25, 0.85), maximumLineLength, True)
+        text.setColour(0.6, 0.6, 0.6)
 
         rawCube = ModelLoader().loadPrimitive(self.loader, Primitives().cube())
         rawCubeTexture = ModelTexture(self.loader.loadTexture(res_dir['TEXTURES'] + "circuitTree.png", False))
@@ -215,14 +217,15 @@ class GLCanvas(Gtk.GLArea):
         chibiTexture = chibiModel.getTexture()
         chibiTexture.setShineDamper(10)
         chibiTexture.setReflectivity(1)
-        self.chibi = Player(chibiModel, (0.0, 0.0, 0.0), 0.0, 0.0, 0.0, 0.25, self.inputEvents, self.terrainTiles)
-        self.entities.append(self.chibi)
+        self.player = Player(chibiModel, (0.0, 0.0, 0.0), 0.0, 0.0, 0.0, 0.25, self.inputEvents, self.terrainTiles)
+        self.entities.append(self.player)
 
         self.guis = []
         self.guiRenderer = GuiRenderer(self.loader)
 
         # Create a manager to display world objects
-        self.renderer = MasterRenderer(self.loader, self.window_rect, self.inputEvents, self.chibi)
+        self.renderer = MasterRenderer(self.loader, self.window_rect, self.inputEvents, self.player)
+        ParticleMaster.init(self.loader, self.renderer.getCamera(), self.renderer.getProjectionMatrix())
 
         self.FBO = WaterFrameBuffers(self.window_size)
         self.waterRenderer = WaterRenderer(self.loader, self.renderer.getCamera(), self.FBO)
@@ -242,6 +245,11 @@ class GLCanvas(Gtk.GLArea):
 
         self.renderer.processMovement(self.delta)
 
+        if self.inputEvents.isKeyDown('y') is True:
+            Particle((self.player[0], self.player[1], self.player[2]), (0, 30, 0), 1, 4, 0, 1)
+
+        ParticleMaster.update()
+
         glEnable(GL_CLIP_DISTANCE0)
 
         self.FBO.bindReflectionFrameBuffer()
@@ -257,11 +265,15 @@ class GLCanvas(Gtk.GLArea):
         self.FBO.unbindCurrentFrameBuffer()
         self.renderer.renderScene(self.entities, self.normalMapEntities, self.terrainTiles, self.lights, self.running_seconds_from_start, Vector4((0, -1, 0, 15)))
         self.waterRenderer.render(self.delta, self.water, self.sun)
+
+        ParticleMaster.renderParticles()
+
         self.guiRenderer.render(self.guis)
         TextMaster.render()
         self.queue_draw()  # Schedules a redraw for Gtk.GLArea
 
     def on_unrealize(self, gl_area):
+        ParticleMaster.cleanUp()
         TextMaster.cleanUp()
         self.FBO.cleanUp()
         self.waterRenderer.cleanUp()
