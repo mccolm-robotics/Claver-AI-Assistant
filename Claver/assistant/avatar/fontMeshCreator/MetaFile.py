@@ -9,9 +9,6 @@ class MetaFile:
     __PAD_RIGHT = 3
     __DESIRED_PADDING = 3
 
-    # __THIS_FOLDER = os.path.dirname(os.path.abspath(__file__))
-    # os.path.join(self.__THIS_FOLDER, fileName)
-
     def __init__(self, fileName, window_rect):
         self.__aspectRatio = window_rect.width / window_rect.height
         self.__metaData_dict = {}

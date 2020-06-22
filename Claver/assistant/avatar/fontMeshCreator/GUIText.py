@@ -1,4 +1,5 @@
 from Claver.assistant.avatar.fontMeshCreator.FontType import FontType
+from Claver.assistant.avatar.fontRendering.TextMaster import TextMaster
 
 class GUIText:
     def __init__(self, text, fontSize, font, position, maxLineLength, centered=False):
@@ -8,11 +9,12 @@ class GUIText:
         self.__position = position
         self.__lineMaxSize = maxLineLength
         self.__centerText = centered
-        self.__colour = []
+        self.__colour = [0, 0, 0]
         self.__numberOfLines = 1
+        TextMaster.loadText(self)
 
     def remove(self):
-        pass
+        TextMaster.removeText(self)
 
     def getFont(self):
         return self.__font

@@ -52,6 +52,13 @@ class Loader:
         #     length += len(tangents) // 3
         return RawModel(vaoID, len(positions))
 
+    def loadQuadToVAO(self, positions, textureCoords):
+        vaoID = self.createVAO()
+        self.storeDataInAttributeList(0, 2, positions)
+        self.storeDataInAttributeList(1, 2, textureCoords)
+        self.unbindVAO()
+        return vaoID
+
     def load2DToVAO(self, positions, dimensions=2):
         vaoID = self.createVAO()
         self.storeDataInAttributeList(0, dimensions, positions)

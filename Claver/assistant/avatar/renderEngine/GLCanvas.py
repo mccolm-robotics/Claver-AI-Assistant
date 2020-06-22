@@ -28,6 +28,9 @@ from Claver.assistant.avatar.water.WaterTile import WaterTile
 from Claver.assistant.avatar.water.WaterFrameBuffers import WaterFrameBuffers
 from Claver.assistant.avatar.water.WaterRenderer import WaterRenderer
 from Claver.assistant.avatar.water.WaterShader import WaterShader
+from Claver.assistant.avatar.fontRendering.TextMaster import TextMaster
+from Claver.assistant.avatar.fontMeshCreator.FontType import FontType
+from Claver.assistant.avatar.fontMeshCreator.GUIText import GUIText
 
 
 class GLCanvas(Gtk.GLArea):
@@ -101,6 +104,10 @@ class GLCanvas(Gtk.GLArea):
         gl_area.get_window().set_cursor(self.custom_cursor)
 
         self.loader = Loader()
+        TextMaster.init(self.loader)
+
+        font = FontType(self.loader.loadTexture(res_dir['FONT_ATLAS'] + "verdana.png"), res_dir['FONT_ATLAS'] + "verdana.fnt", self.window_rect)
+        text = GUIText("This is a test text!", 1, font, (0, 0), 1, True)
 
         rawCube = ModelLoader().loadPrimitive(self.loader, Primitives().cube())
         rawCubeTexture = ModelTexture(self.loader.loadTexture(res_dir['TEXTURES'] + "circuitTree.png", False))
@@ -249,9 +256,11 @@ class GLCanvas(Gtk.GLArea):
         self.renderer.renderScene(self.entities, self.normalMapEntities, self.terrainTiles, self.lights, self.running_seconds_from_start, Vector4((0, -1, 0, 15)))
         self.waterRenderer.render(self.delta, self.water, self.sun)
         self.guiRenderer.render(self.guis)
+        TextMaster.render()
         self.queue_draw()  # Schedules a redraw for Gtk.GLArea
 
     def on_unrealize(self, gl_area):
+        TextMaster.cleanUp()
         self.FBO.cleanUp()
         self.waterRenderer.cleanUp()
         self.guiRenderer.cleanUp()

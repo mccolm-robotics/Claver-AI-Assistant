@@ -1,9 +1,8 @@
-from Claver.assistant.avatar.fontMeshCreator.TextMeshCreator import TextMeshCreator
-
 class FontType:
-    def __init__(self, textureAtlas, fontFile):
+    def __init__(self, textureAtlas, fontFile, window_rect):
+        from Claver.assistant.avatar.fontMeshCreator.TextMeshCreator import TextMeshCreator
         self.__textureAtlas = textureAtlas
-        self.__loader = TextMeshCreator(fontFile)
+        self.__loader = TextMeshCreator(fontFile, window_rect)
 
     def getTextureAtlas(self):
         return self.__textureAtlas

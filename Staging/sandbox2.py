@@ -31,29 +31,52 @@ bar_5 = Bar("the garage")
 
 my_dictionary = {Foo: [foo_1, foo_2, foo_3, foo_4], Bar: [bar_1, bar_2, bar_3, bar_4, bar_5]}
 
-# for model_type in my_dictionary:
-#     for entity in my_dictionary[model_type]:
-#         print(entity.printID())
-
-if Foo in my_dictionary:
-    for entity in my_dictionary[Foo]:
-        print(entity)
-    my_dictionary[Foo].append(Foo("to dirty"))
-    for entity in my_dictionary[Foo]:
-        print(entity)
 
 if Baz in my_dictionary:
-    print("Should not see this")
-    for entity in my_dictionary[Baz]:
-        print(entity)
+    textBatch = my_dictionary[Baz]
 else:
-    my_dictionary[Baz] = [Baz("big test")]
+    textBatch = []
+    my_dictionary[Baz] = textBatch
+textBatch.append(5)     # Pass by reference
 
+# test = my_dictionary.get(Foo)
+# print(test)
+# retest = my_dictionary[Foo]
+# print(retest)
 
-print("\nNow testing for Baz")
-if Baz in my_dictionary:
-    for entity in my_dictionary[Baz]:
+for model_type in my_dictionary:
+    for entity in my_dictionary[model_type]:
         print(entity)
+
+for unit in my_dictionary:
+    print(unit)
+
+if Baz in my_dictionary:
+    del my_dictionary[Baz]
+
+for model_type in my_dictionary:
+    for entity in my_dictionary[model_type]:
+        print(entity)
+#
+# if Foo in my_dictionary:
+#     # for entity in my_dictionary[Foo]:
+#     #     print(entity)
+#     my_dictionary[Foo].append(Foo("to dirty"))
+#     for entity in my_dictionary[Foo]:
+#         print(entity)
+# #
+# # if Baz in my_dictionary:
+# #     print("Should not see this")
+# #     for entity in my_dictionary[Baz]:
+# #         print(entity)
+# # else:
+# #     my_dictionary[Baz] = [Baz("big test")]
+# #
+# #
+# # print("\nNow testing for Baz")
+# # if Baz in my_dictionary:
+# #     for entity in my_dictionary[Baz]:
+# #         print(entity)
 for unit in my_dictionary:
     print(unit)
 

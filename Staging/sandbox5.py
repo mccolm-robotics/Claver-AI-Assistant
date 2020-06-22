@@ -1,4 +1,16 @@
-words = [5]
-spaceSize = "It's got stuff"
+class Test:
+    __value = None
 
-print(spaceSize if words else 0)
+    @staticmethod
+    def init(value):
+        Test.__value = value
+
+    @staticmethod
+    def getValue():
+        return Test.__value
+
+x = Test()
+print(x.getValue())
+x.init("hello world")
+print(x.getValue())
+
