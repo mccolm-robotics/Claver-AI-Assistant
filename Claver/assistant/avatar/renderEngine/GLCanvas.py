@@ -106,8 +106,10 @@ class GLCanvas(Gtk.GLArea):
         self.loader = Loader()
         TextMaster.init(self.loader)
 
-        font = FontType(self.loader.loadTexture(res_dir['FONT_ATLAS'] + "verdana.png"), res_dir['FONT_ATLAS'] + "verdana.fnt", self.window_rect)
-        text = GUIText("This is a test text!", 1, font, (0, 0), 1, True)
+        font = FontType(self.loader.loadTexture(res_dir['FONT_ATLAS'] + "pop.png", False), res_dir['FONT_ATLAS'] + "pop.fnt", self.window_rect)
+        maximumLineLength = 0.5
+        text = GUIText("This is a test text!", 5, font, (0.25, 0.85), maximumLineLength, True)
+        text.setColour(0.9, 0.9, 0.9)
 
         rawCube = ModelLoader().loadPrimitive(self.loader, Primitives().cube())
         rawCubeTexture = ModelTexture(self.loader.loadTexture(res_dir['TEXTURES'] + "circuitTree.png", False))
