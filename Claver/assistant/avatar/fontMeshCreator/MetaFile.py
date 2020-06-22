@@ -7,7 +7,7 @@ class MetaFile:
     __PAD_LEFT = 1
     __PAD_BOTTOM = 2
     __PAD_RIGHT = 3
-    __DESIRED_PADDING = 3
+    __DESIRED_PADDING = 8
 
     def __init__(self, fileName, window_rect):
         self.__aspectRatio = window_rect.width / window_rect.height
