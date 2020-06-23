@@ -33,6 +33,7 @@ from Claver.assistant.avatar.fontMeshCreator.FontType import FontType
 from Claver.assistant.avatar.fontMeshCreator.GUIText import GUIText
 from Claver.assistant.avatar.particles.ParticleMaster import ParticleMaster
 from Claver.assistant.avatar.particles.Particle import Particle
+from Claver.assistant.avatar.particles.ParticleSystem import ParticleSystem
 
 
 class GLCanvas(Gtk.GLArea):
@@ -225,7 +226,7 @@ class GLCanvas(Gtk.GLArea):
 
         # Create a manager to display world objects
         self.renderer = MasterRenderer(self.loader, self.window_rect, self.inputEvents, self.player)
-        ParticleMaster.init(self.loader, self.renderer.getCamera(), self.renderer.getProjectionMatrix())
+        ParticleMaster.init(self.loader, self.renderer.getProjectionMatrix(), self.renderer.getCamera())
 
         self.FBO = WaterFrameBuffers(self.window_size)
         self.waterRenderer = WaterRenderer(self.loader, self.renderer.getCamera(), self.FBO)
@@ -234,6 +235,13 @@ class GLCanvas(Gtk.GLArea):
         # gui = GuiTexture(self.loader.loadTexture(res_dir['TEXTURES'] + "claver-brand.png", False), (0.5, 0.5), (0.25, 0.25))
         # self.guis.append(gui)
         self.FBO_initialized = False
+
+        self.system = ParticleSystem(10, 25, 0.3, 3, 1)
+        self.system.randomizeRotation()
+        self.system.setDirection((0, 1, 0), 0.1)
+        self.system.setLifeError(0.1)
+        self.system.setSpeedError(0.4)
+        self.system.setScaleError(0.8)
 
         return True
 
@@ -245,10 +253,9 @@ class GLCanvas(Gtk.GLArea):
 
         self.renderer.processMovement(self.delta)
 
-        if self.inputEvents.isKeyDown('y') is True:
-            Particle((self.player[0], self.player[1], self.player[2]), (0, 30, 0), 1, 4, 0, 1)
+        self.system.generateParticles(self.delta, (8, 0, 6))
 
-        ParticleMaster.update()
+        ParticleMaster.update(self.delta)
 
         glEnable(GL_CLIP_DISTANCE0)
 

@@ -11,6 +11,7 @@ class Particle:
         self.__scale = scale
 
         self.__elapsedTime = 0
+        print("Hello!")
         ParticleMaster.addParticle(self)
 
     def getPosition(self):

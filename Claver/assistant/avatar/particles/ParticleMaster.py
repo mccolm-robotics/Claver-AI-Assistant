@@ -9,9 +9,9 @@ class ParticleMaster:
         ParticleMaster.__renderer = ParticleRenderer(loader, projectionMatrix, camera)
 
     @staticmethod
-    def update():
+    def update(delta):
         for particle in ParticleMaster.__particles:
-            stillAlive = particle.update()
+            stillAlive = particle.update(delta)
             if not stillAlive:
                 ParticleMaster.__particles.remove(particle)
 

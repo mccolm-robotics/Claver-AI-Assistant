@@ -3,7 +3,6 @@ import random
 from math import pi, cos, sin, sqrt, acos, floor
 from Claver.assistant.avatar.particles.Particle import Particle
 
-
 class ParticleSystem:
     def __init__(self, pps, speed, gravityComplient, lifeLength, scale):
         self.__pps = pps
@@ -17,7 +16,7 @@ class ParticleSystem:
         self.__randomRotation = False
         self.__directionDeviation = 0
         self.__direction = None
-
+        
     # direction - The average direction in which particles are emitted.
     # deviation - A value between 0 and 1 indicating how far from the chosen direction particles can deviate.
     def setDirection(self, direction, deviation):
@@ -47,6 +46,7 @@ class ParticleSystem:
             self.__emitParticle(systemCenter)
         if random.random() < partialParticle:
             self.__emitParticle(systemCenter)
+
 
     def __emitParticle(self, center):
         velocity = None
@@ -99,10 +99,3 @@ class ParticleSystem:
         x = rootOneMinusZSquared * cos(theta)
         y = rootOneMinusZSquared * sin(theta)
         return (x, y, z)
-
-system = ParticleSystem(10, 25, 0.3, 3, 1)
-system.randomizeRotation()
-system.setDirection((0, 1, 0), 0.1)
-system.setLifeError(0.1)
-system.setSpeedError(0.4)
-system.setScaleError(0.8)
