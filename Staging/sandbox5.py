@@ -39,14 +39,22 @@ class ParticleSystem:
     def setScaleError(self, error):
         self.__scaleError = error * self.__averageScale
 
+
+
+
+
+
+
+
     def generateParticles(self, delta, systemCenter):
         particlesToCreate = self.__pps * delta
         count = floor(particlesToCreate)
         partialParticle = particlesToCreate % 1
-        for i in range(count):
-            self.__emitParticle(systemCenter)
-        if random.random() < partialParticle:
-            self.__emitParticle(systemCenter)
+        # for i in range(count):
+        #     self.__emitParticle(systemCenter)
+        # if random.random() < partialParticle:
+        #     self.__emitParticle(systemCenter)
+        print("generateParticles(): count={} partialParticle={}".format(count, partialParticle))
 
     def __emitParticle(self, center):
         velocity = None
@@ -106,3 +114,6 @@ system.setDirection((0, 1, 0), 0.1)
 system.setLifeError(0.1)
 system.setSpeedError(0.4)
 system.setScaleError(0.8)
+
+for i in range(50):
+    system.generateParticles(.0166, (8, 0, 6))

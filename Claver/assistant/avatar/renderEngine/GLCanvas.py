@@ -236,12 +236,7 @@ class GLCanvas(Gtk.GLArea):
         # self.guis.append(gui)
         self.FBO_initialized = False
 
-        self.system = ParticleSystem(10, 25, 0.3, 3, 1)
-        self.system.randomizeRotation()
-        self.system.setDirection((0, 1, 0), 0.1)
-        self.system.setLifeError(0.1)
-        self.system.setSpeedError(0.4)
-        self.system.setScaleError(0.8)
+        self.system = ParticleSystem(20.0, 15.0, 1.0, 4)
 
         return True
 
@@ -253,7 +248,11 @@ class GLCanvas(Gtk.GLArea):
 
         self.renderer.processMovement(self.delta)
 
-        self.system.generateParticles(self.delta, (8, 0, 6))
+        if self.delta < 1:
+            self.system.generateParticles((self.player.getPosition()[0], self.player.getPosition()[1], self.player.getPosition()[2]), self.delta)
+
+        if self.inputEvents.isKeyDown('y') is True:
+            Particle((self.player.getPosition()[0], self.player.getPosition()[1], self.player.getPosition()[2]), (0.0, 15.0, 0.0), 1, 2.0, 0, 1)
 
         ParticleMaster.update(self.delta)
 
