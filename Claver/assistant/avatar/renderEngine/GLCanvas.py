@@ -258,6 +258,7 @@ class GLCanvas(Gtk.GLArea):
 
         glEnable(GL_CLIP_DISTANCE0)
 
+
         # self.FBO.bindReflectionFrameBuffer()
         # distance = 2 * (self.renderer.getCamera().getPosition().y - self.water.getHeight())
         # self.renderer.getCamera().setCameraHeight(self.renderer.getCamera().getPosition().y - distance, True)
@@ -342,6 +343,7 @@ class GLCanvas(Gtk.GLArea):
 
     def on_resize(self, area, width, height):
         self.window_size = (width, height)
+        self.FBO.resizeBuffer(width, height)
         self.renderer.windowResized(width, height)
         # display = Gdk.Display.get_default()
         # monitor = display.get_monitor_at_window(gl_area.get_window())

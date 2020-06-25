@@ -21,6 +21,10 @@ class WaterFrameBuffers:
         self.__initializeReflectionFrameBuffer()
         self.__initializeRefractionFrameBuffer()
 
+    def resizeBuffer(self, width, height):
+        self.__REFRACTION_WIDTH = width
+        self.__REFRACTION_HEIGHT = height
+        self.__window_rect = (width, height)
 
     def cleanUp(self):
         # Call when closing game
