@@ -66,7 +66,8 @@ class ParticleSystem:
         velocity *= self.__generateValue(self.__averageSpeed, self.__speedError)
         scale = self.__generateValue(self.__averageScale, self.__scaleError)
         lifeLength = self.__generateValue(self.__averageLifeLength, self.__lifeError)
-        Particle(center, velocity, self.__gravityComplient, lifeLength, self.__generateRotation(), scale)
+        # Particle(center, velocity, self.__gravityComplient, lifeLength, self.__generateRotation(), scale)
+        print(center)
 
     def __generateValue(self, average, errorMargin):
         offset = (random.uniform(0.0, 1.0) - 0.5) * 2 * errorMargin
@@ -114,6 +115,8 @@ system.setDirection((0, 1, 0), 0.1)
 system.setLifeError(0.1)
 system.setSpeedError(0.4)
 system.setScaleError(0.8)
+
+system.generateParticles(0.016667, (8, 0, 6))
 
 for i in range(50):
     system.generateParticles(.0166, (8, 0, 6))

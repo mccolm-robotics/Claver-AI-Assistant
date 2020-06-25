@@ -128,22 +128,22 @@ class GLCanvas(Gtk.GLArea):
                                   ModelTexture(self.loader.loadTexture(res_dir['MODELS'] + "Lamp_Texture.png")))
         lampModel.getTexture().setUseFakeLighting(True)
 
-        # Normal Mapped Model
-        barrelModel = TexturedModel(ModelLoader().loadNormalMappedModel(self.loader, res_dir['MODELS']+"Barrel.obj"),
-                                  ModelTexture(self.loader.loadTexture(res_dir['MODELS'] + "Barrel_Texture.png")))
-        barrelModel.getTexture().setNormalMap(self.loader.loadTexture(res_dir['MODELS'] + "Barrel_Normal.png"))
-        barrelModel.getTexture().setShineDamper(10)
-        barrelModel.getTexture().setReflectivity(0.5)
-        barrel = Entity(barrelModel, (-3.0, 1.75, -2.0), 0.0, 0.0, 0.0, 0.3)
-        self.normalMapEntities.append(barrel)
-
-        boulderModel = TexturedModel(ModelLoader().loadNormalMappedModel(self.loader, res_dir['MODELS'] + "Boulder.obj"),
-                                    ModelTexture(self.loader.loadTexture(res_dir['MODELS'] + "Boulder_Texture.png")))
-        boulderModel.getTexture().setNormalMap(self.loader.loadTexture(res_dir['MODELS'] + "Boulder_Normal.png"))
-        boulderModel.getTexture().setShineDamper(10)
-        boulderModel.getTexture().setReflectivity(0.5)
-        boulder = Entity(boulderModel, (10.0, 0, 8.0), 0.0, 0.0, 0.0, 0.3)
-        self.normalMapEntities.append(boulder)
+        # # Normal Mapped Model
+        # barrelModel = TexturedModel(ModelLoader().loadNormalMappedModel(self.loader, res_dir['MODELS']+"Barrel.obj"),
+        #                           ModelTexture(self.loader.loadTexture(res_dir['MODELS'] + "Barrel_Texture.png")))
+        # barrelModel.getTexture().setNormalMap(self.loader.loadTexture(res_dir['MODELS'] + "Barrel_Normal.png"))
+        # barrelModel.getTexture().setShineDamper(10)
+        # barrelModel.getTexture().setReflectivity(0.5)
+        # barrel = Entity(barrelModel, (-3.0, 1.75, -2.0), 0.0, 0.0, 0.0, 0.3)
+        # self.normalMapEntities.append(barrel)
+        #
+        # boulderModel = TexturedModel(ModelLoader().loadNormalMappedModel(self.loader, res_dir['MODELS'] + "Boulder.obj"),
+        #                             ModelTexture(self.loader.loadTexture(res_dir['MODELS'] + "Boulder_Texture.png")))
+        # boulderModel.getTexture().setNormalMap(self.loader.loadTexture(res_dir['MODELS'] + "Boulder_Normal.png"))
+        # boulderModel.getTexture().setShineDamper(10)
+        # boulderModel.getTexture().setReflectivity(0.5)
+        # boulder = Entity(boulderModel, (10.0, 0, 8.0), 0.0, 0.0, 0.0, 0.3)
+        # self.normalMapEntities.append(boulder)
 
         treeModel = TexturedModel(ModelLoader().loadModel(self.loader, res_dir['MODELS']+"Pine.obj"),
                                   ModelTexture(self.loader.loadTexture(res_dir['MODELS'] + "Pine_Texture.png")))
@@ -236,7 +236,7 @@ class GLCanvas(Gtk.GLArea):
         # self.guis.append(gui)
         self.FBO_initialized = False
 
-        self.system = ParticleSystem(20.0, 15.0, 1.0, 4)
+        # self.system = ParticleSystem(20.0, 15.0, 1.0, 4)
 
         return True
 
@@ -248,34 +248,36 @@ class GLCanvas(Gtk.GLArea):
 
         self.renderer.processMovement(self.delta)
 
-        if self.delta < 1:
-            self.system.generateParticles((self.player.getPosition()[0], self.player.getPosition()[1], self.player.getPosition()[2]), self.delta)
+        # if self.delta < 1:
+        #     self.system.generateParticles((self.player.getPosition()[0], self.player.getPosition()[1], self.player.getPosition()[2]), self.delta)
 
-        if self.inputEvents.isKeyDown('y') is True:
-            Particle((self.player.getPosition()[0], self.player.getPosition()[1], self.player.getPosition()[2]), (0.0, 15.0, 0.0), 1, 2.0, 0, 1)
-
-        ParticleMaster.update(self.delta)
+        # if self.inputEvents.isKeyDown('y') is True:
+        #     Particle((self.player.getPosition()[0], self.player.getPosition()[1], self.player.getPosition()[2]), (0.0, 15.0, 0.0), 1, 2.0, 0, 1)
+        #
+        # ParticleMaster.update(self.delta)
 
         glEnable(GL_CLIP_DISTANCE0)
 
-        self.FBO.bindReflectionFrameBuffer()
-        distance = 2 * (self.renderer.getCamera().getPosition().y - self.water.getHeight())
-        self.renderer.getCamera().setCameraHeight(self.renderer.getCamera().getPosition().y - distance, True)
-        self.renderer.renderScene(self.entities, self.normalMapEntities, self.terrainTiles, self.lights, self.running_seconds_from_start, Vector4((0, 1, 0, -self.water.getHeight() + 0.5)))
-        self.renderer.getCamera().setCameraHeight(self.renderer.getCamera().getPosition().y + distance)
+        # self.FBO.bindReflectionFrameBuffer()
+        # distance = 2 * (self.renderer.getCamera().getPosition().y - self.water.getHeight())
+        # self.renderer.getCamera().setCameraHeight(self.renderer.getCamera().getPosition().y - distance, True)
+        # self.renderer.renderScene(self.entities, self.normalMapEntities, self.terrainTiles, self.lights, self.running_seconds_from_start, Vector4((0, 1, 0, -self.water.getHeight() + 0.5)))
+        # self.renderer.getCamera().setCameraHeight(self.renderer.getCamera().getPosition().y + distance)
 
         self.FBO.bindRefractionFrameBuffer()
         self.renderer.renderScene(self.entities, self.normalMapEntities, self.terrainTiles, self.lights, self.running_seconds_from_start, Vector4((0, -1, 0, self.water.getHeight())))
 
         glDisable(GL_CLIP_DISTANCE0)
         self.FBO.unbindCurrentFrameBuffer()
+
+
         self.renderer.renderScene(self.entities, self.normalMapEntities, self.terrainTiles, self.lights, self.running_seconds_from_start, Vector4((0, -1, 0, 15)))
-        self.waterRenderer.render(self.delta, self.water, self.sun)
+        # self.waterRenderer.render(self.delta, self.water, self.sun)
 
-        ParticleMaster.renderParticles()
+        # ParticleMaster.renderParticles()
 
-        self.guiRenderer.render(self.guis)
-        TextMaster.render()
+        # self.guiRenderer.render(self.guis)
+        # TextMaster.render()
         self.queue_draw()  # Schedules a redraw for Gtk.GLArea
 
     def on_unrealize(self, gl_area):
