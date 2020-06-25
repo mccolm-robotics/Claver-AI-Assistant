@@ -197,7 +197,7 @@ class GLCanvas(Gtk.GLArea):
         # Add objects to world
         import random
         RANGE = .8
-        for i in range(30):
+        for i in range(10):
             x1 = random.uniform(-RANGE, RANGE) * 100
             z1 = random.uniform(-RANGE, RANGE) * 100
             y1 = getTerrainHeight(x1, z1)
@@ -236,46 +236,44 @@ class GLCanvas(Gtk.GLArea):
         # self.guis.append(gui)
         self.FBO_initialized = False
 
-        # self.system = ParticleSystem(20.0, 15.0, 1.0, 4)
+        self.system = ParticleSystem(20.0, 15.0, 1.0, 4)
 
         return True
 
     def on_render(self, gl_area, gl_context):
-        if self.FBO_initialized is False:
-            self.default_FBO = glGetIntegerv(GL_FRAMEBUFFER_BINDING)  # GLArea does not seem to use FBO 0 as the default.
-            self.FBO.initializeFramebuffer(self.default_FBO, self.window_size)
-            self.FBO_initialized = True
+        # if self.FBO_initialized is False:
+        #     self.default_FBO = glGetIntegerv(GL_FRAMEBUFFER_BINDING)  # GLArea does not seem to use FBO 0 as the default.
+        #     self.FBO.initializeFramebuffer(self.default_FBO, self.window_size)
+        #     self.FBO_initialized = True
 
         self.renderer.processMovement(self.delta)
 
-        # if self.delta < 1:
-        #     self.system.generateParticles((self.player.getPosition()[0], self.player.getPosition()[1], self.player.getPosition()[2]), self.delta)
+        if self.delta < 1:
+            self.system.generateParticles((1.0, 1.0, 1.0), self.delta)
 
-        # if self.inputEvents.isKeyDown('y') is True:
-        #     Particle((self.player.getPosition()[0], self.player.getPosition()[1], self.player.getPosition()[2]), (0.0, 15.0, 0.0), 1, 2.0, 0, 1)
-        #
-        # ParticleMaster.update(self.delta)
+        if self.inputEvents.isKeyDown('y') is True:
+            Particle((self.player.getPosition()[0], self.player.getPosition()[1], self.player.getPosition()[2]), (0.0, 15.0, 0.0), 1, 2.0, 0, 1)
 
-        glEnable(GL_CLIP_DISTANCE0)
+        ParticleMaster.update(self.delta)
 
-
+        # glEnable(GL_CLIP_DISTANCE0)
         # self.FBO.bindReflectionFrameBuffer()
         # distance = 2 * (self.renderer.getCamera().getPosition().y - self.water.getHeight())
         # self.renderer.getCamera().setCameraHeight(self.renderer.getCamera().getPosition().y - distance, True)
         # self.renderer.renderScene(self.entities, self.normalMapEntities, self.terrainTiles, self.lights, self.running_seconds_from_start, Vector4((0, 1, 0, -self.water.getHeight() + 0.5)))
         # self.renderer.getCamera().setCameraHeight(self.renderer.getCamera().getPosition().y + distance)
-
-        self.FBO.bindRefractionFrameBuffer()
-        self.renderer.renderScene(self.entities, self.normalMapEntities, self.terrainTiles, self.lights, self.running_seconds_from_start, Vector4((0, -1, 0, self.water.getHeight())))
-
-        glDisable(GL_CLIP_DISTANCE0)
-        self.FBO.unbindCurrentFrameBuffer()
+        #
+        # self.FBO.bindRefractionFrameBuffer()
+        # self.renderer.renderScene(self.entities, self.normalMapEntities, self.terrainTiles, self.lights, self.running_seconds_from_start, Vector4((0, -1, 0, self.water.getHeight())))
+        #
+        # glDisable(GL_CLIP_DISTANCE0)
+        # self.FBO.unbindCurrentFrameBuffer()
 
 
         self.renderer.renderScene(self.entities, self.normalMapEntities, self.terrainTiles, self.lights, self.running_seconds_from_start, Vector4((0, -1, 0, 15)))
         # self.waterRenderer.render(self.delta, self.water, self.sun)
 
-        # ParticleMaster.renderParticles()
+        ParticleMaster.renderParticles()
 
         # self.guiRenderer.render(self.guis)
         # TextMaster.render()

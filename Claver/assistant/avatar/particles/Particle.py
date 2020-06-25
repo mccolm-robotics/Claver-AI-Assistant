@@ -2,7 +2,8 @@ from pyrr import Vector3
 from Claver.assistant.avatar.particles.ParticleMaster import ParticleMaster
 
 class Particle:
-    def __init__(self, position, velocity, gravityEffect, lifeLength, rotation, scale):
+    def __init__(self, texture, position, velocity, gravityEffect, lifeLength, rotation, scale):
+        self.__texture = texture
         self.__position = position
         self.__velocity = Vector3(velocity)
         self.__gravityEffect = gravityEffect
@@ -12,6 +13,9 @@ class Particle:
 
         self.__elapsedTime = 0
         ParticleMaster.addParticle(self)
+
+    def getTexture(self):
+        return self.__texture
 
     def getPosition(self):
         return self.__position
