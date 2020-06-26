@@ -1,6 +1,6 @@
 class ParticleMaster:
 
-    __particles = []
+    __particles = {}
     __renderer = None
 
     @staticmethod
@@ -25,4 +25,7 @@ class ParticleMaster:
 
     @staticmethod
     def addParticle(particle):
-        ParticleMaster.__particles.append(particle)
+        if particle.getTexture() in ParticleMaster.__particles:
+            ParticleMaster.__particles[particle.getTexture()].append(particle)
+        else:
+            ParticleMaster.__particles[particle.getTexture()] = [particle]
