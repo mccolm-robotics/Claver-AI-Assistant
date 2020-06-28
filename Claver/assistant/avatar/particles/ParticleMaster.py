@@ -1,6 +1,6 @@
 class ParticleMaster:
 
-    __particles = {}
+    __particles_dict = {}
     __renderer = None
 
     @staticmethod
@@ -10,14 +10,17 @@ class ParticleMaster:
 
     @staticmethod
     def update(delta):
-        for particle in ParticleMaster.__particles:
-            stillAlive = particle.update(delta)
-            if not stillAlive:
-                ParticleMaster.__particles.remove(particle)
+        for particleTextureList in ParticleMaster.__particles_dict:
+            for particle in ParticleMaster.__particles_dict[particleTextureList]:
+                stillAlive = particle.update(delta)
+                if not stillAlive:
+                    ParticleMaster.__particles_dict[particleTextureList].remove(particle)
+                    if not ParticleMaster.__particles_dict[particleTextureList]:
+                        del ParticleMaster.__particles_dict[particleTextureList]
 
     @staticmethod
     def renderParticles():
-        ParticleMaster.__renderer.render(ParticleMaster.__particles)
+        ParticleMaster.__renderer.render(ParticleMaster.__particles_dict)
 
     @staticmethod
     def cleanUp():
@@ -25,7 +28,7 @@ class ParticleMaster:
 
     @staticmethod
     def addParticle(particle):
-        if particle.getTexture() in ParticleMaster.__particles:
-            ParticleMaster.__particles[particle.getTexture()].append(particle)
+        if particle.getTexture() in ParticleMaster.__particles_dict:
+            ParticleMaster.__particles_dict[particle.getTexture()].append(particle)
         else:
-            ParticleMaster.__particles[particle.getTexture()] = [particle]
+            ParticleMaster.__particles_dict[particle.getTexture()] = [particle]

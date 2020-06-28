@@ -34,6 +34,7 @@ from Claver.assistant.avatar.fontMeshCreator.GUIText import GUIText
 from Claver.assistant.avatar.particles.ParticleMaster import ParticleMaster
 from Claver.assistant.avatar.particles.Particle import Particle
 from Claver.assistant.avatar.particles.ParticleSystem import ParticleSystem
+from Claver.assistant.avatar.particles.ParticleTexture import ParticleTexture
 
 
 class GLCanvas(Gtk.GLArea):
@@ -236,7 +237,9 @@ class GLCanvas(Gtk.GLArea):
         # self.guis.append(gui)
         self.FBO_initialized = False
 
-        self.system = ParticleSystem(20.0, 15.0, 1.0, 4)
+        particleTexture = ParticleTexture(self.loader.loadTexture(res_dir['TEXTURE_PARTICLES'] + "particleStar.png"), 1)
+
+        self.system = ParticleSystem(particleTexture, 20.0, 15.0, 1.0, 4)
 
         return True
 
@@ -250,9 +253,6 @@ class GLCanvas(Gtk.GLArea):
 
         if self.delta < 1:
             self.system.generateParticles((1.0, 1.0, 1.0), self.delta)
-
-        if self.inputEvents.isKeyDown('y') is True:
-            Particle((self.player.getPosition()[0], self.player.getPosition()[1], self.player.getPosition()[2]), (0.0, 15.0, 0.0), 1, 2.0, 0, 1)
 
         ParticleMaster.update(self.delta)
 

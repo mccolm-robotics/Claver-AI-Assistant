@@ -9,6 +9,7 @@ res_dir = dict(
     FONT_ATLAS=RES_FOLDER + "fonts/atlas/",
     FONT_DISTANCE=RES_FOLDER + "fonts/distance/",
     TEXTURES=RES_FOLDER + "textures/",
+    TEXTURE_PARTICLES=RES_FOLDER + "textures/particles/",
     MODELS=RES_FOLDER + "models/",
     SKYBOX_CLOUDS=RES_FOLDER + "skybox/clouds/",
     SKYBOX_NIGHT=RES_FOLDER + "skybox/night/",

@@ -22,12 +22,15 @@ class ParticleRenderer:
         self.__shader.loadProjectionMatrix(projectionMatrix)
         self.__shader.stop()
 
-    def render(self, particles):
+    def render(self, particles_dict):
         viewMatrix = self.__camera.getViewMatrix()
         self.__prepare()
-        for particle in particles:
-            self.__updateModelViewMatrix(particle.getPosition(), particle.getRotation(), particle.getScale(), viewMatrix)
-            glDrawArrays(GL_TRIANGLE_STRIP, 0, self.__quad.getVertexCount())
+        for particleTextureList in particles_dict:
+            glActiveTexture(GL_TEXTURE0)
+            glBindTexture(GL_TEXTURE_2D, particleTextureList.getTextureID())
+            for particle in particles_dict[particleTextureList]:
+                self.__updateModelViewMatrix(particle.getPosition(), particle.getRotation(), particle.getScale(), viewMatrix)
+                glDrawArrays(GL_TRIANGLE_STRIP, 0, self.__quad.getVertexCount())
         self.__finishRendering()
 
     def cleanUp(self):
@@ -56,7 +59,7 @@ class ParticleRenderer:
         glBindVertexArray(self.__quad.getVaoID())
         glEnableVertexAttribArray(0)
         glEnable(GL_BLEND)
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE)
         glDepthMask(False)
 
     def __finishRendering(self):
