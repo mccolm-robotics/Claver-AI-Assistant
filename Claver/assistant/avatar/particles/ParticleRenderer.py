@@ -8,6 +8,7 @@ from Claver.assistant.avatar.particles.ParticleShader import ParticleShader
 from Claver.assistant.avatar.renderEngine.Loader import Loader
 from Claver.assistant.avatar.models.RawModel import RawModel
 from Claver.assistant.avatar.particles.Particle import Particle
+from Claver.assistant.avatar.particles.ParticleTexture import ParticleTexture
 
 
 class ParticleRenderer:
@@ -25,11 +26,12 @@ class ParticleRenderer:
     def render(self, particles_dict):
         viewMatrix = self.__camera.getViewMatrix()
         self.__prepare()
-        for particleTextureList in particles_dict:
+        for texture in particles_dict:
             glActiveTexture(GL_TEXTURE0)
-            glBindTexture(GL_TEXTURE_2D, particleTextureList.getTextureID())
-            for particle in particles_dict[particleTextureList]:
+            glBindTexture(GL_TEXTURE_2D, texture.getTextureID())
+            for particle in particles_dict[texture]:
                 self.__updateModelViewMatrix(particle.getPosition(), particle.getRotation(), particle.getScale(), viewMatrix)
+                self.__shader.loadTextureCoordInfo(particle.getTexOffset1(), particle.getTexOffset2(), texture.getNumberOfRows(), particle.getBlend())
                 glDrawArrays(GL_TRIANGLE_STRIP, 0, self.__quad.getVertexCount())
         self.__finishRendering()
 
@@ -59,7 +61,7 @@ class ParticleRenderer:
         glBindVertexArray(self.__quad.getVaoID())
         glEnableVertexAttribArray(0)
         glEnable(GL_BLEND)
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         glDepthMask(False)
 
     def __finishRendering(self):

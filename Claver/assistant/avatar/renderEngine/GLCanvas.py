@@ -237,9 +237,8 @@ class GLCanvas(Gtk.GLArea):
         # self.guis.append(gui)
         self.FBO_initialized = False
 
-        particleTexture = ParticleTexture(self.loader.loadTexture(res_dir['TEXTURE_PARTICLES'] + "particleStar.png"), 1)
-
-        self.system = ParticleSystem(particleTexture, 20.0, 15.0, 1.0, 4)
+        particleTexture = ParticleTexture(self.loader.loadTexture(res_dir['TEXTURE_PARTICLES'] + "particleAtlas.png", False), 4)
+        self.system = ParticleSystem(particleTexture, pps=20.0, speed=17.0, gravityComplient=1.0, lifeLength=2)
 
         return True
 
