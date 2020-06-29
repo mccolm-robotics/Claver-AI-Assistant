@@ -238,8 +238,12 @@ class GLCanvas(Gtk.GLArea):
         self.FBO_initialized = False
 
         particleTexture = ParticleTexture(self.loader.loadTexture(res_dir['TEXTURE_PARTICLES'] + "particleAtlas.png", False), 4)
-        self.system = ParticleSystem(particleTexture, pps=20.0, speed=17.0, gravityComplient=1.0, lifeLength=2)
-
+        self.system = ParticleSystem(particleTexture, pps=50.0, speed=20.0, gravityComplient=0.5, lifeLength=3, scale=1)
+        self.system.randomizeRotation()
+        self.system.setDirection((0.0, 1.0, 0.0), 0.1)
+        self.system.setLifeError(0.1)
+        self.system.setSpeedError(0.4)
+        self.system.setScaleError(0.8)
         return True
 
     def on_render(self, gl_area, gl_context):

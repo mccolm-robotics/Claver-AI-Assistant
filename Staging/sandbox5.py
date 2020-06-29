@@ -1,11 +1,6 @@
-def setTextureOffset(offset, index):
-    numberOfRows = 4
-    column = index % numberOfRows
-    row = index // numberOfRows
-    offset[0] = column / numberOfRows
-    offset[1] = row / numberOfRows
+from math import floor, pi, sqrt, sin, cos
+import random
+from pyrr import vector3
 
-offset = [0, 0]
-for i in range(16):
-    setTextureOffset(offset, i)
-    print(offset)
+
+print(random.uniform(0, 1) * 360.0)

@@ -1,6 +1,7 @@
 from pyrr import Vector3
 from math import floor
 from Claver.assistant.avatar.particles.ParticleMaster import ParticleMaster
+from Claver.assistant.avatar.entities.Camera import Camera
 
 class Particle:
     def __init__(self, texture, position, velocity, gravityEffect, lifeLength, rotation, scale):
@@ -16,7 +17,11 @@ class Particle:
         self.__texOffset1 = [0, 0]
         self.__texOffset2 = [0, 0]
         self.__blend = 0
+        self.__distance = 0
         ParticleMaster.addParticle(self)
+
+    def getDistance(self):
+        return self.__distance
 
     def getTexOffset1(self):
         return self.__texOffset1
@@ -45,6 +50,7 @@ class Particle:
         change = Vector3((self.__velocity.x, self.__velocity.y, self.__velocity.z)) # create a copy by value - not by reference
         change *= delta     # scale vector
         self.__position += change   # add two vectors together
+
         self.__updateTextureCoordInfo()
         self.__elapsedTime += delta
         return self.__elapsedTime < self.__lifeLength

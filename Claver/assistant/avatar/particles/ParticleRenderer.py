@@ -49,7 +49,7 @@ class ParticleRenderer:
         translation.m31 = viewMatrix.m13
         translation.m32 = viewMatrix.m23
         translation.m33 = viewMatrix.m33
-        rotation = matrix44.create_from_axis_rotation((0, 0, 1), radians(rotation))
+        rotation = matrix44.create_from_axis_rotation((0.0, 0.0, 1.0), radians(rotation))
         scale = Matrix44.from_scale([scale, scale, scale])
         modelMatrix = translation * rotation * scale
         modelViewMatrix = viewMatrix * modelMatrix
