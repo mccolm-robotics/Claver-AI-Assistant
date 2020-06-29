@@ -1,3 +1,5 @@
+from Claver.assistant.avatar.particles.InsertionSort import InsertionSort
+
 class ParticleMaster:
 
     __particles_dict = {}
@@ -9,14 +11,15 @@ class ParticleMaster:
         ParticleMaster.__renderer = ParticleRenderer(loader, projectionMatrix, camera)
 
     @staticmethod
-    def update(delta):
+    def update(delta, camera):
         for particleTextureList in ParticleMaster.__particles_dict:
             for particle in ParticleMaster.__particles_dict[particleTextureList]:
-                stillAlive = particle.update(delta)
+                stillAlive = particle.update(delta, camera)
                 if not stillAlive:
                     ParticleMaster.__particles_dict[particleTextureList].remove(particle)
                     if not ParticleMaster.__particles_dict[particleTextureList]:
                         del ParticleMaster.__particles_dict[particleTextureList]
+            InsertionSort.sortHighToLow(ParticleMaster.__particles_dict[particleTextureList])
 
     @staticmethod
     def renderParticles():

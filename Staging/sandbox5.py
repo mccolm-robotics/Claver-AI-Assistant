@@ -1,6 +1,5 @@
-from math import floor, pi, sqrt, sin, cos
-import random
-from pyrr import vector3
+list = ["button", "top", "pog"]
 
-
-print(random.uniform(0, 1) * 360.0)
+print(list)
+list.insert(1, "bottom")
+print(list)

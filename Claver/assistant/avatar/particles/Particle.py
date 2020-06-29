@@ -1,4 +1,4 @@
-from pyrr import Vector3
+from pyrr import Vector3, vector3
 from math import floor
 from Claver.assistant.avatar.particles.ParticleMaster import ParticleMaster
 from Claver.assistant.avatar.entities.Camera import Camera
@@ -44,13 +44,13 @@ class Particle:
     def getScale(self):
         return self.__scale
 
-    def update(self, delta):
+    def update(self, delta, camera):
         from Claver.assistant.avatar.entities.Player import Player
         self.__velocity.y += Player.GRAVITY * self.__gravityEffect * delta
         change = Vector3((self.__velocity.x, self.__velocity.y, self.__velocity.z)) # create a copy by value - not by reference
         change *= delta     # scale vector
         self.__position += change   # add two vectors together
-
+        distance = vector3.squared_length(camera.getPosition() - self.__position)
         self.__updateTextureCoordInfo()
         self.__elapsedTime += delta
         return self.__elapsedTime < self.__lifeLength

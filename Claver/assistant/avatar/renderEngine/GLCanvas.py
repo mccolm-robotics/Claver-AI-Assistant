@@ -129,22 +129,22 @@ class GLCanvas(Gtk.GLArea):
                                   ModelTexture(self.loader.loadTexture(res_dir['MODELS'] + "Lamp_Texture.png")))
         lampModel.getTexture().setUseFakeLighting(True)
 
-        # # Normal Mapped Model
-        # barrelModel = TexturedModel(ModelLoader().loadNormalMappedModel(self.loader, res_dir['MODELS']+"Barrel.obj"),
-        #                           ModelTexture(self.loader.loadTexture(res_dir['MODELS'] + "Barrel_Texture.png")))
-        # barrelModel.getTexture().setNormalMap(self.loader.loadTexture(res_dir['MODELS'] + "Barrel_Normal.png"))
-        # barrelModel.getTexture().setShineDamper(10)
-        # barrelModel.getTexture().setReflectivity(0.5)
-        # barrel = Entity(barrelModel, (-3.0, 1.75, -2.0), 0.0, 0.0, 0.0, 0.3)
-        # self.normalMapEntities.append(barrel)
-        #
-        # boulderModel = TexturedModel(ModelLoader().loadNormalMappedModel(self.loader, res_dir['MODELS'] + "Boulder.obj"),
-        #                             ModelTexture(self.loader.loadTexture(res_dir['MODELS'] + "Boulder_Texture.png")))
-        # boulderModel.getTexture().setNormalMap(self.loader.loadTexture(res_dir['MODELS'] + "Boulder_Normal.png"))
-        # boulderModel.getTexture().setShineDamper(10)
-        # boulderModel.getTexture().setReflectivity(0.5)
-        # boulder = Entity(boulderModel, (10.0, 0, 8.0), 0.0, 0.0, 0.0, 0.3)
-        # self.normalMapEntities.append(boulder)
+        # Normal Mapped Model
+        barrelModel = TexturedModel(ModelLoader().loadNormalMappedModel(self.loader, res_dir['MODELS']+"Barrel.obj"),
+                                  ModelTexture(self.loader.loadTexture(res_dir['MODELS'] + "Barrel_Texture.png")))
+        barrelModel.getTexture().setNormalMap(self.loader.loadTexture(res_dir['MODELS'] + "Barrel_Normal.png"))
+        barrelModel.getTexture().setShineDamper(10)
+        barrelModel.getTexture().setReflectivity(0.5)
+        barrel = Entity(barrelModel, (-3.0, 1.75, -2.0), 0.0, 0.0, 0.0, 0.3)
+        self.normalMapEntities.append(barrel)
+
+        boulderModel = TexturedModel(ModelLoader().loadNormalMappedModel(self.loader, res_dir['MODELS'] + "Boulder.obj"),
+                                    ModelTexture(self.loader.loadTexture(res_dir['MODELS'] + "Boulder_Texture.png")))
+        boulderModel.getTexture().setNormalMap(self.loader.loadTexture(res_dir['MODELS'] + "Boulder_Normal.png"))
+        boulderModel.getTexture().setShineDamper(10)
+        boulderModel.getTexture().setReflectivity(0.5)
+        boulder = Entity(boulderModel, (10.0, 0, 8.0), 0.0, 0.0, 0.0, 0.3)
+        self.normalMapEntities.append(boulder)
 
         treeModel = TexturedModel(ModelLoader().loadModel(self.loader, res_dir['MODELS']+"Pine.obj"),
                                   ModelTexture(self.loader.loadTexture(res_dir['MODELS'] + "Pine_Texture.png")))
@@ -198,7 +198,7 @@ class GLCanvas(Gtk.GLArea):
         # Add objects to world
         import random
         RANGE = .8
-        for i in range(10):
+        for i in range(30):
             x1 = random.uniform(-RANGE, RANGE) * 100
             z1 = random.uniform(-RANGE, RANGE) * 100
             y1 = getTerrainHeight(x1, z1)
@@ -233,8 +233,8 @@ class GLCanvas(Gtk.GLArea):
         self.waterRenderer = WaterRenderer(self.loader, self.renderer.getCamera(), self.FBO)
         self.water = WaterTile(self.loader, (13.0, -0.2, 12.25))
 
-        # gui = GuiTexture(self.loader.loadTexture(res_dir['TEXTURES'] + "claver-brand.png", False), (0.5, 0.5), (0.25, 0.25))
-        # self.guis.append(gui)
+        gui = GuiTexture(self.loader.loadTexture(res_dir['TEXTURES'] + "claver-brand.png", False), (0.5, 0.5), (0.25, 0.25))
+        self.guis.append(gui)
         self.FBO_initialized = False
 
         particleTexture = ParticleTexture(self.loader.loadTexture(res_dir['TEXTURE_PARTICLES'] + "particleAtlas.png", False), 4)
@@ -247,39 +247,39 @@ class GLCanvas(Gtk.GLArea):
         return True
 
     def on_render(self, gl_area, gl_context):
-        # if self.FBO_initialized is False:
-        #     self.default_FBO = glGetIntegerv(GL_FRAMEBUFFER_BINDING)  # GLArea does not seem to use FBO 0 as the default.
-        #     self.FBO.initializeFramebuffer(self.default_FBO, self.window_size)
-        #     self.FBO_initialized = True
+        if self.FBO_initialized is False:
+            self.default_FBO = glGetIntegerv(GL_FRAMEBUFFER_BINDING)  # GLArea does not seem to use FBO 0 as the default.
+            self.FBO.initializeFramebuffer(self.default_FBO, self.window_size)
+            self.FBO_initialized = True
 
         self.renderer.processMovement(self.delta)
 
         if self.delta < 1:
             self.system.generateParticles((1.0, 1.0, 1.0), self.delta)
 
-        ParticleMaster.update(self.delta)
+        ParticleMaster.update(self.delta, self.renderer.getCamera())
 
-        # glEnable(GL_CLIP_DISTANCE0)
-        # self.FBO.bindReflectionFrameBuffer()
-        # distance = 2 * (self.renderer.getCamera().getPosition().y - self.water.getHeight())
-        # self.renderer.getCamera().setCameraHeight(self.renderer.getCamera().getPosition().y - distance, True)
-        # self.renderer.renderScene(self.entities, self.normalMapEntities, self.terrainTiles, self.lights, self.running_seconds_from_start, Vector4((0, 1, 0, -self.water.getHeight() + 0.5)))
-        # self.renderer.getCamera().setCameraHeight(self.renderer.getCamera().getPosition().y + distance)
-        #
-        # self.FBO.bindRefractionFrameBuffer()
-        # self.renderer.renderScene(self.entities, self.normalMapEntities, self.terrainTiles, self.lights, self.running_seconds_from_start, Vector4((0, -1, 0, self.water.getHeight())))
-        #
-        # glDisable(GL_CLIP_DISTANCE0)
-        # self.FBO.unbindCurrentFrameBuffer()
+        glEnable(GL_CLIP_DISTANCE0)
+        self.FBO.bindReflectionFrameBuffer()
+        distance = 2 * (self.renderer.getCamera().getPosition().y - self.water.getHeight())
+        self.renderer.getCamera().setCameraHeight(self.renderer.getCamera().getPosition().y - distance, True)
+        self.renderer.renderScene(self.entities, self.normalMapEntities, self.terrainTiles, self.lights, self.running_seconds_from_start, Vector4((0, 1, 0, -self.water.getHeight() + 0.5)))
+        self.renderer.getCamera().setCameraHeight(self.renderer.getCamera().getPosition().y + distance)
+
+        self.FBO.bindRefractionFrameBuffer()
+        self.renderer.renderScene(self.entities, self.normalMapEntities, self.terrainTiles, self.lights, self.running_seconds_from_start, Vector4((0, -1, 0, self.water.getHeight())))
+
+        glDisable(GL_CLIP_DISTANCE0)
+        self.FBO.unbindCurrentFrameBuffer()
 
 
         self.renderer.renderScene(self.entities, self.normalMapEntities, self.terrainTiles, self.lights, self.running_seconds_from_start, Vector4((0, -1, 0, 15)))
-        # self.waterRenderer.render(self.delta, self.water, self.sun)
+        self.waterRenderer.render(self.delta, self.water, self.sun)
 
         ParticleMaster.renderParticles()
 
-        # self.guiRenderer.render(self.guis)
-        # TextMaster.render()
+        self.guiRenderer.render(self.guis)
+        TextMaster.render()
         self.queue_draw()  # Schedules a redraw for Gtk.GLArea
 
     def on_unrealize(self, gl_area):
