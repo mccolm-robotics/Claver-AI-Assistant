@@ -41,7 +41,7 @@ class Loader:
         return RawModel(vaoID, int(len(positions)/dimensions))
 
     def storeDataInAttributeList(self, attributeNumber, coordinateSize, data):
-        vboID = GLuint()  # Stores the name of the vertex buffer
+        vboID = GLuint()
         glCreateBuffers(1, ctypes.byref(vboID))  # Generates a buffer to hold the vertex data
         self.__vbos = np.append(self.__vbos, vboID)
         np_data = self.storDataInNumpyArray(data)
