@@ -138,8 +138,8 @@ class GLCanvas(Gtk.GLArea):
         # Creates a buffer to hold the vertex data and binds it to the OpenGL pipeline
         self.vertex_buffer = GLuint()                           # Stores the name of the vertex buffer
         glCreateBuffers(1, ctypes.byref(self.vertex_buffer))    # Generates a buffer to hold the vertex data
-        glNamedBufferStorage(self.vertex_buffer, self.vertices.nbytes, self.vertices, GL_MAP_READ_BIT) # Allocates buffer memory and initializes it with vertex data
         glBindBuffer(GL_ARRAY_BUFFER, self.vertex_buffer)       # Binds the buffer object to the OpenGL context and specifies that the buffer holds vertex data
+        glNamedBufferStorage(self.vertex_buffer, self.vertices.nbytes, self.vertices, GL_MAP_READ_BIT) # Allocates buffer memory and initializes it with vertex data
 
         self.vertex_attribute_position = glGetAttribLocation(self.shader, 'vertex_position')  # Obtains a reference to the 'vertex_position' attribute from the vertex shader
         glEnableVertexAttribArray(self.vertex_attribute_position)  # Activates client-side use of vertex attribute arrays for rendering

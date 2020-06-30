@@ -89,7 +89,7 @@ class GLCanvas(Gtk.GLArea):
         opengl_context = self.get_context()  # Retrieves the Gdk.GLContext used by gl_area
         opengl_context.make_current()  # Makes the Gdk.GLContext current to the drawing surfaced used by Gtk.GLArea
         major, minor = opengl_context.get_version()  # Gets the version of OpenGL currently used by the opengl_context
-        print("OpenGL context created successfully.\n-- Using OpenGL Version " + str(major) + "." + str(minor))
+        print("\033[93m OpenGL context created successfully.\n -- Using OpenGL Version \033[94m" + str(major) + "." + str(minor) + "\033[0m")
 
         # Checks to see if there were errors creating the context
         if gl_area.get_error() != None:
@@ -129,22 +129,22 @@ class GLCanvas(Gtk.GLArea):
                                   ModelTexture(self.loader.loadTexture(res_dir['MODELS'] + "Lamp_Texture.png")))
         lampModel.getTexture().setUseFakeLighting(True)
 
-        # Normal Mapped Model
-        barrelModel = TexturedModel(ModelLoader().loadNormalMappedModel(self.loader, res_dir['MODELS']+"Barrel.obj"),
-                                  ModelTexture(self.loader.loadTexture(res_dir['MODELS'] + "Barrel_Texture.png")))
-        barrelModel.getTexture().setNormalMap(self.loader.loadTexture(res_dir['MODELS'] + "Barrel_Normal.png"))
-        barrelModel.getTexture().setShineDamper(10)
-        barrelModel.getTexture().setReflectivity(0.5)
-        barrel = Entity(barrelModel, (-3.0, 1.75, -2.0), 0.0, 0.0, 0.0, 0.3)
-        self.normalMapEntities.append(barrel)
-
-        boulderModel = TexturedModel(ModelLoader().loadNormalMappedModel(self.loader, res_dir['MODELS'] + "Boulder.obj"),
-                                    ModelTexture(self.loader.loadTexture(res_dir['MODELS'] + "Boulder_Texture.png")))
-        boulderModel.getTexture().setNormalMap(self.loader.loadTexture(res_dir['MODELS'] + "Boulder_Normal.png"))
-        boulderModel.getTexture().setShineDamper(10)
-        boulderModel.getTexture().setReflectivity(0.5)
-        boulder = Entity(boulderModel, (10.0, 0, 8.0), 0.0, 0.0, 0.0, 0.3)
-        self.normalMapEntities.append(boulder)
+        # # Normal Mapped Model
+        # barrelModel = TexturedModel(ModelLoader().loadNormalMappedModel(self.loader, res_dir['MODELS']+"Barrel.obj"),
+        #                           ModelTexture(self.loader.loadTexture(res_dir['MODELS'] + "Barrel_Texture.png")))
+        # barrelModel.getTexture().setNormalMap(self.loader.loadTexture(res_dir['MODELS'] + "Barrel_Normal.png"))
+        # barrelModel.getTexture().setShineDamper(10)
+        # barrelModel.getTexture().setReflectivity(0.5)
+        # barrel = Entity(barrelModel, (-3.0, 1.75, -2.0), 0.0, 0.0, 0.0, 0.3)
+        # self.normalMapEntities.append(barrel)
+        #
+        # boulderModel = TexturedModel(ModelLoader().loadNormalMappedModel(self.loader, res_dir['MODELS'] + "Boulder.obj"),
+        #                             ModelTexture(self.loader.loadTexture(res_dir['MODELS'] + "Boulder_Texture.png")))
+        # boulderModel.getTexture().setNormalMap(self.loader.loadTexture(res_dir['MODELS'] + "Boulder_Normal.png"))
+        # boulderModel.getTexture().setShineDamper(10)
+        # boulderModel.getTexture().setReflectivity(0.5)
+        # boulder = Entity(boulderModel, (10.0, 0, 8.0), 0.0, 0.0, 0.0, 0.3)
+        # self.normalMapEntities.append(boulder)
 
         treeModel = TexturedModel(ModelLoader().loadModel(self.loader, res_dir['MODELS']+"Pine.obj"),
                                   ModelTexture(self.loader.loadTexture(res_dir['MODELS'] + "Pine_Texture.png")))
@@ -238,7 +238,7 @@ class GLCanvas(Gtk.GLArea):
         self.FBO_initialized = False
 
         particleTexture = ParticleTexture(self.loader.loadTexture(res_dir['TEXTURE_PARTICLES'] + "particleAtlas.png", False), 4)
-        self.system = ParticleSystem(particleTexture, pps=50.0, speed=20.0, gravityComplient=0.5, lifeLength=3, scale=1)
+        self.system = ParticleSystem(particleTexture, pps=20.0, speed=15.0, gravityComplient=0.5, lifeLength=3, scale=1)
         self.system.randomizeRotation()
         self.system.setDirection((0.0, 1.0, 0.0), 0.1)
         self.system.setLifeError(0.1)

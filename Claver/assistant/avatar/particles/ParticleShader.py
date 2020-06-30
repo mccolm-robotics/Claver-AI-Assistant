@@ -11,22 +11,17 @@ class ParticleShader(ShaderProgram):
         super().__init__(self.__VERTEX_FILE, self.__FRAGMENT_FILE)
 
     def getAllUniformLocations(self):
-        self.__location_modelViewMatrix = super().getUniformLocation("modelViewMatrix")
+        self.__location_numberOfRows = super().getUniformLocation("numberOfRows")
         self.__location_projectionMatrix = super().getUniformLocation("projectionMatrix")
-        self.__location_texOffset1 = super().getUniformLocation("texOffset1")
-        self.__location_texOffset2 = super().getUniformLocation("texOffset2")
-        self.__location_texCoordInfo = super().getUniformLocation("texCoordInfo")
 
     def bindAttributes(self):
         super().bindAttribute(0, "position")
+        super().bindAttribute(1, "modelViewMatrix")     # Locations were set out in ParticleRenderer ln. 24
+        super().bindAttribute(5, "texOffsets")
+        super().bindAttribute(6, "blendFactor")
 
-    def loadTextureCoordInfo(self, offset1, offset2, numRows, blend):
-        super().load2DVector(self.__location_texOffset1, offset1)
-        super().load2DVector(self.__location_texOffset2, offset2)
-        super().load2DVector(self.__location_texCoordInfo, (numRows, blend))
-
-    def loadModelViewMatrix(self, modelView):
-        super().loadMatrix(self.__location_modelViewMatrix, modelView)
+    def loadNumberOfRows(self, numberOfRows):
+        super().loadFloat(self.__location_numberOfRows, numberOfRows)
 
     def loadProjectionMatrix(self, matrix):
         super().loadMatrix(self.__location_projectionMatrix, matrix)

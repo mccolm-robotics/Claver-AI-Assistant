@@ -22,34 +22,9 @@ class Loader:
             self.storeDataInAttributeList(2, 3, normals)
         if tangents is not None:
             self.storeDataInAttributeList(3, 3, tangents)
-        # Creates a buffer to hold the vertex data and binds it to the OpenGL pipeline
-        # self.model = np.concatenate((positions, textureCoords), axis=0)
-        #
-        # self.vertex_buffer_object = GLuint()  # Stores the name of the vertex buffer
-        # glCreateBuffers(1, ctypes.byref(self.vertex_buffer_object))  # Generates a buffer to hold the vertex data
-        # self.__vbos = np.append(self.__vbos, self.vertex_buffer_object)
-        # glNamedBufferStorage(self.vertex_buffer_object, self.model.nbytes, self.model, GL_MAP_READ_BIT)  # Allocates buffer memory and initializes it with vertex data
-        # glBindBuffer(GL_ARRAY_BUFFER, self.vertex_buffer_object)  # Binds the buffer object to the OpenGL context and specifies that the buffer holds vertex data
-        # self.vertex_position_attribute = glGetAttribLocation(self.shader, 'vertex_position')
-        # glEnableVertexAttribArray(self.vertex_position_attribute)
-        # # self.model.itemsize*3 specifies the stride (how to step through the data in the buffer). This is important for telling OpenGL how to step through a buffer having concatinated vertex and color data (see: https://youtu.be/bmCYgoCAyMQ).
-        # glVertexAttribPointer(self.vertex_position_attribute, 3, GL_FLOAT, GL_FALSE, self.model.itemsize * 3,
-        #                       ctypes.c_void_p(0))
-        #
-        # self.texture_in = glGetAttribLocation(self.shader, 'texture_position')
-        # self.texture_offset = self.model.itemsize * (len(self.model) // 2) * 3
-        # # Describe the position data layout in the buffer
-        # glVertexAttribPointer(self.texture_in, 3, GL_FLOAT, GL_FALSE, self.model.itemsize * 3,
-        #                       ctypes.c_void_p(self.texture_offset))
-        # glEnableVertexAttribArray(self.texture_in)
+
         self.unbindVAO()
-        # length = len(positions) // 3
-        # if textureCoords is not None:
-        #     length += len(textureCoords) // 3
-        # if normals is not None:
-        #     length += len(normals) // 3
-        # if tangents is not None:
-        #     length += len(tangents) // 3
+
         return RawModel(vaoID, len(positions))
 
     def loadQuadToVAO(self, positions, textureCoords):
@@ -75,6 +50,29 @@ class Loader:
         glVertexAttribPointer(attributeNumber, coordinateSize, GL_FLOAT, GL_FALSE, np_data.itemsize * coordinateSize, ctypes.c_void_p(0))  # Describes the data layout of the vertex buffer used by the 'vertex_position' attribute
         glBindBuffer(GL_ARRAY_BUFFER, 0)
 
+    def createEmptyVbo(self, floatCount):
+        vboID = GLuint()  # Stores the name of the vertex buffer
+        glCreateBuffers(1, ctypes.byref(vboID))  # Generates a buffer to hold the vertex data
+        self.__vbos = np.append(self.__vbos, vboID)
+        glNamedBufferData(vboID, floatCount * 4, ctypes.c_void_p(0), GL_STREAM_DRAW)  # Allocates buffer memory and initializes it with vertex data
+        return vboID
+
+    def addInstancedAttribute(self, vaoID, vboID, attributeNum, dataSize, instancedDataLength, offset):
+        glBindBuffer(GL_ARRAY_BUFFER, vboID)
+        glBindVertexArray(vaoID)
+        # Add an attribute to the VAO
+        glVertexAttribPointer(attributeNum, dataSize, GL_FLOAT, GL_FALSE, instancedDataLength * 4, ctypes.c_void_p(offset * 4))
+        # Indicate that this is a per-instance attribute
+        glVertexAttribDivisor(attributeNum, 1)
+        glBindBuffer(GL_ARRAY_BUFFER, 0)
+        glBindVertexArray(0)
+
+    def updateVbo(self, vboID, data):
+        np_data = self.storDataInNumpyArray(data)
+        glBindBuffer(GL_ARRAY_BUFFER, vboID)
+        glBufferData(GL_ARRAY_BUFFER, np_data.nbytes, ctypes.c_void_p(0), GL_STREAM_DRAW)
+        glBufferSubData(GL_ARRAY_BUFFER, 0, np_data)
+        glBindBuffer(GL_ARRAY_BUFFER, 0)
 
     def loadTexture(self, fileName, flipped=True):
         textureID = glGenTextures(1)

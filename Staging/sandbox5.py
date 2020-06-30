@@ -1,5 +1,11 @@
-list = ["button", "top", "pog"]
+list = []
 
 print(list)
-list.insert(1, "bottom")
+
+def addValue(pop):
+    pop.append("toy")
+
+addValue(list)
 print(list)
+
+print(len(list))
